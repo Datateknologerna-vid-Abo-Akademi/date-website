@@ -1413,6 +1413,17 @@ class AttendanceDetailViewGetTests(AttendanceViewTestCase):
         self.assertNotContains(response, "Hela loggen finns i rapporten.")
         self.assertNotContains(response, 'id="log-end"')
 
+    def test_the_log_reveals_itself_without_javascript(self):
+        """The rows are hidden for the pager, which a reader without the script does not have."""
+        self.client.force_login(self.staff)
+
+        response = self.client.get(self.detail_url)
+
+        self.assertContains(response, "<noscript>")
+        self.assertContains(response, "#change-log tr[hidden] { display: table-row !important; }")
+        self.assertContains(response, "#log-more { display: none !important; }")
+        self.assertContains(response, "#log-end[hidden] { display: block !important; }")
+
     def test_the_change_log_needs_the_permission_not_staff_status(self):
         """A staff group member without the attendance permission sees no log."""
         unpermitted = make_member("utan-behorighet", first_name="Ulla", last_name="Utan")
@@ -2351,6 +2362,17 @@ class AttendanceOverviewViewTests(AttendanceViewTestCase):
         content = response.content.decode()
         start = content.index('<p id="feed-end"')
         self.assertNotIn("hidden", content[start : content.index(">", start)])
+
+    def test_overview_reveals_the_whole_feed_without_javascript(self):
+        """The rows are hidden for the pager, which a reader without the script does not have."""
+        self.client.force_login(self.staff)
+
+        response = self.client.get(self.overview_url)
+
+        self.assertContains(response, "<noscript>")
+        self.assertContains(response, "#change-feed tr[hidden] { display: table-row !important; }")
+        self.assertContains(response, "#feed-more { display: none !important; }")
+        self.assertContains(response, "#feed-end[hidden] { display: block !important; }")
 
     def test_overview_announces_changes_through_the_feed_not_the_list(self):
         """A live region only announces additions, so a list would never say that

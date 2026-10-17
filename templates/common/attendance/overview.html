@@ -91,6 +91,14 @@
           <p id="no-changes"
              class="attendance-changes__end"
              {% if recent_changes %}hidden{% endif %}>{% trans "Inga ändringar ännu" %}</p>
+          {# Without JavaScript the pager cannot reveal the rows it is hiding, so the feed would stop at its first page. #}
+          <noscript>
+            <style>
+              #change-feed tr[hidden] { display: table-row !important; }
+              #feed-more { display: none !important; }
+              #feed-end[hidden] { display: block !important; }
+            </style>
+          </noscript>
         </section>
       </div>
     </div>

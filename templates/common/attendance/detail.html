@@ -181,6 +181,14 @@
                 <a href="{% url 'admin:attendance_event_report' object.pk %}">{% trans "Öppna rapporten" %}</a>
               </p>
             {% endif %}
+            {# Without JavaScript the pager cannot reveal the rows it is hiding, so the log would stop at its first page. #}
+            <noscript>
+              <style>
+                #change-log tr[hidden] { display: table-row !important; }
+                #log-more { display: none !important; }
+                #log-end[hidden] { display: block !important; }
+              </style>
+            </noscript>
           </section>
         {% endif %}
       </div>
