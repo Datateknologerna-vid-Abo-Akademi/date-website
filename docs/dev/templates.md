@@ -66,6 +66,45 @@ Adding an empty block to the common template is safe: associations that don't ov
 
 **You cannot inject content into the middle of a parent template's HTML from a child template** — only into defined `{% raw %}{% block %}{% endraw %}` slots. A block defined in a child template that has no corresponding slot in the parent is a no-op; the content is silently discarded.
 
+## Shared Components, Not Copies
+
+A component that several associations render belongs in `templates/common/`, even
+when each association already carries its own working copy. The copies are what
+drift: the homepage event list existed as five copies, two of them byte
+identical, and every difference any of them carried was a handful of lines.
+
+Put the whole component in the shared template, with a block for each piece that
+really differs, and give an association that differs a short file that extends
+it:
+
+{% raw %}
+```
+templates/common/date/components/events.html   the component, and a block per icon
+templates/sf/date/components/events.html       {% extends %} plus four block overrides
+```
+{% endraw %}
+
+The association file then holds only its difference, so a change to the shared
+structure reaches every association at once and a reviewer can see the whole
+per-association delta in one screen. The same rule covers the seasonal event
+pages: `templates/common/events/arsfest_base.html` is the shared page, and the
+association files should be overrides of it rather than standalone copies.
+
+Two things that are not blocks:
+
+- A fragment repeated **within one template** (the same row, badge or icon drawn
+  twice) is a `{% raw %}{% partialdef %}{% endraw %}` with `{% raw %}{% partial %}{% endraw %}`,
+  which Django 6 provides natively. The partial renders nothing where it is
+  defined unless it is declared `inline`.
+- A single fragment that a view or an htmx endpoint should return on its own is
+  loaded by name with the `template.html#partial` syntax, so one template can
+  serve both the full page and the fragment.
+
+Before adding a template under `templates/<association>/`, check whether the
+same path already exists for another association. Two association copies of one
+component are almost always one shared component plus two overrides, and
+`templates/` should not gain a third.
+
 ## Footer Social Icons
 
 Each association lists its footer buttons in `CONTENT_VARIABLES["SOCIAL_BUTTONS"]` as `[icon, url]` pairs; an entry with a blank URL is skipped. The shared footer (`templates/common/core/footer.html`, `footer_social_buttons` block) picks the icon for each entry:
