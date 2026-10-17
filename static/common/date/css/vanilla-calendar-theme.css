@@ -32,9 +32,11 @@
   --vc-date-today-bg: var(--secondaryColorDarker);
   --vc-date-today-color: var(--primaryColorLighter);
 
-  /* selected day */
-  --vc-date-selected-bg: var(--primaryColorLight);
-  --vc-date-selected-color: var(--secondaryColor);
+  /* selected day: not painted. Clicking a day selects it in the library, but the
+     homepage calendar only navigates or opens a popup, and 2.x never painted the
+     clicked day either. Hover still previews the day, see below. */
+  --vc-date-selected-bg: transparent;
+  --vc-date-selected-color: var(--primaryColor);
 
   /* days outside the current month */
   --vc-date-outside-color: darkgray;
@@ -61,6 +63,17 @@
   min-width: min-content;
   padding: 12px;
   border-radius: 4px;
+}
+
+/* A clicked day is selected by the library; keep it looking like any other day,
+   including while hovered, where the library would otherwise keep using the
+   selected colour instead of the hover one. Hover is gated the same way the
+   vendored sheet gates it, so touch devices get no sticky fill. */
+@media (hover: hover) and (pointer: fine) {
+  .vc [data-vc-date][data-vc-date-selected] [data-vc-date-btn]:hover {
+    background-color: var(--vc-date-bg-hover);
+    color: var(--vc-date-color);
+  }
 }
 
 /* 28 px circles, the day button the homepage had before the upgrade. */

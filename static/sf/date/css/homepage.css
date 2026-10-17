@@ -323,14 +323,6 @@ div.calendar-container a {
     background-color: var(--primaryColorLight) !important;
 }
 
-.vc-date[data-vc-date-selected] .vc-date__btn {
-    background-color: var(--primaryColor) !important;
-}
-
-.vc-date[data-vc-date-selected] .vc-date__btn:hover {
-    background-color: var(--primaryColorLight) !important;
-}
-
 
 /* Calendar tooltip */
 
