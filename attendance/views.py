@@ -119,6 +119,12 @@ class AttendanceEventDetailView(UserPassesTestMixin, AttendanceEventObjectMixin[
         ctx["can_see_report"] = ctx["can_see_attendance"] and self.request.user.is_staff
         ctx["user"] = self.request.user
         ctx["present_attendees"] = self.object.present_attendees()
+        # The roster is paged the way the log below it is: the whole list is
+        # rendered, the page hides all but the first page, and the button reveals
+        # the next one without a request. A meeting of 300 made the page nine
+        # thousand pixels tall and put the log far below it.
+        ctx["roster_visible"] = CHANGES_VISIBLE_ON_LOAD
+        ctx["roster_page_size"] = CHANGES_PAGE_SIZE
         # The log is for readers who hold the attendance permission, and it is paged
         # on the page itself: the newest slice is rendered, the page hides all but
         # the first page of it, and the rest is a click away. The report carries the

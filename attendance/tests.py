@@ -1280,6 +1280,48 @@ class AttendanceDetailViewGetTests(AttendanceViewTestCase):
         self.assertContains(response, f"<li>{self.member.get_full_name()}</li>")
         self.assertContains(response, f"<li>{guest.get_full_name()}</li>")
 
+    def test_the_roster_opens_on_its_first_page(self):
+        """300 present made the page nine thousand pixels tall and buried the log."""
+        crowd = [NonMemberAttendee(name=f"Gäst {index:03d}") for index in range(12)]
+        self.client.force_login(self.staff)
+        with patch.object(AttendanceEvent, "present_attendees", return_value=crowd):
+            response = self.client.get(self.detail_url)
+
+        content = response.content.decode()
+        roster = content[
+            content.index('id="present-roster"') : content.index("</ul>", content.index('id="present-roster"'))
+        ]
+        self.assertEqual(roster.count("<li>"), CHANGES_VISIBLE_ON_LOAD)
+        self.assertEqual(roster.count("<li hidden>"), 2)
+        self.assertContains(response, 'id="roster-more"')
+        self.assertContains(response, f'data-page-size="{CHANGES_PAGE_SIZE}"')
+
+    def test_the_whole_roster_is_rendered_for_the_pager(self):
+        """The button reveals names already on the page, so it costs no request."""
+        crowd = [NonMemberAttendee(name=f"Gäst {index:03d}") for index in range(12)]
+        self.client.force_login(self.staff)
+        with patch.object(AttendanceEvent, "present_attendees", return_value=crowd):
+            response = self.client.get(self.detail_url)
+
+        for attendee in crowd:
+            self.assertContains(response, attendee.name)
+
+    def test_the_roster_pager_is_absent_when_every_name_fits(self):
+        self.client.force_login(self.staff)
+        with patch.object(AttendanceEvent, "present_attendees", return_value=[self.member]):
+            response = self.client.get(self.detail_url)
+
+        self.assertNotContains(response, 'id="roster-more"')
+
+    def test_the_roster_shows_every_name_without_javascript(self):
+        """The rows are hidden for the pager, which a reader without the script does not have."""
+        self.client.force_login(self.staff)
+
+        response = self.client.get(self.detail_url)
+
+        self.assertContains(response, "#present-roster li[hidden] { display: list-item !important; }")
+        self.assertContains(response, "#roster-more { display: none !important; }")
+
     def test_a_participant_without_the_permission_sees_the_number_but_no_names(self):
         """Who is in the room is the log's information, not the page's."""
         guest = NonMemberAttendee.objects.create(name="Gäst I Närvarolistan")
@@ -2511,6 +2553,20 @@ class AttendanceAdminTests(TestCase):
         content = response.content.decode()
         self.assertLess(content.index("Nyare"), content.index("Äldre"))
 
+    def test_the_change_changelist_colours_the_direction(self):
+        """At a few hundred rows the board scans for the departures, so the word is coloured too."""
+        event = make_event(slug="mote")
+        member = make_member("medlem")
+        record_change(event, ENTER, user=member, timestamp=now() - timedelta(minutes=2))
+        record_change(event, LEAVE, user=member, timestamp=now() - timedelta(minutes=1))
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(reverse("admin:attendance_attendancechange_changelist"))
+
+        self.assertContains(response, 'class="attendance-change--enter">Anlände<')
+        self.assertContains(response, 'class="attendance-change--leave">Lämnade<')
+        self.assertContains(response, "attendance/css/change-colours.css")
+
 
 class AttendanceChangeAdminCorrectionTests(TestCase):
     """A correction or a deletion reaches the pages that were built from the row.
@@ -2583,6 +2639,19 @@ class AttendanceReportAdminTests(TestCase):
             user.user_permissions.add(Permission.objects.get(content_type__app_label=app_label, codename=codename))
 
         return user
+
+    def test_the_timeline_colours_the_direction(self):
+        """The report's timeline reads like the event page's log, green and amber."""
+        maja = make_member("maja", first_name="Maja", last_name="Andersson")
+        record_change(self.event, ENTER, user=maja, timestamp=self.at - timedelta(minutes=40))
+        record_change(self.event, LEAVE, user=maja, timestamp=self.at - timedelta(minutes=20))
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(self.report_url)
+
+        self.assertContains(response, 'class="attendance-change--enter"')
+        self.assertContains(response, 'class="attendance-change--leave"')
+        self.assertContains(response, "attendance/css/change-colours.css")
 
     def test_the_report_renders_the_numbers_the_timeline_and_the_polls(self):
         maja = make_member("maja", first_name="Maja", last_name="Andersson")

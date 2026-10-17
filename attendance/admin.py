@@ -469,7 +469,7 @@ class AttendanceChangeAdmin(FlatpickrDateTimeAdminMixin, ModelAdmin):
     flatpickr_datetime_fields = ("timestamp",)
     formfield_overrides = {**UNFOLD_FORMFIELD_OVERRIDES}
 
-    list_display = ("timestamp", "event", "user", "non_member", "type")
+    list_display = ("timestamp", "event", "user", "non_member", "change_direction")
     list_filter = ("type", "event")
     search_fields = (
         "event__title",
@@ -480,6 +480,17 @@ class AttendanceChangeAdmin(FlatpickrDateTimeAdminMixin, ModelAdmin):
     )
     date_hierarchy = "timestamp"
     ordering = ("-timestamp",)
+
+    @admin.display(description=_("Typ"), ordering="type")
+    def change_direction(self, obj):
+        """The direction in the event page's own green and amber.
+
+        A meeting of a few hundred leaves a list where the word alone is easy to
+        lose, and the board scans it for the departures. The word stays, so the
+        colour is a second signal rather than the only one.
+        """
+        css = "enter" if obj.type == AttendanceChange.Type.ENTER else "leave"
+        return format_html('<span class="attendance-change--{}">{}</span>', css, obj.get_type_display())
 
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)
@@ -500,7 +511,7 @@ class AttendanceChangeAdmin(FlatpickrDateTimeAdminMixin, ModelAdmin):
             websocket.send_attendance_invalidate(slug)
 
     class Media:
-        css = {"all": FLATPICKR_ADMIN_CSS}
+        css = {"all": FLATPICKR_ADMIN_CSS + ("attendance/css/change-colours.css",)}
         js = ("admin/js/jquery.init.js",) + FLATPICKR_ADMIN_JS
 
 

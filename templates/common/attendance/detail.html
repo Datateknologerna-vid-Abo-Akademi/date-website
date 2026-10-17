@@ -131,11 +131,26 @@
           <h2>{% trans "Närvarande" %}: <span id="present-count">{{ present_attendees|length }}</span></h2>
           {# The number is the room's size and costs nobody anything. The names are a list of who is in the room, so they follow the same permission as the log below. #}
           {% if can_see_attendance %}
-            <ul class="attendance-list">
+            <ul class="attendance-list" id="present-roster">
               {% for a in present_attendees %}
-                <li>{{ a.get_full_name }}</li>
+                <li{% if forloop.counter > roster_visible %} hidden{% endif %}>{{ a.get_full_name }}</li>
               {% endfor %}
             </ul>
+            {% if present_attendees|length > roster_visible %}
+              <button type="button"
+                      class="attendance-list__more"
+                      id="roster-more"
+                      data-page-size="{{ roster_page_size }}">
+                {% trans "Visa fler" %} <i class="bi bi-chevron-down" aria-hidden="true"></i>
+              </button>
+            {% endif %}
+            {# Without JavaScript the pager cannot reveal the names it is hiding, so the roster would stop at its first page. #}
+            <noscript>
+              <style>
+                #present-roster li[hidden] { display: list-item !important; }
+                #roster-more { display: none !important; }
+              </style>
+            </noscript>
           {% endif %}
         </section>
         {% if can_see_attendance %}

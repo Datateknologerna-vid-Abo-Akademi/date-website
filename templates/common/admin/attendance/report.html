@@ -6,6 +6,8 @@
 {% endblock %}
 {% block extrastyle %}
   {{ block.super }}
+  <link rel="stylesheet"
+        href="{% static 'attendance/css/change-colours.css' %}">
   <link rel="stylesheet" href="{% static 'attendance/css/report.css' %}">
 {% endblock %}
 {% block content %}
@@ -113,7 +115,9 @@
                     {{ change.timestamp|time }}
                   </td>
                   <td>{{ change.attendee_name }}</td>
-                  <td>{% trans change.get_type_display context "left/entered in general" %}</td>
+                  <td class="attendance-change--{{ change.type_name|lower }}">
+                    {% trans change.get_type_display context "left/entered in general" %}
+                  </td>
                   <td>
                     {% if change.user_id %}
                       {% trans "Medlem" %}
