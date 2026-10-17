@@ -172,6 +172,25 @@ DEFAULT_REQUIRE_LOGIN_PATH = "/members/info/"
 USERNAME_ENV_VAR = "CSS_REGRESSION_USERNAME"
 PASSWORD_ENV_VAR = "CSS_REGRESSION_PASSWORD"
 
+# Values that must never reach a log line. A browser or protocol error can echo the
+# sign-in script that carried the password, and an error is exactly the moment someone
+# pastes a run into a ticket, so every path that prints goes through `redact` first.
+_SECRETS: list[str] = []
+
+
+def remember_secret(value: str | None) -> None:
+    """Register a value that `redact` must strip from every message."""
+    if value and value not in _SECRETS:
+        _SECRETS.append(value)
+
+
+def redact(message: str) -> str:
+    """Return the message with every registered secret replaced."""
+    for secret in _SECRETS:
+        message = message.replace(secret, "***")
+    return message
+
+
 VIEWPORTS: dict[str, tuple[int, int]] = {"desktop": (1600, 1000), "mobile": (390, 844)}
 
 # The fixed page set. Detail pages are discovered from the listing pages, never
@@ -507,7 +526,7 @@ def fail(message: str) -> NoReturn:
     Exit codes are 0 for identical, 1 for differences found, 2 for bad input or
     incomparable captures, and 3 for a broken browser session.
     """
-    print(f"error: {message}", file=sys.stderr)
+    print(f"error: {redact(message)}", file=sys.stderr)
     raise SystemExit(2)
 
 
@@ -1121,6 +1140,7 @@ def resolve_credentials(args: argparse.Namespace) -> tuple[str | None, str | Non
         fail(f"a username was supplied without a password (pass --password or set {PASSWORD_ENV_VAR})")
     if password and not username:
         fail(f"a password was supplied without a username (pass --username or set {USERNAME_ENV_VAR})")
+    remember_secret(password)
     return username, password
 
 
@@ -1446,7 +1466,7 @@ def cmd_capture(args: argparse.Namespace) -> int:
                         aborted.add(variant)
                         errors += 1
                         print(f"### {variant}: login FAILED, skipping every page of this variant")
-                        print(f"    {login_record['error']}")
+                        print(f"    {redact(str(login_record['error']))}")
                         continue
                     print(
                         f"    login ok: {login_record['final_url']} "

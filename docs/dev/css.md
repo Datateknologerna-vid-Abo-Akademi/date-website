@@ -208,11 +208,11 @@ model which apps a variant installs.
    `core/css/pagination.css`, `core/css/focus.css`.
 2. The CDN vendor sheets: Bootstrap 5.1.3, bootstrap-icons, Line Awesome, then
    jQuery.
-3. `{% block extra_head %}`.
+3. `{% raw %}{% block extra_head %}{% endraw %}`.
 4. `core/css/header.css`.
-5. `{% block extra_header_css %}`.
+5. `{% raw %}{% block extra_header_css %}{% endraw %}`.
 6. `core/css/footer.css`.
-7. `{% block extra_css %}`.
+7. `{% raw %}{% block extra_css %}{% endraw %}`.
 
 `core/css/base-core.css` is the shared core of the per-association
 `core/css/base.css` sheets and sits first on purpose: the association sheet loads
@@ -231,7 +231,7 @@ rendering across all six associations at once, so it is not a local cleanup.
 
 Page-level stylesheets belong in the `extra_head` or `extra_header_css` blocks.
 A sheet that must win by order rather than by specificity goes in
-`{% block extra_css %}`, which is the last stylesheet position in `<head>`, after
+`{% raw %}{% block extra_css %}{% endraw %}`, which is the last stylesheet position in `<head>`, after
 `core/css/footer.css`. A stylesheet that must beat a vendor sheet that loads
 later has to be linked after that sheet. The vanilla-calendar bundle
 (`static/common/date/css/vanilla-calendar.min.css`) is an example: the base
