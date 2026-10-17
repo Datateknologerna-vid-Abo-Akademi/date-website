@@ -865,6 +865,10 @@ msgstr "Kirjoita vuosiluku muodossa YYYY"
 msgid "Styrelse"
 msgstr "Hallitus"
 
+#: functionaries/models.py:10
+msgid "Tutor"
+msgstr "Tutor"
+
 #: functionaries/models.py:12
 msgid "Funktionärspost"
 msgstr "Toimihenkilöpesti"
@@ -1903,6 +1907,10 @@ msgstr "Suodata"
 #: templates/common/members/functionaries.html:44
 msgid "Styrelsen"
 msgstr "Hallitus"
+
+#: templates/common/members/functionaries.html:78
+msgid "Tutorer"
+msgstr "Tutorit"
 
 #: templates/common/members/functionaries.html:69
 msgid "Övriga Funktionärer"

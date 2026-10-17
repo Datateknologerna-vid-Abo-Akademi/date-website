@@ -116,11 +116,19 @@ class FunctionaryRoleAdmin(
         ),
     )
     save_on_top = True
-    list_display = ('title', 'translation_status', 'board', 'functionary_count')
-    list_filter = ('board',)
+    list_display = ('title', 'translation_status', 'board', 'tutor', 'functionary_count')
+    list_filter = ('board', 'tutor')
     search_fields = ('title', 'functionary__name', 'functionary__member__first_name', 'functionary__member__last_name')
     ordering = ['title']
     inlines = [FunctionaryInline]
+
+    def get_fields(self, request, obj=None):
+        # Show the board and tutor checkboxes on one row, keeping any generated translation fields.
+        fields = list(super().get_fields(request, obj))
+        if 'board' in fields and 'tutor' in fields:
+            fields.remove('tutor')
+            fields[fields.index('board')] = ('board', 'tutor')
+        return fields
 
     def get_list_display(self, request):
         list_display = list(super().get_list_display(request))

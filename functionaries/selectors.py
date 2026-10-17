@@ -62,9 +62,16 @@ def get_selected_role(request, functionary_roles):
     return selected_role, all_roles
 
 
-def get_filtered_functionaries(year, selected_role, is_board):
+def get_filtered_functionaries(year, selected_role, is_board, is_tutor=False):
+    """Return functionaries for one section of the public listing.
+
+    Sections are mutually exclusive: board roles win over the tutor flag, and
+    the "other" section (``is_board=False, is_tutor=False``) excludes both.
+    """
     years = year if isinstance(year, (QuerySet, list, tuple, set)) else [year]
     main_filter = Q(year__in=years, functionary_role__board=is_board)
+    if not is_board:
+        main_filter &= Q(functionary_role__tutor=is_tutor)
 
     if selected_role is not None:
         role_filter = (

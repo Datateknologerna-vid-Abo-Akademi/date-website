@@ -862,6 +862,10 @@ msgstr "Provide a year in the format YYYY"
 msgid "Styrelse"
 msgstr "Board"
 
+#: functionaries/models.py:10
+msgid "Tutor"
+msgstr "Tutor"
+
 #: functionaries/models.py:12
 msgid "Funktionärspost"
 msgstr "Position of trust"
@@ -1891,6 +1895,10 @@ msgstr "Filter"
 #: templates/common/members/functionaries.html:44
 msgid "Styrelsen"
 msgstr "The Board"
+
+#: templates/common/members/functionaries.html:78
+msgid "Tutorer"
+msgstr "Tutors"
 
 #: templates/common/members/functionaries.html:69
 msgid "Övriga Funktionärer"
