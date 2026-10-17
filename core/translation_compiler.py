@@ -23,58 +23,84 @@ def _parse_po(path: Path) -> dict[str, str]:
     A contextual entry is keyed by ``msgctxt``, a separator and the msgid, and a
     plural entry's value is its forms joined by a NUL. The header entry is kept
     even though makemessages marks it fuzzy, because the charset comes from it.
+
+    Entries are normally separated by a blank line, but a catalog that has lost
+    one still parses: a second ``msgid`` (or a comment block after a finished
+    entry) closes the entry being read and starts the next one. Splitting on
+    blank lines alone used to keep only the last entry of such a block and drop
+    the others without a word, which is how an English attendance column lost
+    its label.
     """
     messages: dict[str, str] = {}
+    entry: dict[str, str] = {}
+    plurals: dict[int, str] = {}
+    current: str | None = None
+    fuzzy = False
 
-    for raw_block in path.read_text(encoding="utf-8").split("\n\n"):
-        block = [line for line in raw_block.splitlines() if line.strip()]
-        if not block:
+    def flush() -> None:
+        nonlocal entry, plurals, current, fuzzy
+        msgid = entry.get("msgid")
+        if msgid is not None and not (fuzzy and msgid):
+            context = entry.get("msgctxt", "")
+            key = f"{context}{CONTEXT_SEPARATOR}{msgid}" if context else msgid
+            if plurals:
+                # msgfmt keys a plural entry as the singular, a NUL and the
+                # plural, which is how a reader knows the value holds several
+                # forms.
+                plural_id = entry.get("msgid_plural", "")
+                messages[f"{key}{PLURAL_SEPARATOR}{plural_id}"] = PLURAL_SEPARATOR.join(
+                    plurals[index] for index in sorted(plurals)
+                )
+            else:
+                messages[key] = entry.get("msgstr", "")
+        entry, plurals, current, fuzzy = {}, {}, None, False
+
+    for raw_line in path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line:
+            flush()
+            continue
+        if line.startswith("#"):
+            # A comment block belongs to the entry that follows it, so it closes
+            # whatever was complete before it.
+            if entry.get("msgstr") is not None or plurals:
+                flush()
+            fuzzy = fuzzy or "#, fuzzy" in line
             continue
 
-        is_fuzzy = "#, fuzzy" in block
-
-        fields: dict[str, str] = {}
-        plurals: dict[int, str] = {}
-        current: str | None = None
-
-        for line in block:
-            if line.startswith("#"):
-                continue
-
-            keyword, _, _remainder = line.partition(" ")
-            if keyword in {"msgctxt", "msgid", "msgid_plural", "msgstr"}:
-                current = keyword
-                fields[keyword] = _unquote(line)
-                continue
-            if keyword.startswith("msgstr["):
-                current = "plural"
-                plurals[int(keyword[7:-1])] = _unquote(line)
-                continue
-            if line.startswith('"') and current is not None:
-                if current == "plural":
-                    index = max(plurals, default=0)
-                    plurals[index] += ast.literal_eval(line)
-                else:
-                    fields[current] += ast.literal_eval(line)
-
-        msgid = fields.get("msgid")
-        if msgid is None or (is_fuzzy and msgid):
-            # A fuzzy entry is not offered as a translation, but the header is:
-            # it carries the charset, and makemessages marks it fuzzy too.
+        keyword = line.partition(" ")[0]
+        if keyword == "msgctxt":
+            if entry:
+                flush()
+            current = "msgctxt"
+            entry["msgctxt"] = _unquote(line)
             continue
+        if keyword == "msgid":
+            if "msgid" in entry:
+                flush()
+            current = "msgid"
+            entry["msgid"] = _unquote(line)
+            continue
+        if keyword == "msgid_plural":
+            current = "msgid_plural"
+            entry["msgid_plural"] = _unquote(line)
+            continue
+        if keyword == "msgstr":
+            current = "msgstr"
+            entry["msgstr"] = _unquote(line)
+            continue
+        if keyword.startswith("msgstr["):
+            current = "plural"
+            plurals[int(keyword[7:-1])] = _unquote(line)
+            continue
+        if line.startswith('"') and current is not None:
+            if current == "plural":
+                index = max(plurals, default=0)
+                plurals[index] += ast.literal_eval(line)
+            else:
+                entry[current] += ast.literal_eval(line)
 
-        context = fields.get("msgctxt", "")
-        key = f"{context}{CONTEXT_SEPARATOR}{msgid}" if context else msgid
-        if plurals:
-            # msgfmt keys a plural entry as the singular, a NUL and the plural,
-            # which is how a reader knows the value holds several forms.
-            plural_id = fields.get("msgid_plural", "")
-            messages[f"{key}{PLURAL_SEPARATOR}{plural_id}"] = PLURAL_SEPARATOR.join(
-                plurals[index] for index in sorted(plurals)
-            )
-        else:
-            messages[key] = fields.get("msgstr", "")
-
+    flush()
     return messages
 
 
