@@ -10,6 +10,7 @@
           referrerpolicy="no-referrer"></script>
   <link rel="stylesheet" href="{% static 'attendance/css/attendance.css' %}">
   <script src="{% url 'javascript-catalog' %}"></script>
+  <script src="{% static 'attendance/js/changes-table.js' %}" defer></script>
   <script src="{% static 'attendance/js/detail.js' %}" defer></script>
 {% endblock %}
 {% block content %}
@@ -137,7 +138,7 @@
         {% if user.is_staff %}
           <section class="attendance-section">
             <h2 id="changes-heading">{% trans "Närvaroändringar" %}</h2>
-            <p class="attendance-changes__hint">{% trans "Hela loggen, nyaste först. Listan uppdateras när sidan laddas om." %}</p>
+            <p class="attendance-changes__hint">{% trans "Nyaste först. Listan uppdateras när sidan laddas om." %}</p>
             <div class="attendance-changes-wrap">
               <table class="attendance-changes" aria-labelledby="changes-heading">
                 <thead>
@@ -147,9 +148,10 @@
                     <th scope="col">{% trans "Ändring" %}</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody id="change-log">
                   {% for change in changes %}
-                    <tr class="attendance-changes__row--{{ change.type_name|lower }}">
+                    <tr class="attendance-changes__row--{{ change.type_name|lower }}"
+                        {% if forloop.counter > changes_visible %}hidden{% endif %}>
                       <td class="attendance-changes__time">{{ change.timestamp|date:"SHORT_DATE_FORMAT" }} {{ change.timestamp|time }}</td>
                       <td class="attendance-changes__name">{{ change.attendee_name }}</td>
                       <td class="attendance-changes__action attendance-changes__action--{{ change.type_name|lower }}">
@@ -160,6 +162,20 @@
                 </tbody>
               </table>
             </div>
+            {% if changes|length > changes_visible %}
+              <button type="button"
+                      class="btn btn-secondary attendance-changes__more"
+                      id="log-more"
+                      data-page-size="{{ changes_page_size }}">{% trans "Visa fler" %}</button>
+            {% endif %}
+            <p id="log-end"
+               class="attendance-changes__end"
+               {% if changes|length > changes_visible %}hidden{% endif %}>
+              {% trans "Hela loggen finns i rapporten." %}
+              {% if perms.attendance.view_attendanceevent %}
+                <a href="{% url 'admin:attendance_event_report' object.pk %}">{% trans "Öppna rapporten" %}</a>
+              {% endif %}
+            </p>
           </section>
         {% endif %}
       </div>

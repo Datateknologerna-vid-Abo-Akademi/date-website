@@ -30,19 +30,19 @@ class HttpResponseSeeOther(HttpResponseRedirect):
 # keep working for anyone who has the link.
 NO_END_LISTING_HOURS = 24
 
-# How much of the log the staff overview page renders before the websocket starts
-# appending to it. The feed opens on the newest FEED_VISIBLE_ON_LOAD of those rows
-# and reveals the rest a page at a time through its own button, so the page stays
-# short while the history is still one click away. A meeting longer than this
-# reaches the rest through the event page and the report, which is why the feed
-# says so when the rendered rows run out.
+# How much of the log each page renders before its own pager takes over: the live
+# feed on the staff overview page, and the log on the event page. Both open on the
+# newest CHANGES_VISIBLE_ON_LOAD rows and reveal CHANGES_PAGE_SIZE more per click,
+# and both name where the rest of the record lives once their rows run out: the
+# event page for the feed, the report for the event page's log.
 RECENT_CHANGES_ON_OVERVIEW = 60
+LOG_CHANGES_ON_EVENT_PAGE = 60
 
-# How many feed rows the page shows before its first "show more" click.
-FEED_VISIBLE_ON_LOAD = 10
+# How many rows of a changes table the page shows before its first click.
+CHANGES_VISIBLE_ON_LOAD = 10
 
 # How many further rows one click reveals.
-FEED_PAGE_SIZE = 20
+CHANGES_PAGE_SIZE = 20
 
 # The name a guest typed, kept in a cookie so their next visit is one tap. The
 # cookie is convenience only: the log's identity is the typed name, not the
@@ -109,9 +109,19 @@ class AttendanceEventDetailView(UserPassesTestMixin, AttendanceEventObjectMixin[
         ctx["can_see_overview"] = AttendanceEventOverview.is_user_allowed(self.request.user)
         ctx["user"] = self.request.user
         ctx["present_attendees"] = self.object.present_attendees()
-        # select_related so the staff change log costs one query rather than one
-        # per row for the names. Lazy, so it is free for everyone else.
-        ctx["changes"] = self.object.attendance_changes.select_related("user", "non_member")
+        # The log is staff-only and paged on the page itself: the newest slice is
+        # rendered, the page hides all but the first page of it, and the rest is a
+        # click away. The report carries the whole record as CSV and as a printed
+        # page, so bounding this table loses nothing. A reader who is not staff
+        # never runs the query at all.
+        if self.request.user.is_staff:
+            ctx["changes"] = list(
+                self.object.attendance_changes.select_related("user", "non_member")[:LOG_CHANGES_ON_EVENT_PAGE]
+            )
+        else:
+            ctx["changes"] = []
+        ctx["changes_visible"] = CHANGES_VISIBLE_ON_LOAD
+        ctx["changes_page_size"] = CHANGES_PAGE_SIZE
         ctx["next"] = self._safe_next(self.request)
         ctx["prefilled_name"] = ""
         # None means the page cannot say either way, and then it draws no state at
@@ -345,8 +355,8 @@ class AttendanceEventOverview(UserPassesTestMixin, AttendanceEventObjectMixin[At
         ctx["recent_changes"] = list(
             self.object.attendance_changes.select_related("user", "non_member")[:RECENT_CHANGES_ON_OVERVIEW]
         )
-        ctx["feed_visible"] = FEED_VISIBLE_ON_LOAD
-        ctx["feed_page_size"] = FEED_PAGE_SIZE
+        ctx["changes_visible"] = CHANGES_VISIBLE_ON_LOAD
+        ctx["changes_page_size"] = CHANGES_PAGE_SIZE
 
         return ctx
 

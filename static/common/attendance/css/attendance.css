@@ -196,13 +196,13 @@
    room between the table and whichever of them is visible belongs to them: the
    table sits inside a wrapper, so a margin on the table would not collapse with
    theirs and the gap would come out twice as wide. */
-.attendance-feed__end {
+.attendance-changes__end {
     margin: 1rem 0 0;
     color: var(--attendance-muted, #c9c9c9);
     font-size: 0.95rem;
 }
 
-.attendance-feed__more {
+.attendance-changes__more {
     margin: 1rem 0;
 }
 

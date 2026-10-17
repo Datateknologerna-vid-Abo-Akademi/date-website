@@ -3566,3 +3566,15 @@ msgid ""
 msgstr ""
 "The whole log, newest first. The list refreshes when the page is "
 "reloaded."
+
+#: templates/common/attendance/detail.html
+msgid "Nyaste först. Listan uppdateras när sidan laddas om."
+msgstr "Newest first. The list refreshes when the page is reloaded."
+
+#: templates/common/attendance/detail.html
+msgid "Hela loggen finns i rapporten."
+msgstr "The whole log is in the report."
+
+#: templates/common/attendance/detail.html
+msgid "Öppna rapporten"
+msgstr "Open the report"

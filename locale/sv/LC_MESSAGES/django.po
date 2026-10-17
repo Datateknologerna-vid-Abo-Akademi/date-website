@@ -3550,3 +3550,15 @@ msgid ""
 "Hela loggen, nyaste först. Listan uppdateras när sidan laddas om."
 msgstr ""
 "Hela loggen, nyaste först. Listan uppdateras när sidan laddas om."
+
+#: templates/common/attendance/detail.html
+msgid "Nyaste först. Listan uppdateras när sidan laddas om."
+msgstr "Nyaste först. Listan uppdateras när sidan laddas om."
+
+#: templates/common/attendance/detail.html
+msgid "Hela loggen finns i rapporten."
+msgstr "Hela loggen finns i rapporten."
+
+#: templates/common/attendance/detail.html
+msgid "Öppna rapporten"
+msgstr "Öppna rapporten"

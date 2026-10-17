@@ -68,8 +68,9 @@ from attendance.models import (  # noqa: E402
 )
 from attendance.routing import websocket_urlpatterns  # noqa: E402
 from attendance.views import (  # noqa: E402
-    FEED_PAGE_SIZE,
-    FEED_VISIBLE_ON_LOAD,
+    CHANGES_PAGE_SIZE,
+    CHANGES_VISIBLE_ON_LOAD,
+    LOG_CHANGES_ON_EVENT_PAGE,
     NON_MEMBER_NAME_COOKIE,
     NON_MEMBER_NAME_COOKIE_MAX_AGE,
     RECENT_CHANGES_ON_OVERVIEW,
@@ -1324,6 +1325,73 @@ class AttendanceDetailViewGetTests(AttendanceViewTestCase):
         self.assertContains(response, "Anlände")
         self.assertContains(response, "Lämnade")
 
+    def test_the_change_log_opens_on_one_page_and_offers_the_rest(self):
+        """The event page's log is paged like the feed, not rendered in full."""
+        for index in range(CHANGES_VISIBLE_ON_LOAD + 5):
+            record_change(self.event, ENTER, user=self.member, timestamp=now() - timedelta(minutes=index + 1))
+        self.client.force_login(self.staff)
+
+        response = self.client.get(self.detail_url)
+
+        self.assertEqual(response.context["changes_visible"], CHANGES_VISIBLE_ON_LOAD)
+        self.assertContains(response, 'id="log-more"')
+        self.assertContains(response, f'data-page-size="{CHANGES_PAGE_SIZE}"')
+
+        content = response.content.decode()
+        log = content[content.index('id="change-log"') : content.index("</tbody>", content.index('id="change-log"'))]
+        self.assertEqual(log.count("<tr "), CHANGES_VISIBLE_ON_LOAD + 5)
+        self.assertEqual(log.count("hidden"), 5)
+
+        # Nothing more to show yet, so the report line stays hidden.
+        start = content.index('<p id="log-end"')
+        self.assertIn("hidden", content[start : content.index(">", start)])
+
+    def test_the_change_log_points_at_the_report_when_its_rows_run_out(self):
+        """The report, rather than this page, is the complete record."""
+        record_change(self.event, ENTER, user=self.member, timestamp=now() - timedelta(minutes=1))
+        self.staff.user_permissions.add(
+            Permission.objects.get(codename="view_attendanceevent", content_type__app_label="attendance")
+        )
+        self.client.force_login(self.staff)
+
+        response = self.client.get(self.detail_url)
+
+        self.assertNotContains(response, 'id="log-more"')
+        self.assertContains(response, "Hela loggen finns i rapporten.")
+        self.assertContains(response, reverse("admin:attendance_event_report", args=[self.event.pk]))
+
+        content = response.content.decode()
+        start = content.index('<p id="log-end"')
+        self.assertNotIn("hidden", content[start : content.index(">", start)])
+
+    def test_the_change_log_hides_the_report_link_without_the_permission(self):
+        record_change(self.event, ENTER, user=self.member, timestamp=now() - timedelta(minutes=1))
+        self.client.force_login(self.staff)
+
+        response = self.client.get(self.detail_url)
+
+        self.assertContains(response, "Hela loggen finns i rapporten.")
+        self.assertNotContains(response, reverse("admin:attendance_event_report", args=[self.event.pk]))
+
+    def test_the_change_log_renders_a_bounded_slice(self):
+        for index in range(LOG_CHANGES_ON_EVENT_PAGE + 5):
+            record_change(self.event, ENTER, user=self.member, timestamp=now() - timedelta(minutes=index + 1))
+        self.client.force_login(self.staff)
+
+        response = self.client.get(self.detail_url)
+
+        self.assertEqual(len(response.context["changes"]), LOG_CHANGES_ON_EVENT_PAGE)
+
+    def test_the_change_log_is_not_loaded_for_a_reader_who_may_not_see_it(self):
+        """No rows and no query: the log is staff-only, so the view skips it."""
+        record_change(self.event, ENTER, user=self.member, timestamp=now() - timedelta(minutes=1))
+        self.client.force_login(self.member)
+
+        response = self.client.get(self.detail_url)
+
+        self.assertEqual(response.context["changes"], [])
+        self.assertNotContains(response, 'id="change-log"')
+
     def test_plain_member_does_not_see_the_change_log(self):
         record_change(self.event, ENTER, user=self.member)
         self.client.force_login(self.member)
@@ -2128,19 +2196,19 @@ class AttendanceOverviewViewTests(AttendanceViewTestCase):
     def test_overview_opens_the_feed_on_one_page_and_offers_the_rest(self):
         """The history is one click away rather than scrolling on without end."""
         record_change(self.event, ENTER, user=self.member, timestamp=now())
-        for index in range(FEED_VISIBLE_ON_LOAD + 4):
+        for index in range(CHANGES_VISIBLE_ON_LOAD + 4):
             record_change(self.event, LEAVE, user=self.member, timestamp=now() - timedelta(minutes=index + 1))
         self.client.force_login(self.staff)
 
         response = self.client.get(self.overview_url)
 
-        self.assertEqual(response.context["feed_visible"], FEED_VISIBLE_ON_LOAD)
+        self.assertEqual(response.context["changes_visible"], CHANGES_VISIBLE_ON_LOAD)
         self.assertContains(response, 'id="feed-more"')
-        self.assertContains(response, f'data-page-size="{FEED_PAGE_SIZE}"')
+        self.assertContains(response, f'data-page-size="{CHANGES_PAGE_SIZE}"')
 
         content = response.content.decode()
         feed = content[content.index('id="change-feed"') : content.index("</tbody>")]
-        self.assertEqual(feed.count("data-change-id="), FEED_VISIBLE_ON_LOAD + 5)
+        self.assertEqual(feed.count("data-change-id="), CHANGES_VISIBLE_ON_LOAD + 5)
         self.assertEqual(feed.count("hidden"), 5)
 
         # Nothing more to show yet, so the pointer to the full log stays hidden.

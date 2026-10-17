@@ -10,6 +10,7 @@
           referrerpolicy="no-referrer"></script>
   <link rel="stylesheet" href="{% static 'attendance/css/attendance.css' %}">
   <script src="{% url 'javascript-catalog' %}"></script>
+  <script src="{% static 'attendance/js/changes-table.js' %}" defer></script>
   <script src="{% static 'attendance/js/overview.js' %}" defer></script>
 {% endblock %}
 {% block content %}
@@ -58,7 +59,7 @@
                 {% for change in recent_changes %}
                   <tr data-change-id="{{ change.pk }}"
                       class="attendance-changes__row--{{ change.type_name|lower }}"
-                      {% if forloop.counter > feed_visible %}hidden{% endif %}>
+                      {% if forloop.counter > changes_visible %}hidden{% endif %}>
                     <td class="attendance-changes__time">
                       <time datetime="{{ change.timestamp|date:'c' }}">{{ change.timestamp|time }}</time>
                     </td>
@@ -71,22 +72,22 @@
               </tbody>
             </table>
           </div>
-          {% if recent_changes|length > feed_visible %}
+          {% if recent_changes|length > changes_visible %}
             <button type="button"
-                    class="btn btn-secondary attendance-feed__more"
+                    class="btn btn-secondary attendance-changes__more"
                     id="feed-more"
-                    data-page-size="{{ feed_page_size }}">{% trans "Visa fler" %}</button>
+                    data-page-size="{{ changes_page_size }}">{% trans "Visa fler" %}</button>
           {% endif %}
           {% if recent_changes %}
             <p id="feed-end"
-               class="attendance-feed__end"
-               {% if recent_changes|length > feed_visible %}hidden{% endif %}>
+               class="attendance-changes__end"
+               {% if recent_changes|length > changes_visible %}hidden{% endif %}>
               {% trans "Hela loggen finns på mötets sida." %}
               <a href="{% url 'attendance-event-view' object.slug %}">{% trans "Till mötessidan" %}</a>
             </p>
           {% endif %}
           <p id="no-changes"
-             class="attendance-feed__end"
+             class="attendance-changes__end"
              {% if recent_changes %}hidden{% endif %}>{% trans "Inga ändringar ännu" %}</p>
         </section>
       </div>
