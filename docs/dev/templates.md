@@ -105,6 +105,15 @@ same path already exists for another association. Two association copies of one
 component are almost always one shared component plus two overrides, and
 `templates/` should not gain a third.
 
+`core/tests/test_template_duplication.py` enforces that. It compares the copies of
+every logical path across the six associations and the shared tree, and fails when
+two copies of 15 lines or more are 70 percent alike, unless the pair is frozen in
+`core/tests/template_near_copy_baseline.json` with a reason. A frozen pair that
+gets closer also fails, and so does a baseline entry whose copies have since
+diverged, so the frozen set stays honest. Regenerate it with
+`uv run python -m core.tests.test_template_duplication --write-baseline` after a
+deliberate exception, and add the reason to the `REASONS` mapping in the test.
+
 ## Footer Social Icons
 
 Each association lists its footer buttons in `CONTENT_VARIABLES["SOCIAL_BUTTONS"]` as `[icon, url]` pairs; an entry with a blank URL is skipped. The shared footer (`templates/common/core/footer.html`, `footer_social_buttons` block) picks the icon for each entry:
