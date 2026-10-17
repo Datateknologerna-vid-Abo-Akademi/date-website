@@ -28,7 +28,7 @@ from django.utils import formats, timezone
 from booking import access, emails
 from booking.admin import BookingAdmin, BookingInline, BookingOriginFilter, RoomAdmin
 from booking.forms import AnonymousBookingForm, BookingForm
-from booking.models import BOOKING_PAST_GRACE, Booking, BookingSettings, Closure, Room
+from booking.models import BOOKING_MAX_DURATION, BOOKING_PAST_GRACE, Booking, BookingSettings, Closure, Room
 from booking.templatetags.booking_dates import short_date, year_suffix
 from core.admin_ui import get_sidebar_navigation
 
@@ -702,7 +702,15 @@ class BookingAvailabilityRulesTests(TestCase):
         self.assertIn('end', raised.exception.message_dict)
 
     def test_a_booking_of_exactly_a_week_is_allowed(self):
-        self.booking(hours=24 * 7).full_clean()
+        # The end is built from a real seven day span. ``start + timedelta(days=7)``
+        # is wall clock arithmetic: across a daylight saving change the same wall
+        # clock time a week later is an hour more or less of real time, and the
+        # model measures the real one, so that construction made this test fail
+        # for a week every autumn.
+        booking = self.booking()
+        booking.end = (booking.start.astimezone(datetime.UTC) + BOOKING_MAX_DURATION).astimezone(booking.start.tzinfo)
+
+        booking.full_clean()
 
     def test_a_wall_clock_week_across_the_clock_change_is_refused(self):
         """The rule measures real time, so the week the clocks go back has an hour more.
@@ -1263,6 +1271,53 @@ class BookingMemberFlowTests(TestCase):
         for name in ('start', 'end'):
             with self.subTest(field=name):
                 self.assertEqual(response.context['form'].fields[name].widget.attrs['min'], expected)
+
+    def test_the_two_time_fields_share_one_row(self):
+        response = self.client.get(self.room_url)
+
+        content = response.content.decode()
+        # The pair is what posts and the script turns it into a date and two
+        # clocks, so both inputs and every word the script reads have to be in
+        # the same row.
+        self.assertContains(response, 'data-booking-time-range')
+        self.assertContains(response, 'data-booking-range-fields')
+        self.assertContains(response, 'data-booking-range-separator="till"')
+        self.assertContains(response, 'data-booking-range-date-label="Datum"')
+        self.assertEqual(content.count('name="start"'), 1)
+        self.assertEqual(content.count('name="end"'), 1)
+        # One visible label covers both inputs, so each carries its own name.
+        self.assertContains(response, 'aria-label="Starttid"')
+        self.assertContains(response, 'aria-label="Sluttid"')
+        # The two longer options take their words from the template.
+        self.assertContains(response, 'data-booking-range-overnight-label="Slutar nästa dag"')
+        self.assertContains(response, 'data-booking-range-multi-day-label="Flera dagar"')
+        self.assertContains(response, 'data-booking-range-end-date-label="Till datum"')
+        # The controls are native, so the page no longer loads a picker bundle.
+        self.assertNotContains(response, 'flatpickr')
+
+    def test_the_longer_options_are_offered_only_where_the_server_takes_them(self):
+        # A daily window refuses a booking that crosses the night, so a room with
+        # hours must not be shown a control that can only fail.
+        room_with_hours = Room.objects.create(
+            name='Med tider',
+            bookable_from=datetime.time(8),
+            bookable_until=datetime.time(22),
+        )
+
+        with_hours = self.client.get(reverse('booking:room_detail', args=[room_with_hours.pk]))
+        without_hours = self.client.get(self.room_url)
+
+        self.assertContains(with_hours, 'data-booking-longer="0"')
+        self.assertContains(without_hours, 'data-booking-longer="1"')
+
+    def test_one_empty_range_is_reported_once(self):
+        response = self.client.post(self.room_url, self.booking_payload(start='', end=''))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('start', response.context['form'].errors)
+        self.assertIn('end', response.context['form'].errors)
+        # Two bands saying the same thing read as two problems, and there is one.
+        self.assertEqual(response.content.decode().count('Detta fält måste fyllas i.'), 1)
 
     def test_captcha_is_not_consulted_for_members(self):
         with patch('booking.views.validate_captcha') as captcha:

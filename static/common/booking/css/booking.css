@@ -140,16 +140,30 @@
 
 /* ---- the booking form ---- */
 
-.booking-code-form,
-.booking-form {
+.booking-code-form {
     max-width: 32rem;
 }
 
-/* One row per field, label beside it, the same shape the event registration
-   form uses. Errors and help text sit under both columns. */
+/* One column for the controls: the widgets, their help text and the submit
+   button all start at the same x, so the form reads as a column of inputs with
+   labels beside it instead of a label column with stray content under it. The
+   form repeats the field row's own grid, and every field row spans it, which is
+   what keeps the two grids aligned. */
+.booking-form {
+    display: grid;
+    grid-template-columns: 9rem 1fr;
+    column-gap: 0.75rem;
+}
+
+/* One row per field, label in a fixed column beside it. The event registration
+   form uses the same shape with a 30% label column; fixed rather than a share of
+   the width because the labels here are one or two words, and a percentage
+   leaves a wide gap between a short label and its widget once the form is as
+   wide as the panel. Errors span the row, help text sits under its widget. */
 .booking-form > p {
     display: grid;
-    grid-template-columns: 30% 1fr;
+    grid-template-columns: 9rem 1fr;
+    grid-column: 1 / -1;
     gap: 0.35rem 0.75rem;
     align-items: start;
     margin: 0 0 0.9rem;
@@ -160,9 +174,14 @@
     overflow-wrap: anywhere;
 }
 
-.booking-form > p > .booking-error,
-.booking-form > p > .booking-help {
+.booking-form > p > .booking-error {
     grid-column: 1 / -1;
+}
+
+/* Under the widget it explains, not under the label: the sentence about what
+   the description is for belongs to the box it sits beneath. */
+.booking-form > p > .booking-help {
+    grid-column: 2;
 }
 
 .booking-form input,
@@ -189,8 +208,24 @@
     outline-offset: 1px;
 }
 
+/* The controls' column rather than the labels': the button sits under the
+   fields it submits, and the captcha widget with it. The button keeps the width
+   of its own label instead of filling the column, which is what it did before
+   and what it still does on a narrow screen. */
+.booking-form > .theme-button,
+.booking-form > .cf-turnstile {
+    grid-column: 2;
+}
+
+.booking-form > .theme-button {
+    justify-self: start;
+}
+
+/* The button closes the form, and what follows it is a note about the page
+   rather than about the button. A button carries no space below itself, so
+   without this the board's contact line reads as a caption for it. */
 .booking-form .theme-button {
-    margin-top: 0.35rem;
+    margin: 0.35rem 0 0.6rem;
 }
 
 .booking-help {
@@ -200,17 +235,189 @@
     line-height: 1.5;
 }
 
-/* Errors used to be drawn in --primaryColorLight, which is the colour of the
-   panel behind them, so a wrong code or a rejected field was invisible. */
-.booking-error {
-    margin: 0.35rem 0;
-    padding: 0.45rem 0.65rem;
-    border-left: 3px solid var(--warning-darker, var(--warning));
-    border-radius: var(--defaultRadius);
-    background-color: rgba(213, 91, 78, 0.14);
-    color: var(--warning, #ffb3a7);
-    font-size: 0.95rem;
-    line-height: 1.5;
+/* ---- the start and end of a booking, as one field ---- */
+
+/* The two datetime inputs are what posts. Beside each other under one label they
+   read as a single question, and the script replaces them with a date and two
+   clock times, which the `-split-ready` class records. Without the script this
+   row is the whole control, and it stays usable. */
+.booking-when-fields {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.booking-when-sep {
+    /* Never squeezed, and never broken: the word is the only thing separating the
+       two ends, so a clipped "til" would read as a typo. */
+    flex: 0 0 auto;
+    white-space: nowrap;
+    color: var(--helpText);
+}
+
+.booking-when-split-ready > .booking-when-fields {
+    display: none;
+}
+
+/* The start is one pair and the end is another. On one line they read
+   "day clock till clock"; once the end has a day of its own the row turns into
+   the grid below, so the two days sit in one column and the two clocks in
+   another. */
+.booking-when-split {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.booking-when-from-pair,
+.booking-when-till-pair {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+}
+
+.booking-when-from-pair {
+    flex: 1 1 auto;
+}
+
+.booking-when-till-pair {
+    flex: 0 0 auto;
+}
+
+.booking-when-split .booking-when-date {
+    flex: 1 1 10rem;
+    min-width: 0;
+}
+
+.booking-when-split .booking-when-clock {
+    /* Sized by its own content rather than a fixed width: a clock shows "18:00"
+       in a 24 hour locale and "06:00 PM" in a 12 hour one, and a width chosen for
+       the first clips the second. */
+    flex: 0 0 auto;
+    width: auto;
+    min-width: 6.5rem;
+}
+
+.booking-when-split .booking-when-end-date {
+    flex: 0 1 10rem;
+    width: auto;
+    min-width: 0;
+}
+
+.booking-when > .booking-when-split {
+    grid-column: 2;
+}
+
+/* The row with the end's own day: two lines that share their columns, so both
+   days start at the same x and both clocks do too. "till" moves into the label
+   column on the second line, where it reads against the first one instead of
+   pushing the end day out of the start day's column. */
+.booking-form > p.booking-when-long {
+    grid-template-columns: 9rem minmax(0, 1fr) 8rem;
+    column-gap: 0.75rem;
+    align-items: center;
+}
+
+.booking-when-long > label {
+    grid-column: 1;
+    grid-row: 1;
+}
+
+/* The wrappers exist for the one line layout; on two lines their children take
+   the grid themselves. */
+.booking-when-long > .booking-when-split,
+.booking-when-long .booking-when-from-pair,
+.booking-when-long .booking-when-till-pair {
+    display: contents;
+}
+
+.booking-when-long .booking-when-date {
+    grid-column: 2;
+    grid-row: 1;
+}
+
+.booking-when-long .booking-when-from-pair input[type="time"] {
+    grid-column: 3;
+    grid-row: 1;
+}
+
+.booking-when-long .booking-when-sep {
+    grid-column: 1;
+    grid-row: 2;
+    justify-self: end;
+}
+
+.booking-when-long .booking-when-end-date {
+    grid-column: 2;
+    grid-row: 2;
+}
+
+.booking-when-long .booking-when-till-pair input[type="time"] {
+    grid-column: 3;
+    grid-row: 2;
+}
+
+.booking-when-long .booking-when-date,
+.booking-when-long .booking-when-end-date,
+.booking-when-long .booking-when-clock {
+    width: 100%;
+}
+
+/* The two longer options sit under the row: an end on the next day, and a
+   checkbox that adds the end's own day for a booking over several days. Only a
+   room without a daily window renders them, because only such a room can take
+   them. */
+.booking-when > .booking-when-extras {
+    grid-column: 2;
+}
+
+.booking-when-long > .booking-when-extras {
+    grid-column: 2 / -1;
+    grid-row: 3;
+}
+
+.booking-when-long > .booking-error {
+    grid-column: 1 / -1;
+    grid-row: 4;
+}
+
+.booking-when-extras {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.9rem;
+}
+
+.booking-when-option {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--textColorLightish, var(--textColorLight));
+    cursor: pointer;
+}
+
+.booking-when-option input {
+    width: auto;
+    margin: 0;
+    accent-color: var(--linkColorLight, var(--textColorLight));
+}
+
+/* A native date or time field draws its own calendar and its own indicator icon,
+   and those follow the colour scheme rather than the field's colours. On a white
+   field with the dark scheme the icon turns white and disappears, so the field
+   takes the panel's dark colours as well: the icon, the text and the calendar
+   that opens all belong to the same scheme. */
+.booking-form input[type="date"],
+.booking-form input[type="time"],
+.booking-form input[type="datetime-local"] {
+    color-scheme: dark;
+    border-color: var(--primaryColorLighter);
+    background-color: var(--primaryColorLight);
+    color: var(--textColorLight);
 }
 
 /* ---- the code gate ---- */
@@ -254,7 +461,7 @@
 }
 
 .booking-code-form .theme-button {
-    margin-top: 0.35rem;
+    margin: 0.35rem 0 0.6rem;
 }
 
 .booking-lockout {
@@ -268,6 +475,18 @@
 /* ---- narrow screens ---- */
 
 @media screen and (max-width: 768px) {
+    /* One column, so the control column the button and the help text were
+       placed in no longer exists. */
+    .booking-form {
+        grid-template-columns: 1fr;
+    }
+
+    .booking-form > .theme-button,
+    .booking-form > .cf-turnstile,
+    .booking-form > p > .booking-help {
+        grid-column: 1;
+    }
+
     .booking-form > p {
         grid-template-columns: 1fr;
         gap: 0.25rem;
@@ -277,6 +496,81 @@
     .booking-form > p > label {
         padding-top: 0;
         font-weight: 600;
+    }
+
+    /* A phone has no room for two datetime inputs side by side, so the pair
+       stacks and the separator keeps the order readable. The controls the script
+       builds have to be moved into the one remaining column by hand: their rule
+       above names the second column, which a one-column grid would otherwise
+       create as an implicit one. */
+    .booking-when-fields {
+        grid-template-columns: 1fr;
+    }
+
+    /* The controls the script builds have to be moved into the one remaining
+       column by hand: their rule above names the second column, which a
+       one-column grid would otherwise create as an implicit one. */
+    .booking-when > .booking-when-split,
+    .booking-when > .booking-when-extras {
+        grid-column: 1;
+    }
+
+    /* One line here wraps into "day clock" and then "till clock", and every
+       control keeps the width of its own text, since a fixed width clips an "AM"
+       off in a 12 hour locale. */
+    .booking-when-split .booking-when-date {
+        flex: 1 1 auto;
+        width: auto;
+    }
+
+    .booking-when-split .booking-when-clock {
+        flex: 0 0 auto;
+    }
+
+    .booking-when-split .booking-when-end-date {
+        flex: 1 1 auto;
+    }
+
+    /* Two lines that share their columns, with "till" trailing the first one: a
+       phone has no room for a label column beside them. */
+    .booking-form > p.booking-when-long {
+        grid-template-columns: minmax(0, 1fr) 8rem auto;
+    }
+
+    .booking-when-long > label {
+        grid-column: 1 / -1;
+        grid-row: 1;
+    }
+
+    .booking-when-long .booking-when-date {
+        grid-column: 1;
+        grid-row: 2;
+    }
+
+    .booking-when-long .booking-when-from-pair input[type="time"] {
+        grid-column: 2;
+        grid-row: 2;
+    }
+
+    .booking-when-long .booking-when-sep {
+        grid-column: 3;
+        grid-row: 2;
+        justify-self: start;
+    }
+
+    .booking-when-long .booking-when-end-date {
+        grid-column: 1;
+        grid-row: 3;
+    }
+
+    .booking-when-long .booking-when-till-pair input[type="time"] {
+        grid-column: 2;
+        grid-row: 3;
+    }
+
+    .booking-when-long > .booking-when-extras {
+        grid-column: 1 / -1;
+        grid-row: 4;
     }
 
     .booking-form .theme-button,

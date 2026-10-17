@@ -3738,3 +3738,14 @@ msgstr "Ei-jäsenet"
 #: attendance/admin.py
 msgid "Ändringar"
 msgstr "Muutokset"
+#: templates/common/booking/room_detail.html:97
+msgid "Slutar nästa dag"
+msgstr "Päättyy seuraavana päivänä"
+
+#: templates/common/booking/room_detail.html:98
+msgid "Flera dagar"
+msgstr "Useampi päivä"
+
+#: templates/common/booking/room_detail.html:99
+msgid "Till datum"
+msgstr "Päättymispäivä"
