@@ -195,7 +195,7 @@
   `arsfest_shell_classes`, `arsfest_content_classes`, `arsfest_header_extra`,
   `arsfest_main_tab_class`, `arsfest_background_style`, `arsfest_scripts`,
   `arsfest_signup_tab` and `arsfest_attendee_tab`. `templates/common/events/arsfest.html`
-  is a one-line `{% extends %}` of that base, and every association file is now a
+  is a one-line `{% raw %}{% extends %}{% endraw %}` of that base, and every association file is now a
   short override: date keeps its mascot, its edition number and its click easter
   eggs, pulterit and biocum keep their own logo and background, sf adds a
   stylesheet. The easter eggs belong to DaTe alone, because they load DaTe's audio
