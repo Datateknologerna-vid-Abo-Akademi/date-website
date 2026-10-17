@@ -1925,13 +1925,17 @@ class AttendanceDetailViewPostTests(AttendanceViewTestCase):
         self.assertEqual(self.client.session[limits.ATTEMPTS_SESSION_KEY], 1)
 
     def test_the_lockout_arrives_with_the_last_allowed_wrong_code(self):
-        for _ in range(limits.ATTEMPT_LIMIT - 1):
-            self.assertEqual(
-                self.post_change(ENTER, code=PINNED_CODE + 1, login=self.member).status_code,
-                403,
-            )
+        # A frozen clock, because the lockout is measured against the wall: a CI run
+        # that stalls for a minute between these posts would otherwise expire it and
+        # the last attempt would be answered 403 instead of 429.
+        with patch("attendance.limits.now", return_value=now()):
+            for _ in range(limits.ATTEMPT_LIMIT - 1):
+                self.assertEqual(
+                    self.post_change(ENTER, code=PINNED_CODE + 1, login=self.member).status_code,
+                    403,
+                )
 
-        response = self.post_change(ENTER, code=PINNED_CODE + 1, login=self.member)
+            response = self.post_change(ENTER, code=PINNED_CODE + 1, login=self.member)
 
         self.assertEqual(response.status_code, 429)
         self.assertIn("lockout_error", response.context)
@@ -1939,10 +1943,11 @@ class AttendanceDetailViewPostTests(AttendanceViewTestCase):
         self.send_change.assert_not_called()
 
     def test_a_correct_code_is_refused_while_locked_out(self):
-        for _ in range(limits.ATTEMPT_LIMIT):
-            self.post_change(ENTER, code=PINNED_CODE + 1, login=self.member)
+        with patch("attendance.limits.now", return_value=now()):
+            for _ in range(limits.ATTEMPT_LIMIT):
+                self.post_change(ENTER, code=PINNED_CODE + 1, login=self.member)
 
-        response = self.post_change(ENTER, login=self.member)
+            response = self.post_change(ENTER, login=self.member)
 
         self.assertEqual(response.status_code, 429)
         self.assertEqual(self.event.attendance_changes.count(), 0)
@@ -2036,10 +2041,12 @@ class AttendanceDetailViewPostTests(AttendanceViewTestCase):
         self.assertContains(response, 'value="/polls/7/"', status_code=409)
 
     def test_a_lockout_keeps_the_next_input(self):
-        for _ in range(limits.ATTEMPT_LIMIT - 1):
-            self.post_change(ENTER, code=PINNED_CODE + 1, login=self.member, next_url="/polls/7/")
+        # Frozen for the same reason as the lockout tests above.
+        with patch("attendance.limits.now", return_value=now()):
+            for _ in range(limits.ATTEMPT_LIMIT - 1):
+                self.post_change(ENTER, code=PINNED_CODE + 1, login=self.member, next_url="/polls/7/")
 
-        response = self.post_change(ENTER, code=PINNED_CODE + 1, login=self.member, next_url="/polls/7/")
+            response = self.post_change(ENTER, code=PINNED_CODE + 1, login=self.member, next_url="/polls/7/")
 
         self.assertEqual(response.status_code, 429)
         self.assertContains(response, 'value="/polls/7/"', status_code=429)
