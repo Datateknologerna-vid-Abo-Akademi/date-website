@@ -2,6 +2,7 @@ import csv
 from datetime import datetime
 from typing import Any
 
+from django import forms
 from django.contrib import admin
 from django.core.exceptions import PermissionDenied
 from django.http import HttpRequest, HttpResponse
@@ -19,6 +20,7 @@ from core.admin_widgets import (
     FLATPICKR_ADMIN_JS,
     FlatpickrDateTimeAdminMixin,
 )
+from members.models import Member
 
 from . import models, websocket
 from .models import AttendanceChange, AttendanceEvent
@@ -463,13 +465,41 @@ class AttendanceEventAdmin(FlatpickrDateTimeAdminMixin, ModelAdmin):
         return response
 
 
+def member_display_name(member: Member) -> str:
+    """The name the board knows a member by.
+
+    ``get_full_name()`` is first and last name, and a member may have neither, so
+    the username is the fallback rather than the label: a list of "medlem054" is
+    what the change list used to show, and nobody reads who that is.
+    """
+    return (member.get_full_name() or "").strip() or member.username
+
+
+class AttendanceChangeAdminForm(forms.ModelForm):
+    """The correction form, with a member picked by name rather than by username."""
+
+    class Meta:
+        model = AttendanceChange
+        # The admin supplies the fields it draws; this is the model's own set, listed
+        # explicitly because the linter forbids "__all__" and a stray field would
+        # otherwise slip into the form unseen.
+        fields = ("event", "user", "non_member", "timestamp", "type")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        user_field = self.fields.get("user")
+        if isinstance(user_field, forms.ModelChoiceField):
+            user_field.label_from_instance = member_display_name
+
+
 class AttendanceChangeAdmin(FlatpickrDateTimeAdminMixin, ModelAdmin):
     # A correction of last resort, so the time is edited with the same picker as the
     # meeting's own times rather than with the split date and hour boxes.
     flatpickr_datetime_fields = ("timestamp",)
     formfield_overrides = {**UNFOLD_FORMFIELD_OVERRIDES}
+    form = AttendanceChangeAdminForm
 
-    list_display = ("timestamp", "event", "user", "non_member", "change_direction")
+    list_display = ("timestamp", "event", "member_name", "non_member", "change_direction")
     list_filter = ("type", "event")
     search_fields = (
         "event__title",
@@ -480,6 +510,18 @@ class AttendanceChangeAdmin(FlatpickrDateTimeAdminMixin, ModelAdmin):
     )
     date_hierarchy = "timestamp"
     ordering = ("-timestamp",)
+
+    @admin.display(description=_("Användare"), ordering="user__first_name")
+    def member_name(self, obj):
+        """The member by name, linked to their own page; the guest column stays its own."""
+        if obj.user_id is None:
+            return "-"
+
+        return format_html(
+            '<a href="{}">{}</a>',
+            reverse("admin:members_member_change", args=[obj.user_id]),
+            member_display_name(obj.user),
+        )
 
     @admin.display(description=_("Typ"), ordering="type")
     def change_direction(self, obj):

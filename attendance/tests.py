@@ -2567,6 +2567,40 @@ class AttendanceAdminTests(TestCase):
         self.assertContains(response, 'class="attendance-change--leave">Lämnade<')
         self.assertContains(response, "attendance/css/change-colours.css")
 
+    def test_the_change_changelist_shows_the_member_by_name(self):
+        """A row of "medlem054" tells the board nothing; the name, linked, does."""
+        event = make_event(slug="mote")
+        maja = make_member("maja", first_name="Maja", last_name="Andersson")
+        record_change(event, ENTER, user=maja, timestamp=now())
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(reverse("admin:attendance_attendancechange_changelist"))
+
+        self.assertContains(response, ">Maja Andersson</a>")
+        self.assertContains(response, reverse("admin:members_member_change", args=[maja.pk]))
+
+    def test_a_member_without_a_name_falls_back_to_the_username(self):
+        """Neither name set is the one case where the username is all there is."""
+        event = make_event(slug="mote")
+        nameless = make_member("namnlos")
+        record_change(event, ENTER, user=nameless, timestamp=now())
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(reverse("admin:attendance_attendancechange_changelist"))
+
+        self.assertContains(response, ">namnlos</a>")
+
+    def test_the_correction_form_picks_a_member_by_name(self):
+        event = make_event(slug="mote")
+        maja = make_member("maja", first_name="Maja", last_name="Andersson")
+        change = record_change(event, ENTER, user=maja, timestamp=now())
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(reverse("admin:attendance_attendancechange_change", args=[change.pk]))
+
+        self.assertContains(response, "Maja Andersson</option>")
+        self.assertNotContains(response, ">maja</option>")
+
 
 class AttendanceChangeAdminCorrectionTests(TestCase):
     """A correction or a deletion reaches the pages that were built from the row.
