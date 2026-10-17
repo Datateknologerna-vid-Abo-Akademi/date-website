@@ -202,8 +202,36 @@
     font-size: 0.95rem;
 }
 
+/* The paging control under a changes table. It is a button because it acts on the
+   page rather than navigating, but it reads as the quiet text affordance that
+   pagination wants, in the site's own link colour, instead of a second primary
+   action competing with the table. */
 .attendance-changes__more {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
     margin: 1rem 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--linkColorLight, rgb(208, 255, 0));
+    font: inherit;
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+    cursor: pointer;
+}
+
+.attendance-changes__more .bi {
+    font-size: 0.8em;
+}
+
+.attendance-changes__more:hover {
+    color: var(--linkColorLightHover, rgb(146, 179, 0));
+}
+
+.attendance-changes__more:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
 }
 
 /* The list of meetings. Each row is one tappable block carrying the meeting's
