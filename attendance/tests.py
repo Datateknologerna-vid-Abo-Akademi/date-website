@@ -2630,6 +2630,8 @@ class AttendanceAdminTests(TestCase):
         self.assertContains(response, 'attendance-status--ended">Avslutat<')
         self.assertContains(response, 'attendance-status--running">Pågår<')
         self.assertContains(response, 'attendance-status--upcoming">Inte startat<')
+        # The sheet has to be on this page too, or the three words are uncoloured.
+        self.assertContains(response, "attendance/css/admin-colours.css")
 
     def test_event_changelist_links_to_the_code(self):
         """An operator starts from the list, so the code should be one click from it."""

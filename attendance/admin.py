@@ -228,7 +228,7 @@ class AttendanceEventAdmin(FlatpickrDateTimeAdminMixin, ModelAdmin):
     # The shared picker's stylesheet and script. Admin Media is not inherited from the
     # mixin, so both admins that use the widget declare it themselves.
     class Media:
-        css = {"all": FLATPICKR_ADMIN_CSS}
+        css = {"all": FLATPICKR_ADMIN_CSS + ("attendance/css/admin-colours.css",)}
         js = ("admin/js/jquery.init.js",) + FLATPICKR_ADMIN_JS
 
     # No inline of the changes: Django does not paginate an inline, so a meeting
