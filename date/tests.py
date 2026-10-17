@@ -1391,13 +1391,12 @@ class CalendarHandlerCompatibilityTests(SimpleTestCase):
             handler,
             "This build reports day clicks through onClickDate.",
         )
-        # 3.x runs onClickDate before updating its selection, so the handler cannot read
-        # the clicked day from selectedDates and must take it from the clicked cell.
+        # The handler reads the clicked day from the cell's data-vc-date, which is the
+        # same ISO key the homepage payload is keyed by.
         self.assertIn(
             "data-vc-date",
             handler,
-            "This build has not updated selectedDates when the callback runs, so the "
-            "handler must read the date from the clicked cell.",
+            "The handler must read the date from the clicked cell, whose data-vc-date is the key the payload uses.",
         )
 
 

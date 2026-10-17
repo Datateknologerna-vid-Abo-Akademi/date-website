@@ -17,6 +17,11 @@
 ## Calendar Data Structure
 - `format_calendar_events()` converts the event queryset into a `dict["YYYY-MM-DD"] = [event, ...]` used by the front-end calendar widget. Each date maps to a list because several events can share a day; each event includes `link`, `eventFullDate`, and `eventTitle`. The calendar JS builds the popup HTML (and the `modifier`) itself.
 
+## Calendar Widget
+- The homepage calendar is `vanilla-calendar-pro` 3.x, vendored at `static/common/date/js/vanilla-calendar.min.js` and `static/common/date/css/vanilla-calendar.min.css`, with identical copies under `static/date/`, `static/impuls/` and `static/pulterit/`. `templates/common/date/partials/calendar_scripts.html` builds the popup payload, initialises the widget, and reads the clicked day from the cell's `data-vc-date`.
+- `static/common/date/css/vanilla-calendar-theme.css` sets the colour properties the vendored light theme reads and restores the metrics the homepage had on 2.x: 28 px circular day buttons, thin chevron arrows, the 2.x title and weekday sizes, and a six-week grid. The options pin `selectedTheme: 'light'` because only the light theme layer is vendored; a browser that prefers a dark colour scheme would otherwise set the dark theme and lose the styles.
+- Day-state colours stay per association in `static/<assoc>/date/css/homepage.css`. Where an event on today keeps the event colour (date, demo, sf, impuls) the today rule carries `:not(.calendar-eventday)`; pulterit leaves it off because its 2.x rule order let today win.
+
 ## Language Handling
 - `set_language(request)` reads `POST["lang"]`, normalizes it through `date.language_utils.resolve_language()`, stores the choice in Django's language cookie, and redirects back to the referrer.
 - If the referrer points to an internal page, `date.language_utils.strip_language_prefix()` rewrites the path back to the canonical unprefixed URL before redirecting.

@@ -74,9 +74,9 @@
         document.querySelectorAll('.calendar').forEach(calendarElement => {
             const calendarPopups = new VanillaCalendarPro.Calendar(calendarElement, {
                 onClickDate(self, event) {
-                    // 3.x runs this before it updates its own selectedDates, so read the
-                    // day from the clicked cell instead. The cell carries the date as an
-                    // ISO key, which is the same key the payload is built with.
+                    // Read the day from the clicked cell rather than from the selection
+                    // state: the cell carries the date as an ISO key, the same key the
+                    // payload is built with, and the click may land on the popup.
                     const target = event && event.target;
                     const cell = target && target.closest ? target.closest('[data-vc-date]') : null;
                     const dateKey = cell && cell.getAttribute('data-vc-date');
@@ -95,6 +95,10 @@
                         }
                     }
                 },
+                // The 3.x sheet ships only its light theme, so a browser that prefers a
+                // dark colour scheme would set data-vc-theme="dark" and lose the colours
+                // and the arrow icon. The site has no dark mode, so pin light.
+                selectedTheme: 'light',
                 selectedMonth: new Date().getMonth(),
                 selectedYear: new Date().getFullYear(),
                 popups: events_json

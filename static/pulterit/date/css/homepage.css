@@ -410,14 +410,16 @@ div.calendar-container a {
     color: var(--primaryColorLighter) !important;
 }
 
-/* vanilla-calendar 3.x draws the arrow as an embedded SVG with a fixed fill
-   rather than a background swatch, so the previous background-color override
-   cannot express this any more. Tint the SVG to --textColorMedium instead, and
-   let the library's own hover opacity carry the hover state. */
-[data-vc-theme].vc .vc-arrow:before {
-    filter: invert(38%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(96%) contrast(88%);
+/* The shared calendar theme draws the arrows as two bars; pulterit greys them
+   and darkens the grey on hover, as the 2.x sheet did. */
+[data-vc-theme].vc {
+    --calendar-arrow-color: var(--textColorMedium);
+    --calendar-arrow-hover-color: var(--textColorDarkish);
 }
 
+/* Pulterit is the exception: on 2.x its today rules came after .calendar-eventday,
+   so a day that is both kept the today colour. The selector stays without a
+   :not() guard, which reproduces that order once it outranks the event rule. */
 .vc-date[data-vc-date-today] .vc-date__btn {
     color: var(--textColorLight) !important;
     background-color: #545454 !important;
