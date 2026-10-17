@@ -274,6 +274,26 @@ class SiteShellTemplateTests(TestCase):
             rendered = template.render(Context(self._content_context()))
         self.assertNotIn("aa-logo-small.png", rendered)
 
+    def test_only_date_loads_the_dad_joke_fetcher(self):
+        # The joke is DaTe's: every other association includes the calendar script
+        # without the fetcher, because none of them renders a #joke-string to put a
+        # joke in, and fetching one anyway is a request on every page load. The demo
+        # variant is outside the association rule and still fetches.
+        for association, settings_module in ASSOCIATION_SETTINGS_MODULES.items():
+            if association == "demo":
+                continue
+            with self.subTest(association=association):
+                module = importlib.import_module(settings_module)
+                with override_settings(TEMPLATES=module.TEMPLATES):
+                    rendered = Template("{% include 'date/components/scripts.html' %}").render(
+                        Context(self._content_context())
+                    )
+                self.assertEqual(
+                    "getJoke" in rendered,
+                    association == "date",
+                    f"only date should fetch the dad joke, not {association}",
+                )
+
     def test_aa_news_url_falls_back_to_the_news_index(self):
         # Both a missing category and an unreachable database must degrade to the
         # news index: the footer also renders on the error pages, so the tag must

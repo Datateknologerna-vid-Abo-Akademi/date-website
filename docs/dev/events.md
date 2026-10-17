@@ -189,10 +189,21 @@
   `KK_EVENT_TEMPLATES_ENABLED` (kk) adds the kk event-template choices to the
   admin forms. Defaults live in `core/settings/common.py`; enable them per
   association in its settings module rather than adding `PROJECT_NAME` checks.
-- The Årsfest layout lives in `templates/common/events/arsfest_base.html` with the
-  `arsfest_logo`, `arsfest_heading`, `arsfest_signup_tab` and `arsfest_attendee_tab`
-  block slots, so an association can replace the logo or heading, or customize the
-  navigation, without copying the page. Dropping a registration tab needs no override:
+- The Årsfest layout lives in `templates/common/events/arsfest_base.html`, and an
+  association overrides only the block that differs: `arsfest_logo`,
+  `arsfest_heading_block` (the whole `h1`), `arsfest_heading` (its text),
+  `arsfest_shell_classes`, `arsfest_content_classes`, `arsfest_header_extra`,
+  `arsfest_main_tab_class`, `arsfest_background_style`, `arsfest_scripts`,
+  `arsfest_signup_tab` and `arsfest_attendee_tab`. `templates/common/events/arsfest.html`
+  is a one-line `{% raw %}{% extends %}{% endraw %}` of that base, and every association file is now a
+  short override: date keeps its mascot, its edition number and its click easter
+  eggs, pulterit and biocum keep their own logo and background, sf adds a
+  stylesheet. The easter eggs belong to DaTe alone, because they load DaTe's audio
+  and overwrite the heading, so no other association fills `arsfest_scripts`.
+  `templates/impuls/events/arsfest.html` exists only to stop Impuls inheriting
+  DaTe's page, since Impuls' template path includes `templates/date`.
+  A template that only fills blocks is exempt from the near-copy ratchet, because it
+  has no page body of its own to have been copied. Dropping a registration tab needs no override:
   which tabs appear follows the event. Adding a tab means adding a link whose `data-nav`
   and `#/` hash carry the key, plus a `.ball-content` panel carrying that key as its
   `id`: both the click handler and the hash navigation select the panel by id, and fall

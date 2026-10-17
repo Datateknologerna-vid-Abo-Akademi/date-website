@@ -12,7 +12,7 @@
           crossorigin="anonymous"></script>
   <script src="{% static 'core/js/live-attendee-list.js' %}"></script>
   <style>
-    {% if event.background_image_url %}.background-img {
+    {% block arsfest_background_style %}{% if event.background_image_url %}.background-img {
       background: url("{{ event.background_image_url }}") no-repeat center center;
       background-attachment: fixed;
       -webkit-background-size: cover;
@@ -24,14 +24,15 @@
         .background-img {
             background-attachment: scroll;
         }
-    }{% endif %}
+    }{% endif %}{% endblock %}
   </style>
 {% endblock %}
 {% block content %}
   <div class="background-img">
     <div class="container-md min-vh-100 p-1">
-      <div class="container-size">
+      <div class="{% block arsfest_shell_classes %}container-size{% endblock %}">
         <div class="content header-box">
+          {% block arsfest_header_extra %}{% endblock %}
           <div class="main-content mt-4">
             <div class="text-center flex-container-center">
               {% block arsfest_logo %}
@@ -41,9 +42,9 @@
               {% endblock %}
             </div>
           </div>
-          <h1 class="baal-header">{% block arsfest_heading %}{{ event.title }}{% endblock %}</h1>
+          {% block arsfest_heading_block %}<h1 class="baal-header">{% block arsfest_heading %}{{ event.title }}{% endblock %}</h1>{% endblock %}
           <div class="ball-nav flex-container-center">
-            <a class="ball-link ontop"
+            <a class="{% block arsfest_main_tab_class %}ball-link ontop{% endblock %}"
                onclick="showPage(this)"
                href="#/main"
                data-nav="main">Välkommen</a>
@@ -71,7 +72,7 @@
             {% endblock %}
           </div>
         </div>
-        <div class="text-content">
+        <div class="{% block arsfest_content_classes %}text-content{% endblock %}">
           {% for page in staticpages %}
             <div id="{{ page.slug }}"
                  class="content ball-content {{ page.slug }} hidden">
@@ -158,4 +159,5 @@
         }
 
   </script>
+  {% block arsfest_scripts %}{% endblock %}
 {% endblock %}
