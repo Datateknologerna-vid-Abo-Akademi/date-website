@@ -3204,6 +3204,28 @@ class AttendanceEventAdminFormTests(TestCase):
         self.assertContains(response, f'href="{reverse("attendance-event-view", args=[self.event.slug])}"')
         self.assertContains(response, f'href="{reverse("attendance-event-overview", args=[self.event.slug])}"')
 
+    def test_the_change_page_links_to_the_event_s_own_changes(self):
+        """The log lives in the change list, which filters and pages it."""
+        self.client.force_login(self.staff)
+
+        response = self.client.get(self.change_url)
+
+        changelist = reverse("admin:attendance_attendancechange_changelist")
+        self.assertContains(response, "Visa ändringarna")
+        self.assertContains(response, f'href="{changelist}?event__id__exact={self.event.pk}"')
+
+    def test_the_change_page_does_not_draw_a_form_per_change(self):
+        """An inline drew one editable form per check-in and the page stopped loading."""
+        member = make_member("medlem")
+        for index in range(30):
+            record_change(self.event, ENTER, user=member, timestamp=now() - timedelta(minutes=index + 1))
+        self.client.force_login(self.staff)
+
+        response = self.client.get(self.change_url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "attendance_changes-TOTAL_FORMS")
+
     def test_the_add_page_renders_no_event_links(self):
         """Before the meeting exists there is no slug for either page."""
         self.client.force_login(self.staff)

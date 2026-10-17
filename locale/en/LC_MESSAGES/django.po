@@ -3578,3 +3578,7 @@ msgstr "The whole log is in the report."
 #: templates/common/attendance/detail.html
 msgid "Öppna rapporten"
 msgstr "Open the report"
+
+#: attendance/admin.py
+msgid "Visa ändringarna"
+msgstr "Show the changes"

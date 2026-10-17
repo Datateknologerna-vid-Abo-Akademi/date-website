@@ -155,11 +155,6 @@ def csv_row(fieldnames: tuple[str, ...], values: list[Any]) -> dict[str, Any]:
     return dict(zip(fieldnames, safe_values, strict=True))
 
 
-class AttendanceChangesInline(admin.TabularInline):
-    model = models.AttendanceChange
-    classes = ["collapse"]
-
-
 class AttendanceEventAdmin(admin.ModelAdmin):
     # The workflow is "find the event, open its overview page", so the list is
     # ordered newest first and carries the times and the guest switch. Without
@@ -169,7 +164,11 @@ class AttendanceEventAdmin(admin.ModelAdmin):
     search_fields = ("title", "description", "slug")
     date_hierarchy = "start_datetime"
     ordering = ("-start_datetime",)
-    inlines = [AttendanceChangesInline]
+
+    # No inline of the changes: Django does not paginate an inline, so a meeting
+    # with a few hundred people draws one editable form per check-in and the page
+    # stops loading. The change list is linked from `event_links` instead, filtered
+    # to the meeting, and it has the filters and the date drill-down for the rest.
 
     # The person filling this in is a board member, not a developer setting up a
     # code generator, so the meeting comes first and the two fields that produce
@@ -249,24 +248,31 @@ class AttendanceEventAdmin(admin.ModelAdmin):
 
     @admin.display(description=_("Länkar"))
     def event_links(self, obj) -> SafeString:
-        """The two pages an operator opens from this meeting, without a built URL.
+        """The pages an operator opens from this meeting, without a built URL.
 
         The add page has no object yet, so there is no slug to point at and
         nothing to link to. It gets an empty element rather than an empty string,
         because Unfold renders its own "-" placeholder for any falsy readonly
         value; this way the add page shows nothing at all under either theme.
-        Both links open in a new tab so a half-filled form is not left behind.
+        Every link opens in a new tab so a half-filled form is not left behind,
+        and the changes are a filtered change list rather than an inline, because
+        an inline would render one form per change.
         """
         if not obj or not obj.pk:
             return format_html("<span>{}</span>", "")
 
         return format_html(
             '<a class="button admin-inline-action" href="{}" target="_blank" rel="noopener noreferrer">{}</a>'
-            '&nbsp;<a class="button admin-inline-action" href="{}" target="_blank" rel="noopener noreferrer">{}</a>',
+            '&nbsp;<a class="button admin-inline-action" href="{}" target="_blank" rel="noopener noreferrer">{}</a>'
+            '&nbsp;<a class="button admin-inline-action" href="{}?event__id__exact={}" target="_blank" '
+            'rel="noopener noreferrer">{}</a>',
             obj.get_absolute_url(),
             _("Öppna incheckningen"),
             reverse("attendance-event-overview", args=[obj.slug]),
             _("Visa möteskoden"),
+            reverse("admin:attendance_attendancechange_changelist"),
+            obj.pk,
+            _("Visa ändringarna"),
         )
 
     def _event(self, request: HttpRequest, event_id: str) -> AttendanceEvent:
@@ -300,10 +306,13 @@ class AttendanceEventAdmin(admin.ModelAdmin):
         polls = []
         for poll in event.polls.select_related("question").order_by("pk"):
             question = poll.question
-            # get_total_votes() is the number of ballots, which is the sum of the
-            # choices rather than the number of people: a multiple-choice poll
-            # lets one voter cast several, and so does a poll open to anyone.
-            ballots = question.get_total_votes()
+            choices = list(question.choice_set.order_by("pk"))
+            # The ballot count is the sum of the choices rather than the number of
+            # people: a multiple-choice poll lets one voter cast several, and so
+            # does a poll open to anyone. Summing the choices already loaded here
+            # keeps it to one query per poll, where a percentage that asked the
+            # question per choice went back to the database once for every bar.
+            ballots = sum(choice.votes for choice in choices)
             polls.append(
                 {
                     "question": question,
@@ -314,11 +323,9 @@ class AttendanceEventAdmin(admin.ModelAdmin):
                         {
                             "choice": choice,
                             "votes": choice.votes,
-                            # get_vote_percentage() divides by the total and
-                            # raises ZeroDivisionError when there are no votes.
-                            "percentage": choice.get_vote_percentage() if ballots else 0,
+                            "percentage": int((choice.votes / ballots) * 100) if ballots else 0,
                         }
-                        for choice in question.choice_set.order_by("pk")
+                        for choice in choices
                     ],
                     "ballots": ballots,
                     "voters": question.voters.count(),

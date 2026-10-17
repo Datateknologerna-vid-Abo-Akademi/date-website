@@ -3618,3 +3618,7 @@ msgstr "Koko loki on raportissa."
 #: templates/common/attendance/detail.html
 msgid "Öppna rapporten"
 msgstr "Avaa raportti"
+
+#: attendance/admin.py
+msgid "Visa ändringarna"
+msgstr "Näytä muutokset"

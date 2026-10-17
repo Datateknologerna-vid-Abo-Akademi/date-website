@@ -3562,3 +3562,7 @@ msgstr "Hela loggen finns i rapporten."
 #: templates/common/attendance/detail.html
 msgid "Öppna rapporten"
 msgstr "Öppna rapporten"
+
+#: attendance/admin.py
+msgid "Visa ändringarna"
+msgstr "Visa ändringarna"
