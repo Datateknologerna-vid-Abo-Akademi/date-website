@@ -400,6 +400,12 @@ const onMessage = (ws, msg) => {
     } else if (data.type == "attendance_change") {
         applyAttendanceChange(data.data);
         addChangeToFeed(data.data);
+    } else if (data.type == "attendance_invalidate") {
+        // A row was corrected or deleted in the admin. The feed only appends and
+        // the list is built from snapshots, so neither can drop or rewrite the
+        // row that changed. A reload is the only answer that matches the
+        // database again.
+        window.location.reload();
     }
 };
 
@@ -430,7 +436,6 @@ const makeWebsocket = () => {
         if (!codeIsStale) {
             setStatusMessage("");
         }
-        console.log("Websocket open");
 
         requestNewCode(ws);
     });

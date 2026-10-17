@@ -20,7 +20,7 @@ from core.admin_widgets import (
     FlatpickrDateTimeAdminMixin,
 )
 
-from . import models
+from . import models, websocket
 from .models import AttendanceChange, AttendanceEvent
 
 # The report's downloads are read in Excel by a Swedish association admin, where
@@ -480,6 +480,24 @@ class AttendanceChangeAdmin(FlatpickrDateTimeAdminMixin, ModelAdmin):
     )
     date_hierarchy = "timestamp"
     ordering = ("-timestamp",)
+
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        # An open overview page was built from the row as it stood, and a
+        # correction produces no change the feed can append. Reloading it is the
+        # only answer that also repairs the feed.
+        websocket.send_attendance_invalidate(obj.event.slug)
+
+    def delete_model(self, request, obj):
+        slug = obj.event.slug
+        super().delete_model(request, obj)
+        websocket.send_attendance_invalidate(slug)
+
+    def delete_queryset(self, request, queryset):
+        slugs = set(queryset.values_list("event__slug", flat=True))
+        super().delete_queryset(request, queryset)
+        for slug in slugs:
+            websocket.send_attendance_invalidate(slug)
 
     class Media:
         css = {"all": FLATPICKR_ADMIN_CSS}

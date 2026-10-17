@@ -2020,6 +2020,44 @@ class AttendanceDetailViewPostTests(AttendanceViewTestCase):
         self.assertEqual(response["Location"], "/polls/7/")
 
 
+class AttendanceCheckInBroadcastFailureTests(AttendanceViewTestCase):
+    """The live update is not the record, so a broken channel layer cannot fail a write.
+
+    ``AttendanceDetailViewPostTests`` patches the sender out, which hides this path.
+    Here the real one runs against a layer that refuses, which is what a channel
+    layer outage looks like from the request that has already saved the row.
+    """
+
+    def test_a_saved_check_in_answers_303_when_the_broadcast_fails(self):
+        self.client.force_login(self.member)
+        layer = get_channel_layer()
+
+        with (
+            patch("django_otp.oath.time", return_value=OATH_TIME),
+            patch.object(layer, "group_send", new=AsyncMock(side_effect=RuntimeError("redis is down"))),
+            self.assertLogs("attendance", level="ERROR"),
+        ):
+            response = self.client.post(self.detail_url, {"type": str(ENTER.value), "code": str(PINNED_CODE)})
+
+        self.assertEqual(response.status_code, 303)
+        self.assertTrue(self.event.is_attendee_present(self.member))
+
+    def test_a_saved_check_out_answers_303_when_the_broadcast_fails(self):
+        record_change(self.event, ENTER, user=self.member, timestamp=now() - timedelta(minutes=5))
+        self.client.force_login(self.member)
+        layer = get_channel_layer()
+
+        with (
+            patch("django_otp.oath.time", return_value=OATH_TIME),
+            patch.object(layer, "group_send", new=AsyncMock(side_effect=RuntimeError("redis is down"))),
+            self.assertLogs("attendance", level="ERROR"),
+        ):
+            response = self.client.post(self.detail_url, {"type": str(LEAVE.value), "code": str(PINNED_CODE)})
+
+        self.assertEqual(response.status_code, 303)
+        self.assertFalse(self.event.is_attendee_present(self.member))
+
+
 class AttendanceOverviewViewTests(AttendanceViewTestCase):
     """The staff-only code view."""
 
@@ -2413,6 +2451,50 @@ class AttendanceAdminTests(TestCase):
 
         content = response.content.decode()
         self.assertLess(content.index("Nyare"), content.index("Äldre"))
+
+
+class AttendanceChangeAdminCorrectionTests(TestCase):
+    """A correction or a deletion reaches the pages that were built from the row.
+
+    The feed only appends, so the message is not a change but a reload: the page
+    cannot drop the row it was given, and the admin is the only place that
+    rewrites history.
+    """
+
+    def setUp(self):
+        self.admin_user = make_member("admin", is_superuser=True)
+        self.event = make_event(slug="mote")
+        self.member = make_member("medlem")
+        self.change = record_change(self.event, ENTER, user=self.member)
+        self.model_admin = admin.site._registry[AttendanceChange]
+        self.request = RequestFactory().post("/")
+        self.request.user = self.admin_user
+
+    def test_saving_a_correction_invalidates_the_meeting(self):
+        self.change.type = LEAVE
+
+        with patch("attendance.admin.websocket.send_attendance_invalidate") as invalidate:
+            self.model_admin.save_model(self.request, self.change, form=None, change=True)
+
+        invalidate.assert_called_once_with("mote")
+        self.change.refresh_from_db()
+        self.assertEqual(self.change.type, LEAVE)
+
+    def test_deleting_a_change_invalidates_the_meeting(self):
+        with patch("attendance.admin.websocket.send_attendance_invalidate") as invalidate:
+            self.model_admin.delete_model(self.request, self.change)
+
+        invalidate.assert_called_once_with("mote")
+        self.assertFalse(AttendanceChange.objects.filter(pk=self.change.pk).exists())
+
+    def test_a_bulk_delete_invalidates_every_meeting_it_touched(self):
+        other_member = make_member("annan")
+        record_change(make_event(slug="annat"), ENTER, user=other_member)
+
+        with patch("attendance.admin.websocket.send_attendance_invalidate") as invalidate:
+            self.model_admin.delete_queryset(self.request, AttendanceChange.objects.all())
+
+        self.assertEqual({call.args[0] for call in invalidate.call_args_list}, {"mote", "annat"})
 
 
 class AttendanceReportAdminTests(TestCase):
@@ -2825,6 +2907,43 @@ class AttendanceWebsocketTests(TestCase):
             },
         )
 
+    def test_a_refusing_channel_layer_is_logged_rather_than_raised(self):
+        """The sender is called after the row is saved, so it may not raise."""
+        change = record_change(self.event, ENTER, user=self.member)
+
+        with (
+            patch.object(self.channel_layer, "group_send", new=AsyncMock(side_effect=RuntimeError("no redis"))),
+            self.assertLogs("attendance", level="ERROR"),
+        ):
+            websocket.send_attendance_change(self.event.slug, change)
+
+    def test_a_missing_channel_layer_is_a_no_op(self):
+        change = record_change(self.event, ENTER, user=self.member)
+
+        with patch("attendance.websocket.get_channel_layer", return_value=None):
+            websocket.send_attendance_change(self.event.slug, change)
+
+    def test_an_invalidation_targets_the_event_group(self):
+        """A correction in the admin has no change row to send, only a stale page."""
+
+        with patch.object(self.channel_layer, "group_send", new=AsyncMock()) as group_send:
+            websocket.send_attendance_invalidate(self.event.slug)
+
+        group_send.assert_awaited_once_with(
+            "attendance_mote",
+            {"type": "attendance.invalidate"},
+        )
+
+    def test_an_invalidation_reaches_a_listener_in_the_event_group(self):
+        channel = async_to_sync(self.channel_layer.new_channel)()
+        async_to_sync(self.channel_layer.group_add)(self.group, channel)
+        self.addCleanup(async_to_sync(self.channel_layer.group_discard), self.group, channel)
+
+        websocket.send_attendance_invalidate(self.event.slug)
+
+        message = async_to_sync(receive_message)(self.channel_layer, channel)
+        self.assertEqual(message["type"], "attendance.invalidate")
+
 
 @override_settings(ALLOWED_HOSTS=["testserver"])
 class AttendanceOriginValidationTests(TestCase):
@@ -3112,6 +3231,45 @@ class AttendanceConsumerTests(TestCase):
                     "type": "attendance.change",
                     "change": {"key": attendee_key(self.member), "name": "Maja Andersson", "type": "ENTER"},
                 },
+            )
+
+            return await communicator.receive_output(timeout=10)
+
+        output = async_to_sync(flow)()
+
+        self.assertEqual(output["type"], "websocket.close")
+        self.assertEqual(output["code"], AttendanceConsumer.NOT_ALLOWED)
+
+    def test_an_invalidation_reaches_a_connected_page(self):
+        """A correction in the admin tells the page to reload, without a change row."""
+
+        async def flow():
+            communicator = await connect_as(self.staff, self.event.slug)
+            await self.connect_and_drain_the_snapshot(communicator)
+
+            await self.channel_layer.group_send(
+                f"attendance_{self.event.slug}",
+                {"type": "attendance.invalidate"},
+            )
+
+            return await communicator.receive_json_from(timeout=10)
+
+        message = async_to_sync(flow)()
+
+        self.assertEqual(message, {"type": "attendance_invalidate"})
+
+    def test_a_demoted_staff_socket_is_closed_when_an_invalidation_is_broadcast(self):
+        """The invalidation handler revalidates like every other broadcast."""
+
+        async def flow():
+            communicator = await connect_as(self.staff, self.event.slug)
+            await self.connect_and_drain_the_snapshot(communicator)
+
+            await sync_to_async(self.staff.groups.clear)()
+
+            await self.channel_layer.group_send(
+                f"attendance_{self.event.slug}",
+                {"type": "attendance.invalidate"},
             )
 
             return await communicator.receive_output(timeout=10)

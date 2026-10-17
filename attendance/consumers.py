@@ -81,6 +81,16 @@ class AttendanceConsumer(AsyncJsonWebsocketConsumer):
 
         await self.send_json({"type": "attendance_change", "data": event["change"]})
 
+    async def attendance_invalidate(self, event):
+        # A correction or a deletion in the admin moved a row the page was built
+        # from, so the browser's copy is stale in a way no change payload
+        # describes. Revalidate like any other broadcast, then say so.
+        if not await self._is_user_allowed():
+            logger.info(f"closing attendance connection for {self.slug}: user is no longer allowed")
+            return await self.close(code=self.NOT_ALLOWED)
+
+        await self.send_json({"type": "attendance_invalidate"})
+
     async def _get_event(self) -> AttendanceEvent | None:
         """The event this socket is for, or None when its slug does not exist."""
         return await AttendanceEvent.objects.filter(slug=self.slug).afirst()
