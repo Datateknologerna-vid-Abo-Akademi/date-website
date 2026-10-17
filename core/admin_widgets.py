@@ -122,7 +122,8 @@ class FlatpickrDateTimeAdminMixin:
     inherited from mixins automatically.
     """
 
-    flatpickr_datetime_fields = ("published_time",)
+    # Annotated as a variable-length tuple so an admin may list more than one field.
+    flatpickr_datetime_fields: tuple[str, ...] = ("published_time",)
 
     def formfield_for_dbfield(self, db_field, request, **kwargs):
         if db_field.name in self.flatpickr_datetime_fields:

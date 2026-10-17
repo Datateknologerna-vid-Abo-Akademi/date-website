@@ -38,6 +38,7 @@ dependencies = [
     "defusedxml>=0.7.1",
     "pillow-heif>=1.5.0",
     "uvicorn-worker>=0.4.0",
+    "django-stubs-ext>=6.0.4",
 ]
 
 [project.optional-dependencies]

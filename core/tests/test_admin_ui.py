@@ -46,6 +46,12 @@ class AdminUiRegistryTests(TestCase):
         self.assertIn("/admin/booking/room/", links)
         self.assertIn("/admin/booking/closure/", links)
         self.assertIn("/admin/booking/bookingsettings/", links)
+        # The attendance group: the event list is where an editor finds the event
+        # whose overview page runs the check-in. A meeting's changes are opened
+        # from the meeting, so the change list is not a page of its own.
+        self.assertIn("/admin/attendance/attendanceevent/", links)
+        self.assertIn("/admin/attendance/nonmemberattendee/", links)
+        self.assertNotIn("/admin/attendance/attendancechange/", links)
         self.assertNotIn("/admin/billing/eventinvoice/", links)
         self.assertNotIn("/admin/functionaries/functionary/", links)
         self.assertNotIn("/admin/publications/pdffile/", links)
@@ -80,6 +86,39 @@ class AdminUiRegistryTests(TestCase):
         links = {item["link"] for group in get_sidebar_navigation(request) for item in group["items"]}
 
         self.assertIn("/admin/booking/closure/", links)
+
+    def test_sidebar_attendance_link_needs_the_attendance_permission(self):
+        """The change list belongs to a meeting, so it is not a sidebar entry at all."""
+        request = self.factory.get("/admin/")
+        request.user = get_user_model().objects.create_user(
+            username="changes-only-admin",
+            password="pass",
+            email="changes-only@example.com",
+        )
+        request.user.user_permissions.add(Permission.objects.get(codename="view_attendancechange"))
+
+        links = {item["link"] for group in get_sidebar_navigation(request) for item in group["items"]}
+
+        self.assertNotIn("/admin/attendance/attendanceevent/", links)
+        self.assertNotIn("/admin/attendance/attendancechange/", links)
+
+        request.user.user_permissions.add(Permission.objects.get(codename="view_attendanceevent"))
+        # Django caches a user's permissions on the instance, and a real request
+        # would have loaded a fresh one.
+        request.user = get_user_model().objects.get(pk=request.user.pk)
+
+        links = {item["link"] for group in get_sidebar_navigation(request) for item in group["items"]}
+
+        self.assertIn("/admin/attendance/attendanceevent/", links)
+        self.assertNotIn("/admin/attendance/nonmemberattendee/", links)
+        self.assertNotIn("/admin/attendance/attendancechange/", links)
+
+        request.user.user_permissions.add(Permission.objects.get(codename="view_nonmemberattendee"))
+        request.user = get_user_model().objects.get(pk=request.user.pk)
+
+        links = {item["link"] for group in get_sidebar_navigation(request) for item in group["items"]}
+
+        self.assertIn("/admin/attendance/nonmemberattendee/", links)
 
     def test_sidebar_registry_requires_permissions(self):
         request = self.factory.get("/admin/")

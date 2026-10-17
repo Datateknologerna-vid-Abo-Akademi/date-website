@@ -5,6 +5,7 @@ from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.models import PermissionsMixin
 from django.db import models
 from django.utils import timezone
+from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 
 from core.utils import send_email_task
@@ -58,8 +59,11 @@ class Member(AbstractBaseUser, PermissionsMixin):  # type: ignore[django-manager
     def __unicode__(self):
         return f"{self.get_full_name()} ({self.email})"
 
-    @property
+    @cached_property
     def is_staff(self):
+        # Cached on the instance: this is a query, and templates and views reach for
+        # it several times per request. Each request loads its own instance, so the
+        # cache cannot outlive the group membership it reports.
         return self.groups.filter(name__in=settings.STAFF_GROUPS).exists() or self.is_superuser
 
     @property

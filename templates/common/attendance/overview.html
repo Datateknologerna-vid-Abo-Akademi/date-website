@@ -1,0 +1,104 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% load i18n %}
+{% block title %}{{ ASSOCIATION_NAME_SHORT }} - {% blocktrans with title=object.title %}Närvaro för {{title}}{% endblocktrans %}{% endblock %}
+{% block extra_head %}
+  {{ block.super }}
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.1/qrcode.min.js"
+          integrity="sha512-PEhlWBZBrQL7flpJPY8lXx8tIN7HWX912GzGhFTDqA3iWFrakVH3lVHomCoU9BhfKzgxfEk6EG2C3xej+9srOQ=="
+          crossorigin="anonymous"
+          referrerpolicy="no-referrer"></script>
+  <link rel="stylesheet" href="{% static 'attendance/css/attendance.css' %}">
+  {# Without JavaScript the pager cannot reveal the rows it is hiding, so the feed would stop at its first page. #}
+  <noscript>
+    <style>
+      #change-feed tr[hidden] { display: table-row !important; }
+      #feed-more { display: none !important; }
+      #feed-end[hidden] { display: block !important; }
+    </style>
+  </noscript>
+  <script src="{% url 'javascript-catalog' %}"></script>
+  <script src="{% static 'attendance/js/changes-table.js' %}" defer></script>
+  <script src="{% static 'attendance/js/overview.js' %}" defer></script>
+{% endblock %}
+{% block content %}
+  <div class="container-md min-vh-100 container-margin-top d-flex justify-content-center">
+    <div class="container-size">
+      <div class="content attendance-page" style="width: fit-content">
+        <div class="attendance-head">
+          <h1>{{ object.title }}</h1>
+          <p class="h5">{{ object.description }}</p>
+        </div>
+        <section class="attendance-code-block text-center"
+                 aria-labelledby="code-heading">
+          <h2 class="visually-hidden" id="code-heading">{% trans "Aktuell möteskod" %}</h2>
+          <div aria-live="polite" aria-atomic="true">
+            <p class="h1" id="current-code">{{ code }}</p>
+          </div>
+          <p class="attendance-countdown" id="code-countdown" aria-hidden="true"></p>
+          <div class="w-100 text-warning" id="status-message" aria-live="polite"></div>
+        </section>
+        <div class="attendance-qr" id="qrcode" data-event-url="{{ event_url }}"></div>
+        <p class="attendance-qr-caption">{% trans "Skanna med telefonens kamera" %}</p>
+        <section class="attendance-section">
+          <h2>{% trans "Närvarande" %}: <span id="present-count">{{ present_attendees|length }}</span></h2>
+          <ul id="present-attendees" class="attendance-list">
+            {% for a in present_attendees %}
+              <li data-attendee="{{ a.key }}">{{ a.name }}</li>
+            {% endfor %}
+          </ul>
+          <p id="no-present-attendees"
+             aria-live="polite"
+             {% if present_attendees %}hidden{% endif %}>{% trans "Ingen är närvarande" %}</p>
+        </section>
+        <section class="attendance-section">
+          <h2 id="change-feed-heading">{% trans "Närvaroflöde" %}</h2>
+          <p class="attendance-changes__hint">{% trans "Varje in- och utcheckning, senaste först." %}</p>
+          <div class="attendance-changes-wrap" aria-live="polite">
+            <table class="attendance-changes" aria-labelledby="change-feed-heading">
+              <thead>
+                <tr>
+                  <th scope="col">{% trans "Tid" %}</th>
+                  <th scope="col">{% trans "Deltagare" %}</th>
+                  <th scope="col">{% trans "Ändring" %}</th>
+                </tr>
+              </thead>
+              <tbody id="change-feed">
+                {% for change in recent_changes %}
+                  <tr data-change-id="{{ change.pk }}"
+                      class="attendance-changes__row--{{ change.type_name|lower }}"
+                      {% if forloop.counter > changes_visible %}hidden{% endif %}>
+                    <td class="attendance-changes__time">
+                      <time datetime="{{ change.timestamp|date:'c' }}">{{ change.timestamp|time }}</time>
+                    </td>
+                    <td class="attendance-changes__name">{{ change.attendee_name }}</td>
+                    <td class="attendance-changes__action attendance-changes__action--{{ change.type_name|lower }}">
+                      {% trans change.get_type_display context "left/entered in general" %}
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% if recent_changes|length > changes_visible %}
+            <button type="button"
+                    class="attendance-changes__more"
+                    id="feed-more"
+                    data-page-size="{{ changes_page_size }}">
+              {% trans "Visa fler" %} <i class="bi bi-chevron-down" aria-hidden="true"></i>
+            </button>
+          {% endif %}
+          <p id="feed-end"
+             class="attendance-changes__end"
+             {% if not recent_changes or recent_changes|length > changes_visible %}hidden{% endif %}>
+            {% trans "Hela loggen finns på mötets sida." %}
+            <a href="{% url 'attendance-event-view' object.slug %}">{% trans "Till mötessidan" %}</a>
+          </p>
+          <p id="no-changes"
+             class="attendance-changes__end"
+             {% if recent_changes %}hidden{% endif %}>{% trans "Inga ändringar ännu" %}</p>
+        </section>
+      </div>
+    </div>
+  </div>
+{% endblock %}

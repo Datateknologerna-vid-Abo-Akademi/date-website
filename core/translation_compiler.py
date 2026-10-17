@@ -4,6 +4,13 @@ import ast
 import struct
 from pathlib import Path
 
+# GNU gettext joins a message context to its msgid with this byte, and a plural
+# entry's forms with this one, in the text form and in the compiled catalog
+# alike. Both Python's gettext module and Django look entries up by those keys,
+# so the values written here have to match what msgfmt would have written.
+CONTEXT_SEPARATOR = "\x04"
+PLURAL_SEPARATOR = "\x00"
+
 
 def _unquote(line: str) -> str:
     _, _, value = line.partition(" ")
@@ -11,47 +18,62 @@ def _unquote(line: str) -> str:
 
 
 def _parse_po(path: Path) -> dict[str, str]:
-    messages: dict[str, str] = {}
-    text = path.read_text(encoding="utf-8")
+    """Return a .po file's entries in the key/value form a .mo file holds.
 
-    for raw_block in text.split("\n\n"):
+    A contextual entry is keyed by ``msgctxt``, a separator and the msgid, and a
+    plural entry's value is its forms joined by a NUL. The header entry is kept
+    even though makemessages marks it fuzzy, because the charset comes from it.
+    """
+    messages: dict[str, str] = {}
+
+    for raw_block in path.read_text(encoding="utf-8").split("\n\n"):
         block = [line for line in raw_block.splitlines() if line.strip()]
         if not block:
             continue
 
         is_fuzzy = "#, fuzzy" in block
 
-        msgid = ""
-        msgstr = ""
-        in_msgid = False
-        in_msgstr = False
-        saw_msgid = False
+        fields: dict[str, str] = {}
+        plurals: dict[int, str] = {}
+        current: str | None = None
 
         for line in block:
-            if line.startswith("msgid "):
-                saw_msgid = True
-                in_msgid = True
-                in_msgstr = False
-                msgid = _unquote(line)
+            if line.startswith("#"):
                 continue
-            if line.startswith("msgstr "):
-                in_msgid = False
-                in_msgstr = True
-                msgstr = _unquote(line)
-                continue
-            if line.startswith('"'):
-                if in_msgid:
-                    msgid += ast.literal_eval(line)
-                elif in_msgstr:
-                    msgstr += ast.literal_eval(line)
 
-        if not saw_msgid:
+            keyword, _, _remainder = line.partition(" ")
+            if keyword in {"msgctxt", "msgid", "msgid_plural", "msgstr"}:
+                current = keyword
+                fields[keyword] = _unquote(line)
+                continue
+            if keyword.startswith("msgstr["):
+                current = "plural"
+                plurals[int(keyword[7:-1])] = _unquote(line)
+                continue
+            if line.startswith('"') and current is not None:
+                if current == "plural":
+                    index = max(plurals, default=0)
+                    plurals[index] += ast.literal_eval(line)
+                else:
+                    fields[current] += ast.literal_eval(line)
+
+        msgid = fields.get("msgid")
+        if msgid is None or (is_fuzzy and msgid):
+            # A fuzzy entry is not offered as a translation, but the header is:
+            # it carries the charset, and makemessages marks it fuzzy too.
             continue
 
-        if is_fuzzy and msgid != "":
-            continue
-
-        messages[msgid] = msgstr
+        context = fields.get("msgctxt", "")
+        key = f"{context}{CONTEXT_SEPARATOR}{msgid}" if context else msgid
+        if plurals:
+            # msgfmt keys a plural entry as the singular, a NUL and the plural,
+            # which is how a reader knows the value holds several forms.
+            plural_id = fields.get("msgid_plural", "")
+            messages[f"{key}{PLURAL_SEPARATOR}{plural_id}"] = PLURAL_SEPARATOR.join(
+                plurals[index] for index in sorted(plurals)
+            )
+        else:
+            messages[key] = fields.get("msgstr", "")
 
     return messages
 
