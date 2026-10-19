@@ -20,13 +20,18 @@ class DocumentAdminForm(forms.ModelForm):
     class Meta:
         model = Collection
         fields = '__all__'  # noqa: DJ007
-        exclude = ('hide_for_gulis',)  # noqa: DJ006
+        # The type selects which admin manages the collection (and, for public
+        # files, whether that admin is registered at all). Letting an editor
+        # change it here can move a row out of every admin and hide it from the
+        # site, so the admin path below pins it instead.
+        exclude = ('hide_for_gulis', 'type')  # noqa: DJ006
 
     def save(self, *args, **kwargs):
         # The admin flow calls save(commit=False) and persists the row itself,
         # so the explicit save() below is what actually writes the collection;
         # on the direct commit=True path it is a harmless second save.
         collection = super().save(*args, **kwargs)
+        collection.type = 'Documents'
         collection.save()
         for f in _uploaded_files(self.cleaned_data.get('files')):
             if isinstance(f, dict):
@@ -45,11 +50,13 @@ class PublicAdminForm(forms.ModelForm):
     class Meta:
         model = Collection
         fields = '__all__'  # noqa: DJ007
+        exclude = ('type',)  # noqa: DJ006
 
     def save(self, *args, **kwargs):
         # See DocumentAdminForm.save: the explicit save persists the collection
         # on the admin commit=False path.
         collection = super().save(*args, **kwargs)
+        collection.type = 'PublicFiles'
         collection.save()
         for f in _uploaded_files(self.cleaned_data.get('files')):
             if isinstance(f, dict):
