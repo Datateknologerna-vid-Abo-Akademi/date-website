@@ -67,6 +67,7 @@
     "screen and (max-width: 1400px)",
     "screen and (max-width: 420px)",
     "screen and (max-width: 550px)",
+    "screen and (max-width: 575.98px)",
     "screen and (max-width: 600px)",
     "screen and (max-width: 768px)",
     "screen and (max-width: 800px)",
@@ -165,7 +166,6 @@
   },
   "zero_byte_stylesheets_linked": [
     "static/common/events/css/style.css",
-    "static/common/members/css/userinfo.css",
     "static/common/news/css/article.css",
     "static/common/polls/css/style.css",
     "static/common/staticpages/css/staticpage.css"

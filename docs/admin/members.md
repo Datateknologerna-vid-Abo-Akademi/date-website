@@ -15,8 +15,18 @@ Most people register themselves at `/members/signup/`. Those signups land in the
     - On SF, tick **Gulispass utfört** after the member completes the required duty/pass. Until then, ordinary, lifetime, and extra SF members are blocked from the picture and exam archives. The checkbox only appears on SF.
    - Use the actions menu to bulk **Activate** or **Deactivate** selected users.
    - `is_staff` is computed automatically from group membership (groups listed in `settings.STAFF_GROUPS`).
-4. **Password resets**: direct members to the "Forgot password" link on the login page, which uses the custom reset form.
+4. **Password resets**: direct members to the "Forgot password" link on the login page, which uses the custom reset form. A password reset does not remove the member's two-factor devices or passkeys.
 5. **Delete member**: deleting an account also permanently deletes the admin log entries where that member was the acting user, because the audit log points at the member record; entries recorded for other users stay untouched. Everything else that cascades from the member (subscription payments, votes, authored content) is deleted too, so you need the matching delete permission for those registered models, while a superuser is unrestricted. The history of a deleted member cannot be recovered, so deactivate instead of deleting whenever you only mean to revoke access.
+
+## Two-Factor Authentication & Passkeys
+- Members can protect their account with an authenticator app (TOTP), passkeys, and backup tokens from their profile page. A passkey sign-in counts as two-factor verification, including for admin access.
+- The member edit page shows read-only **2FA devices**, **Passkeys**, and **Backup token devices** inlines (name, created, last used). You can delete individual authenticator apps and backup token devices there; passkeys can only be removed by the member or with **Inaktivera 2FA**.
+- The **2FA** column in the member list is ticked when the member has a confirmed authenticator app or passkey.
+- **Inaktivera 2FA** (actions menu) removes all authenticator apps, passkeys, and backup tokens for the selected members. Use it when a member has lost their devices and is locked out; they can then sign in with their password and set up 2FA again.
+  - It requires change permission on members.
+  - Superusers among the selected members are skipped unless you are a superuser yourself.
+  - Every use is logged with your user ID and the affected members.
+- Verify the member's identity before disabling 2FA: it is the recovery path for a lost second factor.
 
 ## Membership Types
 - Found under **Members › Membership types**. Each type has a description and a `Behörighetsprofil` (Freshman, Ordinary, Supporting, Senior, Member without voting rights). These profiles are referenced by other apps (e.g., Polls, Archive) to enforce permissions.
