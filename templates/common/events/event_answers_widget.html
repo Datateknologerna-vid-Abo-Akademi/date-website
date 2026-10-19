@@ -18,13 +18,15 @@
                  value="{{ row.kind }}">
           {% if row.kind == "checkbox" %}
             <select name="{{ name }}__value__{{ forloop.counter0 }}"
-                    id="{{ row.input_id }}">
+                    id="{{ row.input_id }}"
+                    class="{{ select_class }}">
               <option value="true"{% if row.value %} selected{% endif %}>{% translate "Ja" %}</option>
               <option value="false"{% if not row.value %} selected{% endif %}>{% translate "Nej" %}</option>
             </select>
           {% elif row.kind == "select" %}
             <select name="{{ name }}__value__{{ forloop.counter0 }}"
-                    id="{{ row.input_id }}">
+                    id="{{ row.input_id }}"
+                    class="{{ select_class }}">
               <option value="">---------</option>
               {% for choice in row.choices %}
                 <option value="{{ choice }}"{% if choice == row.value %} selected{% endif %}>{{ choice }}</option>
@@ -33,11 +35,13 @@
           {% elif row.kind == "json" %}
             <textarea name="{{ name }}__value__{{ forloop.counter0 }}"
                       id="{{ row.input_id }}"
+                      class="{{ textarea_class }}"
                       rows="3">{{ row.value }}</textarea>
           {% else %}
             <input type="text"
                    name="{{ name }}__value__{{ forloop.counter0 }}"
                    id="{{ row.input_id }}"
+                   class="{{ input_class }}"
                    value="{{ row.value }}">
           {% endif %}
         </div>

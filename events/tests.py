@@ -29,6 +29,7 @@ from events.models import Event, EventAttendees, EventRegistrationForm
 from events.registration import EventSignupError, register_event_signup
 from events.routing import websocket_urlpatterns
 from events.websocket_utils import ws_data, ws_send
+from events.widgets import EventAnswersWidget
 from members.models import ORDINARY_MEMBER, Member, MembershipType, Subscription, SubscriptionPayment
 from news.models import Category, Post
 from staticpages.models import StaticPage, StaticPageNav, StaticUrl
@@ -1365,6 +1366,17 @@ class EventAdminTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'class="event-answers-empty"')
         self.assertNotContains(response, "Det finns inga anmälningsfält")
+
+    def test_answers_widget_uses_the_active_admin_themes_input_classes(self):
+        question = EventRegistrationForm(name="Meal", type="select", choice_list="fish,vegetarian")
+
+        html = EventAnswersWidget(questions=[question]).render("preferences", {"Meal": "fish"})
+
+        if settings.USE_UNFOLD:
+            self.assertIn("border-base-200", html)
+            self.assertIn("appearance-none", html)
+        else:
+            self.assertNotIn("border-base-200", html)
 
     def test_attendee_answers_are_saved_from_question_fields(self):
         EventRegistrationForm.objects.create(

@@ -1,9 +1,19 @@
 import json
 
 from django import forms
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.template.loader import render_to_string
 from django.utils.translation import gettext_lazy as _
+
+if getattr(settings, 'USE_UNFOLD', False):
+    from unfold.widgets import INPUT_CLASSES, SELECT_CLASSES, TEXTAREA_CLASSES
+else:
+    # The stock admin styles these elements globally; Unfold puts the styling
+    # in widget classes, so the raw controls need the same classes here.
+    INPUT_CLASSES = ()
+    SELECT_CLASSES = ()
+    TEXTAREA_CLASSES = ()
 
 _TICKED = {"true", "1", "yes", "on", "ja"}
 
@@ -140,7 +150,14 @@ class EventAnswersWidget(forms.Widget):
         rows = self._answer_rows(value)
         for index, row in enumerate(rows):
             row["input_id"] = f"{base_id}_answer_{index}"
-        context = {"name": name, "rows": rows, "compact": self.compact}
+        context = {
+            "name": name,
+            "rows": rows,
+            "compact": self.compact,
+            "input_class": " ".join(INPUT_CLASSES),
+            "select_class": " ".join(SELECT_CLASSES),
+            "textarea_class": " ".join(TEXTAREA_CLASSES),
+        }
         return render_to_string(self.template_name, context)
 
     def value_from_datadict(self, data, files, name):
