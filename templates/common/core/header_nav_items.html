@@ -19,7 +19,7 @@
           aria-labelledby="navbarDropdownMenuLink{{ forloop.counter0 }}">
         {% url 'members:login' as login_url %}
         {% for page in urls %}
-          {% if page.category|lower == category.category_name|lower %}
+          {% if page.category_id == category.id %}
             {% if user.is_authenticated and page.url|localized_url == login_url %}
               <li>
                 <form action="{% url 'members:logout' %}" method="post">

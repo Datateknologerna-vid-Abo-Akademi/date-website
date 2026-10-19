@@ -14,8 +14,8 @@ Manage the informational pages and navigation links that live under the "About",
 3. Fields:
    - **Kategori** – visible name in the menu.
    - **Nav element** – manual ordering number (use increments of 10 to leave room).
-   - **Använd kategorins URL** – if checked, visitors clicking the category go directly to the URL below instead of showing dropdown entries.
-   - **Url** – external/internal destination used when the checkbox above is ticked.
+   - **Använd kategorins URL** – if checked, visitors clicking the category go directly to the URL below instead of showing dropdown entries. The URL is required in that case.
+   - **Url** – external/internal destination used when the checkbox above is ticked. The field suggests the site's own pages while you type, but you can still type any external address or path.
 4. Save, then use the inline table to add **Static URLs** (dropdown entries). Drag handles in the inline list to reorder.
 5. Existing category and dropdown URLs show quick **Open** links so you can check destinations without leaving the admin workflow.
 
@@ -26,17 +26,21 @@ Manage the informational pages and navigation links that live under the "About",
    - **Titel** – shown as page header and used for SEO.
    - **Slug** – auto-generated, stays in the final URL. Keep lowercase without spaces.
    - **Innehåll** – write/edit content using the CKEditor toolbar.
+   - **Bakgrundsbild** – optional background image. The form shows the local field or the public S3 field depending on how this deployment stores media, so there is only one image field to fill.
    - **Kräv inloggning** – tick if only members may read the page; anonymous visitors will be redirected to the login screen.
 4. Save. The `Modifierad` timestamp updates automatically when you edit later.
 5. Use the **Public page** link from the list or edit form to open the rendered page.
+6. The **I menyn** row on the edit form shows which navigation entries point at this page and links to the category that owns them. A page that is not linked yet shows **Sidan finns inte i menyn** with a link to the navigation list.
 
 ## Add Dropdown Links (Static URLs)
 1. Inside a category edit page, use the inline table:
    - **Titel** – link text.
-   - **Url** – destination (can be `/pages/<slug>/`, `/members/...`, or an external site).
+   - **Url** – destination. Start typing and pick one of the site's own pages from the suggestions, or type `/members/...` or an external `https://` address by hand.
    - **Visa endast åt inloggade användare** – hide the link from anonymous visitors.
    - **#** – ordering token; increments of 10 keep the list tidy.
 2. Save the category to persist link changes.
+
+Urls must be a full address (`https://...`, `mailto:` or `tel:`) or an internal path starting with `/`. A bare relative path such as `pages/om-oss/` is rejected, because it would render as a broken link.
 
 ## Editor Options
 The **Innehåll** field uses the shared CKEditor configuration (`core/settings/dependencies/ckeditor.py`), which offers:
@@ -51,7 +55,7 @@ The **Innehåll** field uses the shared CKEditor configuration (`core/settings/d
 Uploads accept jpg, jpeg, png, gif, bmp, webp and tiff. An image you add with **Insert image** is a block image, which is what the resize list works on: it keeps the size you pick, and one you leave alone is capped to a share of the viewport height so a single large photo cannot dominate the page. An image that arrives inline from pasted content is not resized by that list, because the site caps those at their natural size. Delete it and add it again with **Insert image** to get a resizable one. A table wider than the screen scrolls sideways on a phone instead of shifting the whole page.
 
 ## Tips for Editors
-- If a page should be linked from navigation, create the Static Page first, copy its slug, then create a Static URL entry that points to `/pages/<slug>/`.
+- If a page should be linked from navigation, create the Static Page first, then add a Static URL entry and pick the page from the URL suggestions; there is no need to copy the slug by hand.
 - If translation features are enabled, category names and link labels can have per-language values. Check the translated fields before publishing multilingual navigation changes.
 - CKEditor has no preview plugin here, so check the layout with the **Public page** link from the list or the edit form rather than from inside the editor.
 - Keep `members_only` pages organized; add “(endast medlemmar)” to their titles so visitors know why they might need to log in.
