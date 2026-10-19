@@ -465,6 +465,19 @@ class TwoFactorIntegrationTests(TestCase):
         self.assertEqual(response.context['wizard']['steps'].current, 'generator')
         self.assertIsInstance(response.context['wizard']['form'], StrictTOTPDeviceForm)
 
+    def test_setup_back_button_skips_validation_and_is_not_the_default_submit(self):
+        self.client.force_login(self.member, backend='members.backends.AuthBackend')
+        response = self.client.get(reverse('two_factor:setup'))
+        prefix = self._wizard_prefix(response)
+        response = self.client.post(reverse('two_factor:setup'), data={f"{prefix}-current_step": 'welcome'})
+
+        html = response.content.decode()
+        back = html.index('name="wizard_goto_step"')
+        # The required token field must not block going back...
+        self.assertIn('formnovalidate', html[back : html.index('</button>', back)])
+        # ...and Enter must not trigger Back: a default submit button comes first.
+        self.assertLess(html.index('<button type="submit" hidden'), back)
+
     def test_strict_totp_form_signature_supports_setup_view_kwargs(self):
         form_parameters = signature(StrictTOTPDeviceForm).parameters
 
