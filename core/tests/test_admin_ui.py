@@ -279,6 +279,19 @@ class PublicUrlAdminMixinTests(TestCase):
         request = self.factory.get('/')
         self.assertNotIn('public_url', self.admin.get_readonly_fields(request, obj=None))
 
+    def test_public_url_is_placed_in_the_first_fieldset_in_the_classic_admin(self):
+        if settings.USE_UNFOLD:
+            self.skipTest("Unfold uses its own object action")
+        from publications.models import PublicationCollection
+
+        request = self.factory.get('/')
+        admin_obj = django_admin.site._registry[PublicationCollection]
+        obj = PublicationCollection(title='Collection', slug='collection')
+        fieldsets = admin_obj.get_fieldsets(request, obj=obj)
+
+        self.assertEqual(fieldsets[0][1]['fields'][0], 'public_url')
+        self.assertNotIn('public_url', fieldsets[-1][1]['fields'])
+
 
 class UnfoldFormMixinTests(TestCase):
     def test_mixin_does_not_break_form_init(self):
