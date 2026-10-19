@@ -1,0 +1,55 @@
+{% load i18n %}
+<div class="event-answers-widget">
+  {% if rows %}
+    {% for row in rows %}
+      <div class="event-answer-row">
+        <label class="event-answer-label" for="{{ row.input_id }}">
+          {{ row.label }}
+          {% if row.is_orphan %}
+            <span class="event-answer-orphan">({% translate "fältet finns inte längre" %})</span>
+          {% endif %}
+        </label>
+        <div class="event-answer-control">
+          <input type="hidden"
+                 name="{{ name }}__key__{{ forloop.counter0 }}"
+                 value="{{ row.key }}">
+          <input type="hidden"
+                 name="{{ name }}__kind__{{ forloop.counter0 }}"
+                 value="{{ row.kind }}">
+          {% if row.kind == "checkbox" %}
+            <select name="{{ name }}__value__{{ forloop.counter0 }}"
+                    id="{{ row.input_id }}">
+              <option value="true"{% if row.value %} selected{% endif %}>{% translate "Ja" %}</option>
+              <option value="false"{% if not row.value %} selected{% endif %}>{% translate "Nej" %}</option>
+            </select>
+          {% elif row.kind == "select" %}
+            <select name="{{ name }}__value__{{ forloop.counter0 }}"
+                    id="{{ row.input_id }}">
+              <option value="">---------</option>
+              {% for choice in row.choices %}
+                <option value="{{ choice }}"{% if choice == row.value %} selected{% endif %}>{{ choice }}</option>
+              {% endfor %}
+            </select>
+          {% elif row.kind == "json" %}
+            <textarea name="{{ name }}__value__{{ forloop.counter0 }}"
+                      id="{{ row.input_id }}"
+                      rows="3">{{ row.value }}</textarea>
+          {% else %}
+            <input type="text"
+                   name="{{ name }}__value__{{ forloop.counter0 }}"
+                   id="{{ row.input_id }}"
+                   value="{{ row.value }}">
+          {% endif %}
+        </div>
+      </div>
+    {% endfor %}
+  {% else %}
+    {% if compact %}
+      <span class="event-answers-empty">-</span>
+    {% else %}
+      <p class="help">
+        {% translate "Det finns inga anmälningsfält för evenemanget ännu. Lägg till fält under Anmälningsfält." %}
+      </p>
+    {% endif %}
+  {% endif %}
+</div>
