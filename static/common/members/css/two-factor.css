@@ -194,6 +194,11 @@
     font-weight: 600;
 }
 
+.members-form .passkey-rename input:focus-visible {
+    outline: 2px solid var(--textColorDarkish);
+    outline-offset: 2px;
+}
+
 .passkey-item__meta {
     display: block;
     margin-top: 0.4rem;
@@ -254,7 +259,7 @@
     text-decoration: underline;
 }
 
-@media screen and (max-width: 520px) {
+@media screen and (max-width: 575.98px) {
     .passkey-item {
         flex-direction: column;
     }

@@ -48,6 +48,7 @@ SHORTHANDS = frozenset(
         "inset",
         "list-style",
         "margin",
+        "mask",
         "outline",
         "overflow",
         "padding",

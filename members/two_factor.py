@@ -186,6 +186,10 @@ class MemberLoginView(LoginView):
 
     def done(self, form_list, **kwargs):
         response = super().done(form_list, **kwargs)
+        if getattr(self.get_user(), 'otp_device', None):
+            # login() keeps the session key when this user was already logged in
+            # unverified; rotate it whenever the wizard verifies the session.
+            self.request.session.cycle_key()
         redirect_to = self.get_success_url()
         target = self.get_redirect_url()
 

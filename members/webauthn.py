@@ -1,9 +1,11 @@
+import hashlib
 import json
 import logging
 import time
 
 from django.conf import settings
 from django.contrib.auth.signals import user_logged_in
+from django.core.cache import cache
 from django.dispatch import receiver
 from django.http import Http404
 from django.shortcuts import resolve_url
@@ -14,6 +16,7 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext as _
 from django_otp_webauthn import exceptions
 from django_otp_webauthn.models import WebAuthnCredential
+from django_otp_webauthn.settings import app_settings as webauthn_settings
 from django_otp_webauthn.views import (
     BeginCredentialAuthenticationView,
     BeginCredentialRegistrationView,
@@ -26,6 +29,8 @@ from core.utils import enqueue_task_on_commit, send_email_task
 logger = logging.getLogger('date')
 
 RECENT_AUTH_SESSION_KEY = 'members_recent_auth_at'
+AUTHENTICATION_STATE_SESSION_KEY = 'otp_webauthn_authentication_state'
+CHALLENGE_ISSUED_AT_KEY = 'members_issued_at'
 
 
 def get_rp_name(request):
@@ -118,10 +123,29 @@ class MemberCompleteRegistrationView(MemberRegistrationMixin, CompleteCredential
 
 
 class MemberBeginAuthenticationView(PasskeysEnabledMixin, BeginCredentialAuthenticationView):
-    pass
+    def post(self, *args, **kwargs):
+        response = super().post(*args, **kwargs)
+        state = self.request.session.get(AUTHENTICATION_STATE_SESSION_KEY)
+        if state:
+            state[CHALLENGE_ISSUED_AT_KEY] = int(time.time())
+            self.request.session[AUTHENTICATION_STATE_SESSION_KEY] = state
+        return response
 
 
 class MemberCompleteAuthenticationView(PasskeysEnabledMixin, CompleteCredentialAuthenticationView):
+    def get_state(self):
+        # The library only pops the state from the session, which two concurrent
+        # requests can both read, and never enforces the timeout server-side.
+        state = super().get_state()
+        issued_at = state.pop(CHALLENGE_ISSUED_AT_KEY, None)
+        timeout = webauthn_settings.OTP_WEBAUTHN_TIMEOUT_SECONDS
+        if not isinstance(issued_at, int) or time.time() - issued_at > timeout:
+            raise exceptions.InvalidState()
+        challenge_hash = hashlib.sha256(state['challenge'].encode()).hexdigest()
+        if not cache.add(f'members:webauthn:challenge:{challenge_hash}', True, timeout=timeout):
+            raise exceptions.InvalidState()
+        return state
+
     def complete_auth(self, device):
         was_authenticated = self.request.user.is_authenticated
         super().complete_auth(device)

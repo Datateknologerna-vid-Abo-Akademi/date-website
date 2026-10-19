@@ -58,6 +58,8 @@
 
 ### Passkey flows
 - **Passwordless sign-in**: the login page's auth step shows "Sign in with a passkey". User verification is required for this anonymous ceremony. Success logs the member in through `django_otp_webauthn.backends.WebAuthnBackend` and marks the session OTP-verified, so it satisfies admin and `otp_required` views. The complete view reuses the login page's validated `next`/referer-inferred redirect.
+- **Authentication challenges**: the library keeps the challenge only in the session and enforces neither its timeout nor atomic single use server-side. `MemberBeginAuthenticationView` stamps the state with its issue time, and `MemberCompleteAuthenticationView` rejects it (`invalid_state`) once `OTP_WEBAUTHN_TIMEOUT_SECONDS` has passed or when the challenge was already claimed through `cache.add`. Single use across concurrent requests relies on a shared cache (Valkey in production); the development `DummyCache` only gets the library's session pop.
+- **Session rotation**: every transition from unverified to verified rotates the session key: passkey sign-in on an existing session, passkey registration, and `MemberLoginView.done()` for TOTP and backup tokens (Django's `login()` keeps the key when the same member was already logged in).
 - **Existing session**: if a member is already logged in (in practice only after GitHub login with `GITHUB_MFA_POLICY` `off`/`staff`), the library uses UV "discouraged", so a security-key touch verifies the session; GitHub was the first factor. The session key is rotated when an existing session becomes verified.
 - **Passkey-only member + password or GitHub login**: two_factor's `default_device()` only knows TOTP-style devices, so `MemberLoginView.has_backup_step` uses `member_has_2fa` and `_begin_two_factor_login` jumps to the backup step. That step offers the passkey button or a backup token; there is no way to finish unverified. Members who have both TOTP and a passkey also get the passkey button on the token step.
 - **GitHub 2FA handoff**: `_begin_two_factor_login` seeds the login wizard (token or backup step) and sets a one-shot `members_login_handoff` session marker; `MemberLoginView.get` resumes that step instead of letting formtools reset the wizard, but only while the wizard holds an authenticated user, the two_factor login timeout hasn't expired, and the step's condition still applies. Before this fix (also on `main`) the redirect always reset to the password step, so GitHub sign-in never worked for members with 2FA.
@@ -76,6 +78,7 @@
 ### Known gaps
 - The passkey endpoints have no application-level rate limiting; throttle `members/webauthn/` at the ingress.
 - py_webauthn rejects non-increasing sign counts, but the credential is not flagged or disabled and the member is not alerted (synced passkeys report 0 anyway).
+- The tests in `members/tests_webauthn.py` patch `WebAuthnHelper`, so they cover the member-side wrappers, not signature, origin, RP ID or user-verification checks. Verify registration and sign-in with a real authenticator after changing the WebAuthn settings or upgrading `django-otp-webauthn`.
 
 ## Extending
 - Consider adding auditing (who edited a member) since current forms don’t track admin users.
@@ -88,6 +91,3 @@
 - Ran full `ruff check`, `ruff format --check`, `djlint --check templates/`, and `mypy .` checks plus `git diff --check`; all passed.
 - Ran `uv run python manage.py makemigrations --check --dry-run`: no model changes were missing. The command warned that the configured development host `db` could not resolve while checking migration history, but dry-run migration detection completed.
 - [ ] Run an SF deployment smoke test after migration with representative staff accounts and production membership data.
-
-## Verification (passkeys branch)
-- [ ] Record test, lint, and manual passkey smoke-test results for the `feat/passkeys` branch before merge.

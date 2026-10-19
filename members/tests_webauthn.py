@@ -1,9 +1,10 @@
 import itertools
 import json
 import time
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from django.contrib.auth.models import Group, Permission
+from django.core.cache import cache
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from django_otp import DEVICE_ID_SESSION_KEY
@@ -16,14 +17,31 @@ from members.backends import AuthBackend
 from members.checks import check_passkey_settings
 from members.models import ORDINARY_MEMBER, Member, MembershipType
 from members.two_factor import INFERRED_REDIRECT_SESSION_KEY, member_has_2fa
-from members.webauthn import RECENT_AUTH_SESSION_KEY
+from members.webauthn import CHALLENGE_ISSUED_AT_KEY, RECENT_AUTH_SESSION_KEY
 
 from .tests import GITHUB_SETTINGS, _mock_github_responses
 
+# Every ceremony test patches WebAuthnHelper, so these cover the member-side
+# wrappers (verification upgrade, key rotation, redirects, guards), not
+# signature, origin, RP ID or user-verification checks. Those need a manual
+# check with a real authenticator.
+
 _credential_ids = itertools.count()
 
-AUTH_STATE = {'challenge': 'Y2hhbGxlbmdl', 'require_user_verification': True}
 REGISTER_STATE = {'challenge': 'Y2hhbGxlbmdl'}
+MAX_AUTH_AGE = 600
+
+
+def auth_state(issued_at=None):
+    return {
+        'challenge': f'challenge-{next(_credential_ids)}',
+        'require_user_verification': True,
+        CHALLENGE_ISSUED_AT_KEY: int(time.time()) if issued_at is None else issued_at,
+    }
+
+
+def frozen_time(now):
+    return patch('members.webauthn.time', Mock(time=Mock(return_value=now)))
 
 
 def make_passkey(user, confirmed=True, name='Laptop'):
@@ -268,6 +286,23 @@ class PasskeyLoginWizardTests(PasskeyTestMixin, TestCase):
         self.assertEqual(int(self.client.session['_auth_user_id']), self.member.pk)
         self.assertEqual(self.client.session[DEVICE_ID_SESSION_KEY], static.persistent_id)
 
+    def test_backup_token_rotates_session_of_already_logged_in_member(self):
+        make_passkey(self.member)
+        static = StaticDevice.objects.create(user=self.member, confirmed=True, name='backup')
+        static.token_set.create(token='abcd1234')
+        self.login(self.member)
+        prefix, _ = self._post_auth_step()
+        before = self.client.session.session_key
+
+        response = self.client.post(
+            reverse('members:login'),
+            data={f'{prefix}-current_step': 'backup', 'backup-otp_token': 'abcd1234'},
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertNotEqual(self.client.session.session_key, before)
+        self.assertEqual(self.client.session[DEVICE_ID_SESSION_KEY], static.persistent_id)
+
     def test_totp_member_still_gets_token_step(self):
         TOTPDevice.objects.create(user=self.member, confirmed=True, name='default')
         make_passkey(self.member)
@@ -379,12 +414,41 @@ class PasskeyRegistrationApiTests(PasskeyTestMixin, TestCase):
     begin_url = reverse('otp_webauthn:credential-registration-begin')
     complete_url = reverse('otp_webauthn:credential-registration-complete')
 
-    def test_begin_requires_recent_authentication(self):
+    def _post_at_auth_age(self, url, age, data=None):
+        now = 1_800_000_000
         self.login(self.member)
-        self.set_session(**{RECENT_AUTH_SESSION_KEY: int(time.time()) - 3600})
-        response = self.post_json(self.begin_url)
+        self.set_session(**{RECENT_AUTH_SESSION_KEY: now - age}, otp_webauthn_register_state=REGISTER_STATE)
+        with frozen_time(now):
+            return self.post_json(url, data)
+
+    def test_registration_max_auth_age_setting(self):
+        from django.conf import settings
+
+        self.assertEqual(settings.PASSKEY_REGISTRATION_MAX_AUTH_AGE, MAX_AUTH_AGE)
+
+    def test_begin_allowed_at_max_auth_age(self):
+        self.assertEqual(self._post_at_auth_age(self.begin_url, MAX_AUTH_AGE).status_code, 200)
+
+    def test_begin_rejected_just_past_max_auth_age(self):
+        response = self._post_at_auth_age(self.begin_url, MAX_AUTH_AGE + 1)
         self.assertEqual(response.status_code, 403)
         self.assertEqual(response.json()['code'], 'recent_auth_required')
+
+    @patch('members.webauthn.enqueue_task_on_commit')
+    def test_complete_allowed_at_max_auth_age(self, _mock_enqueue):
+        with patch(
+            'django_otp_webauthn.helpers.WebAuthnHelper.register_complete', lambda h, user, **kw: make_passkey(user)
+        ):
+            response = self._post_at_auth_age(self.complete_url, MAX_AUTH_AGE, {'id': 'x'})
+        self.assertEqual(response.status_code, 200, response.content)
+
+    def test_complete_rejected_just_past_max_auth_age(self):
+        with patch('django_otp_webauthn.helpers.WebAuthnHelper.register_complete') as register_complete:
+            response = self._post_at_auth_age(self.complete_url, MAX_AUTH_AGE + 1, {'id': 'x'})
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.json()['code'], 'recent_auth_required')
+        register_complete.assert_not_called()
+        self.assertFalse(WebAuthnCredential.objects.filter(user=self.member).exists())
 
     def test_begin_allowed_after_fresh_login_without_2fa(self):
         self.login(self.member)
@@ -478,12 +542,15 @@ class PasskeySecurityRegressionTests(PasskeyTestMixin, TestCase):
 class PasskeyAuthenticationApiTests(PasskeyTestMixin, TestCase):
     complete_url = reverse('otp_webauthn:credential-authentication-complete')
 
+    begin_url = reverse('otp_webauthn:credential-authentication-begin')
+
     def setUp(self):
         super().setUp()
+        cache.clear()
         self.passkey = make_passkey(self.member)
 
-    def _complete(self, query=''):
-        self.set_session(otp_webauthn_authentication_state=AUTH_STATE)
+    def _complete(self, query='', state=None):
+        self.set_session(otp_webauthn_authentication_state=state or auth_state())
         with patch('django_otp_webauthn.helpers.WebAuthnHelper.authenticate_complete', return_value=self.passkey):
             return self.post_json(self.complete_url + query, {'id': 'x'})
 
@@ -532,6 +599,41 @@ class PasskeyAuthenticationApiTests(PasskeyTestMixin, TestCase):
         with patch('django_otp_webauthn.helpers.WebAuthnHelper.authenticate_complete', return_value=self.passkey):
             response = self.post_json(self.complete_url, {'id': 'x'})
         self.assertGreaterEqual(response.status_code, 400)
+
+    def test_challenge_is_single_use_across_sessions(self):
+        # Simulates two concurrent requests that both loaded the session before either popped the state.
+        state = auth_state()
+        self.assertEqual(self._complete(state=dict(state)).status_code, 200)
+        self.client = Client()
+        response = self._complete(state=dict(state))
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json()['code'], 'invalid_state')
+        self.assertNotIn('_auth_user_id', self.client.session)
+
+    def test_begin_records_issue_time(self):
+        with frozen_time(1_800_000_000):
+            self.assertEqual(self.post_json(self.begin_url).status_code, 200)
+        state = self.client.session['otp_webauthn_authentication_state']
+        self.assertEqual(state[CHALLENGE_ISSUED_AT_KEY], 1_800_000_000)
+
+    @override_settings(OTP_WEBAUTHN_TIMEOUT_SECONDS=300)
+    def test_challenge_accepted_within_timeout(self):
+        with frozen_time(1_800_000_000):
+            response = self._complete(state=auth_state(issued_at=1_800_000_000 - 300))
+        self.assertEqual(response.status_code, 200, response.content)
+
+    @override_settings(OTP_WEBAUTHN_TIMEOUT_SECONDS=300)
+    def test_expired_challenge_is_rejected(self):
+        with frozen_time(1_800_000_000):
+            response = self._complete(state=auth_state(issued_at=1_800_000_000 - 301))
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json()['code'], 'invalid_state')
+        self.assertNotIn('_auth_user_id', self.client.session)
+
+    def test_state_without_issue_time_is_rejected(self):
+        state = auth_state()
+        del state[CHALLENGE_ISSUED_AT_KEY]
+        self.assertEqual(self._complete(state=state).status_code, 400)
 
 
 @override_settings(PASSKEYS_ENABLED=False)
