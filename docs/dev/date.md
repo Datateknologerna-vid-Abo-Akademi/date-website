@@ -16,7 +16,7 @@
 
 ## Lunch Widget
 - The homepage right column embeds the official lunchmenu.fi student lunch widget below the booking card and above "Annat". The partial is `templates/common/date/components/lunch.html`, included from `templates/date/date/start.html`; its `lunch` CSS grid area sits between `bookings` and `extras` on desktop and after the news card on mobile (`static/date/date/css/homepage.css`).
-- `date/templatetags/lunch.py` provides `{% lunch_widget count=... heading=... wrapper_class=... %}`. It renders `templates/common/date/components/lunch_widget.html`, returns no markup when `LUNCH_ENABLED` is off, and uses the active language when it is `sv`, `en`, or `fi`, falling back to `sv`.
+- `date/templatetags/lunch.py` provides the `{% raw %}{% lunch_widget count=... heading=... wrapper_class=... %}{% endraw %}` tag. It renders `templates/common/date/components/lunch_widget.html`, returns no markup when `LUNCH_ENABLED` is off, and uses the active language when it is `sv`, `en`, or `fi`, falling back to `sv`.
 - `/lunch/` renders the same widget with 10 entries and an `h2` heading. The view raises 404 when `LUNCH_ENABLED` is off, and the route is mounted only in the DaTe URLconf.
 - Link `/lunch/` from the navigation (admin-managed `Länkar` or its own item); the homepage card's fallback anchor already points there.
 - Settings: `LUNCH_ENABLED` (off in `core/settings/common.py`, on for DaTe), `LUNCH_CITY` (`turku`), `LUNCH_LAT`/`LUNCH_LNG` (both set: coordinates replace the city; leave unset, not empty, to use the city), `LUNCH_COUNT` (3, the sidebar count), `LUNCH_ACCENT` (`#3a80c3`).
