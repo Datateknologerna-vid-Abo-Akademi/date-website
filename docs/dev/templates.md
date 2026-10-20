@@ -129,7 +129,7 @@ So platforms Line Awesome covers keep using `fa-*` names, and a platform it lack
 
 To give one association a different icon, put a file at the same path in its own template directory (`templates/<association>/core/svg/social/<name>.svg`); the search order finds it before the shared file. A variant that layers another variant's templates (impuls and biocum layer `date`) or an app's `templates/` directory can supply or override an icon the same way.
 
-Shared icons so far: `tiktok`, `linktree` (Font Awesome Free 7.3.1, CC BY 4.0). `sf` renders its own complete footer and does not use this lookup.
+Shared icons so far: `tiktok`, `linktree` (Font Awesome Free 7.3.1, CC BY 4.0). `sf` renders its own complete footer and does not use this lookup: `templates/sf/core/footer.html` has one branch per platform (instagram, facebook, x, linkedin, tiktok), so a new platform for sf needs a branch added there. Its `tiktok` branch includes the shared `tiktok.svg`.
 
 ## Shared CSS And Element Selectors
 

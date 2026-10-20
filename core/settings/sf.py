@@ -91,6 +91,7 @@ CONTENT_VARIABLES = {
         ["facebook", "https://www.facebook.com/SFKlubben/"],
         ["x", "https://twitter.com/sfklubben"],
         ["linkedin", "https://linkedin.com/company/statsvetenskapligaklubben"],
+        ["tiktok", "https://www.tiktok.com/@sfklubben"],
     ],
     # Alumni
     "ALUMNI_ASSOCIATION_NAME": "",
