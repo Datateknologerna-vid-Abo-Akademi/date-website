@@ -74,3 +74,7 @@ EQUALITY_PLAN_ENABLED = True
 # their releases has no effect. Turn it off here (or on the DaTe release) to
 # remove the public booking pages and the homepage booking block.
 BOOKING_ENABLED = env('BOOKING_ENABLED', bool, True)
+# The lunchmenu.fi student lunch widget is on by default for DaTe. Other
+# associations keep the shared default from core/settings/common.py (off) until
+# their release sets LUNCH_ENABLED.
+LUNCH_ENABLED = env('LUNCH_ENABLED', bool, True)

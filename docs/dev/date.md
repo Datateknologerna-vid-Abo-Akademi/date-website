@@ -14,6 +14,25 @@
 - kk and impuls include the shared Instagram slider (`date/components/instagram.html`, see `docs/dev/instagram.md`); impuls shows it in place of the partners section.
 - Keep variant-specific homepage behavior here rather than scattering date checks through templates.
 
+## Lunch Widget
+- The homepage right column embeds the official lunchmenu.fi student lunch widget below the booking card and above "Annat". The partial is `templates/common/date/components/lunch.html`, included from `templates/date/date/start.html`; its `lunch` CSS grid area sits between `bookings` and `extras` on desktop and after the news card on mobile (`static/date/date/css/homepage.css`).
+- `date/templatetags/lunch.py` provides `{% lunch_widget count=... heading=... wrapper_class=... %}`. It renders `templates/common/date/components/lunch_widget.html`, returns no markup when `LUNCH_ENABLED` is off, and uses the active language when it is `sv`, `en`, or `fi`, falling back to `sv`.
+- `/lunch/` renders the same widget with 10 entries and an `h2` heading. The view raises 404 when `LUNCH_ENABLED` is off, and the route is mounted only in the DaTe URLconf.
+- Link `/lunch/` from the navigation (admin-managed `Länkar` or its own item); the homepage card's fallback anchor already points there.
+- Settings: `LUNCH_ENABLED` (off in `core/settings/common.py`, on for DaTe), `LUNCH_CITY` (`turku`), `LUNCH_LAT`/`LUNCH_LNG` (both set: coordinates replace the city; leave unset, not empty, to use the city), `LUNCH_COUNT` (3, the sidebar count), `LUNCH_ACCENT` (`#3a80c3`).
+- Set the values in the site's release environment, for example Helm `extraEnv`; the shared `.env.example` leaves the association-specific values unset:
+
+  ```dotenv
+  LUNCH_ENABLED="True"
+  LUNCH_CITY="turku"
+  LUNCH_COUNT=3
+  LUNCH_ACCENT="#3a80c3"
+  # LUNCH_LAT="60.4518"
+  # LUNCH_LNG="22.2666"
+  ```
+
+- Other associations opt in by setting the `LUNCH_*` variables and adding `lunch` to their `build_urlpatterns` list. The embed script is served by lunchmenu.fi, so the widget falls back to the `/lunch/` link (or `https://lunchmenu.fi/` without the route) when the third party is unavailable.
+
 ## Calendar Data Structure
 - `format_calendar_events()` converts the event queryset into a `dict["YYYY-MM-DD"] = [event, ...]` used by the front-end calendar widget. Each date maps to a list because several events can share a day; each event includes `link`, `eventFullDate`, and `eventTitle`. The calendar JS builds the popup HTML (and the `modifier`) itself.
 

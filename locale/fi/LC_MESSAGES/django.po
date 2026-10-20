@@ -3911,3 +3911,8 @@ msgstr "Pääsyavain"
 #: members/webauthn.py members/two_factor.py
 msgid "Choose a different name."
 msgstr "Valitse toinen nimi."
+
+#: templates/common/date/components/lunch_widget.html:6
+#: templates/common/date/lunch.html:5 templates/common/date/lunch.html:9
+msgid "Lunch"
+msgstr "Lounas"

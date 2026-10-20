@@ -1,7 +1,7 @@
 {% extends 'date/start.html' %}
 {% comment %}
 DaTe shows the about section, and fills the homepage with the calendar, the event
-list, its booking block, the extras and the partner carousel.
+list, its booking block, the lunch widget, the extras and the partner carousel.
 {% endcomment %}
 {% block homepage_about %}
   {% include "date/components/about.html" %}
@@ -10,6 +10,7 @@ list, its booking block, the extras and the partner carousel.
   {% include "date/components/news.html" %}
   {% include "date/components/events.html" %}
   {% include "date/components/bookings.html" %}
+  {% include "date/components/lunch.html" %}
   {% include "date/components/extras.html" %}
   {% include "date/components/partners.html" %}
 {% endblock %}

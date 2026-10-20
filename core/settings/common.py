@@ -414,6 +414,17 @@ KK_EVENT_TEMPLATES_ENABLED = False
 BOOKING_ENABLED = False
 INSTAGRAM_USERNAME = ''
 
+# lunchmenu.fi student lunch widget. Off by default; DaTe turns it on in
+# core/settings/date.py. LUNCH_LAT and LUNCH_LNG replace LUNCH_CITY as the
+# widget search area when both are set. An empty env value means "not set":
+# django-environ would otherwise try to cast an empty string to float.
+LUNCH_ENABLED = env('LUNCH_ENABLED', bool, False)
+LUNCH_CITY = env('LUNCH_CITY', str, 'turku')
+LUNCH_LAT = env('LUNCH_LAT', float, None) if os.environ.get('LUNCH_LAT') else None
+LUNCH_LNG = env('LUNCH_LNG', float, None) if os.environ.get('LUNCH_LNG') else None
+LUNCH_COUNT = env('LUNCH_COUNT', int, 3)
+LUNCH_ACCENT = env('LUNCH_ACCENT', str, '#3a80c3')
+
 # The public functionaries listing applies the year and role query parameters
 # for logged-out visitors only when this is on. Off by default because the year
 # filter exposes earlier years; pulterit enables it because it has no member

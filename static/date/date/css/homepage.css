@@ -144,6 +144,7 @@
     grid-template-areas: 
       ". news events ."
       ". news bookings ."
+      ". news lunch ."
       ". news extras ."
       ". ig-scroll ig-scroll ."
       ". logos logos .";
@@ -251,6 +252,11 @@ div.news-content a:hover{
 
 .bookings-container{
     grid-area: bookings;
+    display: block;
+}
+
+.lunch-container{
+    grid-area: lunch;
     display: block;
 }
 
@@ -414,6 +420,7 @@ div.calendar-container a {
           ". events ."
           ". bookings ."
           ". news ."
+          ". lunch ."
           ". extras ."
           ". logos ."
           ". ig-scroll .";
