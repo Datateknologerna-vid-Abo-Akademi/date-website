@@ -407,6 +407,28 @@ class SiteShellTemplateTests(TestCase):
         self.assertIn("impuls-logo-transparent.png", rendered)
         self.assertNotIn("core/images/footerlogo.png", rendered)
 
+    def test_sf_footer_renders_the_tiktok_icon(self):
+        sf_settings = importlib.import_module("core.settings.sf")
+
+        with override_settings(
+            TEMPLATES=sf_settings.TEMPLATES,
+            STATICFILES_DIRS=sf_settings.STATICFILES_DIRS,
+        ):
+            rendered = render_to_string(
+                "core/footer.html",
+                {
+                    **self._content_context(),
+                    "SOCIAL_BUTTONS": sf_settings.CONTENT_VARIABLES["SOCIAL_BUTTONS"],
+                },
+            )
+
+        # sf renders its own footer with one hardcoded branch per platform, so
+        # the TikTok link must get the shared SVG and not the plain-text fallback.
+        self.assertIn("SF_logo_Tran.svg", rendered)
+        self.assertIn("https://www.tiktok.com/@sfklubben", rendered)
+        self.assertIn('role="img" aria-label="TikTok"', rendered)
+        self.assertEqual(rendered.count("<svg"), 5)
+
 
 class SocialIconTemplateTagTests(SimpleTestCase):
     def test_returns_the_shared_svg_template_when_one_exists(self):
