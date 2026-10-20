@@ -1552,19 +1552,34 @@ class LunchWidgetTests(TestCase):
     def test_homepage_renders_the_widget_when_enabled(self):
         cache.clear()
 
-        with override_settings(LUNCH_ENABLED=True):
+        with override_settings(
+            LUNCH_ENABLED=True,
+            LUNCH_LAT=60.4565176,
+            LUNCH_LNG=22.2796885,
+        ):
             response = self.client.get("/")
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'class="lunch-container"')
         self.assertContains(response, "lunchmenu-student-widget")
-        self.assertContains(response, 'data-city="turku"')
+        self.assertContains(response, 'data-lat="60.4565176"')
+        self.assertContains(response, 'data-lng="22.2796885"')
+        self.assertNotContains(response, 'data-city="turku"')
         self.assertContains(response, 'data-lang="sv"')
         self.assertContains(response, 'data-count="3"')
         self.assertContains(response, 'data-heading="3"')
         self.assertContains(response, 'data-accent="#3a80c3"')
         self.assertContains(response, 'href="/lunch/"')
         self.assertContains(response, "https://lunchmenu.fi/static/widget/student.js")
+
+    def test_homepage_uses_the_city_when_coordinates_are_unset(self):
+        cache.clear()
+
+        with override_settings(LUNCH_ENABLED=True, LUNCH_LAT=None, LUNCH_LNG=None):
+            response = self.client.get("/")
+
+        self.assertContains(response, 'data-city="turku"')
+        self.assertNotContains(response, 'data-lat=')
 
     def test_coordinates_replace_the_city_with_dot_decimals(self):
         cache.clear()
