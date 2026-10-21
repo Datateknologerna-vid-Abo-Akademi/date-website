@@ -10,7 +10,7 @@ from unittest.mock import patch
 from django.apps import apps
 from django.conf import settings
 from django.contrib import admin
-from django.contrib.admin.models import ADDITION, LogEntry
+from django.contrib.admin.models import ADDITION, CHANGE, LogEntry
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.db import DatabaseError, connection
@@ -584,6 +584,23 @@ class AuditLogTestCase(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "created user")
+
+    def test_audit_log_renders_a_human_readable_change_message(self):
+        LogEntry.objects.log_actions(
+            user_id=self.user.pk,
+            queryset=get_user_model().objects.filter(pk=self.user.pk),
+            action_flag=CHANGE,
+            change_message='[{"changed": {"fields": ["Titel"]}}]',
+            single_object=True,
+        )
+        self.client.login(username="admin", password="pass")
+
+        response = self.client.get(reverse("admin:admin_logentry_changelist"))
+
+        entry = LogEntry.objects.latest("action_time")
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, entry.get_change_message())
+        self.assertNotContains(response, "&quot;fields&quot;")
 
     def test_admin_respects_english_language_cookie(self):
         self.client.login(username="admin", password="pass")

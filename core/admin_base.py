@@ -111,11 +111,13 @@ class PublicUrlAdminMixin:
         if self.public_url_field in flatten_fieldsets(fieldsets) or not fieldsets:
             return fieldsets
 
-        # Append the public-page link to the last existing fieldset rather than
-        # creating a new unlabelled section at the bottom of the change form.
-        name, options = fieldsets[-1]
-        options = {**options, 'fields': tuple(options.get('fields', ())) + (self.public_url_field,)}
-        fieldsets[-1] = (name, options)
+        # Put the public-page link at the top of the first fieldset. Appending
+        # it to the last fieldset hides it inside collapsed sections such as
+        # "Timestamps" on publications, which made the link effectively
+        # invisible in the stock admin.
+        name, options = fieldsets[0]
+        options = {**options, 'fields': (self.public_url_field, *options.get('fields', ()))}
+        fieldsets[0] = (name, options)
         return fieldsets
 
 

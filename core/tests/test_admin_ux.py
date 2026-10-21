@@ -149,6 +149,16 @@ class AdminUxLinkTests(TestCase):
         # shortcut must not be offered either.
         self.assertNotContains(response, reverse("admin:ctf_postmortem_changelist"))
 
+    def test_extra_changelist_links_use_theme_appropriate_markup(self):
+        response = self.client.get(reverse("admin:archive_documentcollection_changelist"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Städa upp media")
+        if settings.USE_UNFOLD:
+            self.assertContains(response, "cleaning_services")
+        else:
+            self.assertNotContains(response, "cleaning_services")
+
     def test_static_pages_admin_exposes_public_and_navigation_links(self):
         page = StaticPage.objects.create(title="About", slug="about")
         nav = StaticPageNav.objects.create(
