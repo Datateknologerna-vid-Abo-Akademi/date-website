@@ -6,6 +6,13 @@ on:
       - main
     tags:
       - 'v*.*.*'
+    # Path filters are not evaluated for tag pushes, so v* tags always run.
+    # release_tag.yaml also dispatches this workflow explicitly on the tag ref.
+    paths-ignore:
+      - 'docs/**'
+      - 'charts/**'
+      - '**/*.md'
+      - '.github/**'
   workflow_dispatch:
   schedule:
     - cron: '0 0 1 * *'
@@ -17,12 +24,22 @@ permissions:
   actions: write
 jobs:
   build:
-    concurrency:
-      group: 'docker-publish-${{ github.ref_name }}'
-      cancel-in-progress: true
-    runs-on: ubuntu-latest
-    timeout-minutes: 45
     if: github.ref_type == 'branch' || github.event_name == 'schedule'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux/amd64
+            arch: amd64
+            runner: ubuntu-latest
+          - platform: linux/arm64
+            arch: arm64
+            runner: ubuntu-24.04-arm
+    concurrency:
+      group: 'docker-publish-${{ github.ref_name }}-${{ matrix.arch }}'
+      cancel-in-progress: true
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
     defaults:
       run:
         shell: bash
@@ -52,40 +69,35 @@ jobs:
           done
           echo "GHCR login failed after 3 attempts."
           exit 1
-      - name: Compute image tags
-        id: tags
-        shell: bash
-        env:
-          IMAGE_REPO: ghcr.io/${{ steps.image.outputs.repo_lower }}
-        run: |
-          set -euo pipefail
-
-          TAGS=("${IMAGE_REPO}:${GITHUB_SHA}")
-
-          if [ "${GITHUB_REF_TYPE}" = "branch" ] && [ "${GITHUB_REF_NAME}" = "main" ]; then
-            TAGS+=("${IMAGE_REPO}:qa")
-          fi
-
-          {
-            echo "value<<EOF"
-            printf '%s\n' "${TAGS[@]}"
-            echo "EOF"
-          } >> "${GITHUB_OUTPUT}"
-      - name: Build and push image
+      - name: Build and push by digest
+        id: build
         uses: docker/build-push-action@v7
         with:
           context: .
-          push: true
-          platforms: linux/amd64,linux/arm64
-          tags: ${{ steps.tags.outputs.value }}
+          platforms: ${{ matrix.platform }}
+          outputs: type=image,name=ghcr.io/${{ steps.image.outputs.repo_lower }},push-by-digest=true,name-canonical=true,push=true
           # The image collects static for every association at build time
           # (one tree per variant under /code/static-collected). PROJECT_NAME
           # sets the runtime default only; the chart/compose always pass the
           # site's variant explicitly.
           build-args: |
             PROJECT_NAME=date
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=buildkit-${{ matrix.arch }}
+          cache-to: type=gha,mode=max,scope=buildkit-${{ matrix.arch }}
+      - name: Write digest
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+          ARCH: ${{ matrix.arch }}
+        run: |
+          mkdir -p "${RUNNER_TEMP}/digests"
+          echo "${DIGEST#sha256:}" > "${RUNNER_TEMP}/digests/digest-${ARCH}.txt"
+      - name: Upload digest
+        uses: actions/upload-artifact@v7
+        with:
+          name: digest-${{ matrix.arch }}
+          path: ${{ runner.temp }}/digests/digest-${{ matrix.arch }}.txt
+          if-no-files-found: error
+          retention-days: 1
 
       # Self-heal the build cache. A corrupt gha cache entry makes every
       # subsequent build fail the same way (2026-08-29: compilemessages
@@ -108,6 +120,75 @@ jobs:
             [ "${N}" = "0" ] && break
             sleep 2
           done
+
+  merge:
+    needs: build
+    if: github.ref_type == 'branch' || github.event_name == 'schedule'
+    concurrency:
+      group: 'docker-publish-${{ github.ref_name }}'
+      cancel-in-progress: true
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+      - name: Compute image repository
+        id: image
+        run: |
+          echo "repo_lower=${GITHUB_REPOSITORY,,}" >> "${GITHUB_OUTPUT}"
+      - name: Docker login with retry
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          for attempt in 1 2 3; do
+            if echo "${GHCR_TOKEN}" | docker login ghcr.io -u "${GITHUB_ACTOR}" --password-stdin; then
+              exit 0
+            fi
+            if [ "${attempt}" -lt 3 ]; then
+              sleep $((attempt * 5))
+            fi
+          done
+          echo "GHCR login failed after 3 attempts."
+          exit 1
+      - name: Download digests
+        uses: actions/download-artifact@v7
+        with:
+          pattern: digest-*
+          path: ${{ runner.temp }}/digests
+          merge-multiple: true
+      - name: Create multi-arch manifest
+        env:
+          IMAGE_REPO: ghcr.io/${{ steps.image.outputs.repo_lower }}
+        run: |
+          set -euo pipefail
+
+          TAGS=("${IMAGE_REPO}:${GITHUB_SHA}")
+          if [ "${GITHUB_REF_TYPE}" = "branch" ] && [ "${GITHUB_REF_NAME}" = "main" ]; then
+            TAGS+=("${IMAGE_REPO}:qa")
+          fi
+
+          TAG_ARGS=()
+          for tag in "${TAGS[@]}"; do
+            TAG_ARGS+=(--tag "${tag}")
+          done
+
+          shopt -s nullglob
+          DIGEST_FILES=("${RUNNER_TEMP}"/digests/*.txt)
+          if [ "${#DIGEST_FILES[@]}" -ne 2 ]; then
+            echo "Expected 2 platform digests, found ${#DIGEST_FILES[@]}."
+            exit 1
+          fi
+
+          IMAGES=()
+          for digest_file in "${DIGEST_FILES[@]}"; do
+            IMAGES+=("${IMAGE_REPO}@sha256:$(cat "${digest_file}")")
+          done
+
+          docker buildx imagetools create "${TAG_ARGS[@]}" "${IMAGES[@]}"
 
   tag_release_image:
     concurrency:
