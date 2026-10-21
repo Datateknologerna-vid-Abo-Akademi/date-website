@@ -148,7 +148,9 @@ jobs:
           set -euo pipefail
           export COMPOSE_FILE="${{ steps.prebuilt.outputs.compose_file }}"
           # Test settings use in-memory SQLite/Channels/cache, so skip service startup.
-          docker compose run --rm --no-deps -e TEST=1 ${{ matrix.extra_env }} web python /code/manage.py test
+          # Parallel workers cut the run to the longest single test; see
+          # klotterplanket/tests.py for why module-level skips are avoided.
+          docker compose run --rm --no-deps -e TEST=1 ${{ matrix.extra_env }} web python /code/manage.py test --parallel 4
 
       - name: Build and run Docker Compose
         if: matrix.label == 'default'

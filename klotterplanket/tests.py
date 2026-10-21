@@ -1,16 +1,26 @@
 import unittest
+from typing import TYPE_CHECKING
 from unittest.mock import patch
 
 from django.conf import settings
 from django.test import TestCase
 from django.urls import reverse
 
-if "klotterplanket" not in settings.INSTALLED_APPS:
-    raise unittest.SkipTest("klotterplanket app is not installed in this settings module")
+KLOTTERPLANKET_INSTALLED = "klotterplanket" in settings.INSTALLED_APPS
 
-from .models import Post  # noqa: E402
+if TYPE_CHECKING:
+    from .models import Post  # noqa: E402
+elif KLOTTERPLANKET_INSTALLED:
+    from .models import Post  # noqa: E402
 
 
+# A module-level SkipTest is wrapped in unittest.loader.ModuleSkipped, which
+# cannot be pickled, so Django's parallel test runner aborts before running a
+# single test when this module is loaded without the app installed.
+@unittest.skipUnless(
+    KLOTTERPLANKET_INSTALLED,
+    "klotterplanket app is not installed in this settings module",
+)
 class KlotterplanketViewTests(TestCase):
     def test_index_get_renders_empty_state(self):
         response = self.client.get(reverse('klotterplanket:index'))
