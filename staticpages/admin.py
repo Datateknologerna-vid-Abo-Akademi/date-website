@@ -4,7 +4,8 @@ from admin_ordering.admin import OrderableAdmin
 from django.conf import settings
 from django.contrib import admin
 from django.db.models import Case, Count, IntegerField, TextField, Value, When
-from django.utils.html import format_html
+from django.urls import reverse
+from django.utils.html import format_html, format_html_join
 from django.utils.translation import gettext_lazy as _
 from django_ckeditor_5.widgets import CKEditor5Widget
 
@@ -14,8 +15,14 @@ from core.admin import (
     TranslationCompletionAdminMixin,
 )
 from core.admin_base import UNFOLD_FORMFIELD_OVERRIDES, ModelAdmin, PublicUrlAdminMixin, StackedInline
+from core.admin_widgets import SafeAdminImageWidget
 
 from .models import StaticPage, StaticPageNav, StaticUrl
+from .widgets import NavTargetWidget, get_nav_targets
+
+NAV_URL_HELP_TEXT = _(
+    'Välj en egen sida i listan eller skriv en egen adress. Interna länkar börjar med /, externa med https://.'
+)
 
 
 def safe_admin_url_link(url, label=None):
@@ -83,6 +90,13 @@ class UrlInline(OrderableAdmin, StaticPageTranslationInlineBase):
             kwargs['queryset'] = queryset
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        formfield = super().formfield_for_dbfield(db_field, request, **kwargs)
+        if formfield is not None and db_field.name == 'url':
+            formfield.widget = NavTargetWidget(targets=get_nav_targets())
+            formfield.help_text = NAV_URL_HELP_TEXT
+        return formfield
+
     @admin.display(description=_('Open'))
     def open_link(self, obj):
         if not obj or not obj.url:
@@ -98,6 +112,24 @@ class StaticPageNavAdmin(TranslationCompletionAdminMixin, StaticPageTranslationA
     search_fields = ('category_name', 'url', 'staticurl__title', 'staticurl__url')
     ordering = ('nav_element',)
     inlines = [UrlInline]
+
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        formfield = super().formfield_for_dbfield(db_field, request, **kwargs)
+        if formfield is None:
+            return None
+        if db_field.name == 'url':
+            formfield.widget = NavTargetWidget(targets=get_nav_targets())
+            formfield.help_text = _(
+                'Används när "Använd kategorins URL" är ikryssad. '
+                'Välj en egen sida i listan eller skriv en egen adress.'
+            )
+        elif db_field.name == 'use_category_url':
+            formfield.help_text = _('Kategorin länkar direkt till URL:en i stället för att visa en meny med länkar.')
+        elif db_field.name == 'nav_element':
+            formfield.help_text = _(
+                'Lägre värde visas först. Använd 10, 20, 30 för att lämna plats för nya kategorier.'
+            )
+        return formfield
 
     def get_queryset(self, request):
         return super().get_queryset(request).annotate(link_total=Count('staticurl', distinct=True))
@@ -131,6 +163,71 @@ class StaticPageAdmin(PublicUrlAdminMixin, TranslationCompletionAdminMixin, Stat
         if obj is None:
             return self.prepopulated_fields
         return {}
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly_fields = list(super().get_readonly_fields(request, obj))
+        if obj is not None and 'navigation_usage' not in readonly_fields:
+            readonly_fields.append('navigation_usage')
+        return readonly_fields
+
+    def get_exclude(self, request, obj=None):
+        exclude = list(super().get_exclude(request, obj) or ())
+        # Only one of the two background image fields is usable for the current
+        # storage configuration. Showing both with the same label made editors
+        # pick the wrong one and failed only on save when both were filled. If
+        # an image from the other storage is still set (for example after a
+        # deployment switched to S3), keep both fields visible so the stale
+        # value can be cleared instead of becoming unreachable.
+        hidden_field = 'image' if settings.USE_S3 else 's3_image'
+        if obj is not None and getattr(obj, hidden_field):
+            return exclude
+        if hidden_field not in exclude:
+            exclude.append(hidden_field)
+        return exclude
+
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        formfield = super().formfield_for_dbfield(db_field, request, **kwargs)
+        if formfield is None:
+            return None
+        if db_field.name == 'image':
+            formfield.widget = SafeAdminImageWidget()
+            formfield.label = _('Bakgrundsbild (lokal)')
+            formfield.help_text = _('Visas bakom sidans innehåll.')
+        elif db_field.name == 's3_image':
+            formfield.widget = SafeAdminImageWidget()
+            formfield.label = _('Bakgrundsbild (publik S3)')
+            formfield.help_text = _('Visas bakom sidans innehåll.')
+        return formfield
+
+    @admin.display(description=_('I menyn'))
+    def navigation_usage(self, obj):
+        if not obj or not obj.pk:
+            return '-'
+        links = list(
+            StaticUrl.objects.filter(url=obj.get_absolute_url())
+            .select_related('category')
+            .order_by('category__nav_element', 'dropdown_element')
+        )
+        if not links:
+            return format_html(
+                '{} <a href="{}">{}</a>',
+                _('Sidan finns inte i menyn.'),
+                reverse('admin:staticpages_staticpagenav_changelist'),
+                _('Öppna sidmenyn'),
+            )
+        rendered_links = format_html_join(
+            ', ',
+            '<a href="{}">{} / {}</a>',
+            (
+                (
+                    reverse('admin:staticpages_staticpagenav_change', args=[link.category_id]),
+                    link.category,
+                    link.title,
+                )
+                for link in links
+            ),
+        )
+        return format_html('{}: {}', _('Länkad i menyn'), rendered_links)
 
     @admin.display(description=_('Public page'))
     def public_page_link(self, obj):

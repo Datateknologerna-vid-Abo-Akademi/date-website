@@ -9,6 +9,7 @@ from django.test import RequestFactory, TestCase, override_settings
 from django.urls import reverse
 from django.utils import translation
 
+from members.models import ORDINARY_MEMBER, Member, MembershipType
 from staticpages.context_processors import get_categories, get_urls, navigation
 from staticpages.models import StaticPage, StaticPageNav, StaticUrl
 
@@ -308,6 +309,107 @@ class StaticUrlTests(TestCase):
         children = list(urls[0].children.all())
 
         self.assertEqual([child.title for child in children], ["Visible child"])
+
+
+class StaticPageAdminTests(TestCase):
+    def setUp(self):
+        self.admin_user = Member.objects.create_superuser(
+            username="staticpages-admin",
+            password="pwd",
+            email="staticpages-admin@example.com",
+            membership_type=MembershipType.objects.get(pk=ORDINARY_MEMBER),
+        )
+        self.category = StaticPageNav.objects.create(category_name="Menu")
+        self.client.force_login(self.admin_user)
+
+    def test_nav_link_form_autocompletes_the_sites_own_pages(self):
+        StaticPage.objects.create(title="Om oss", slug="om-oss")
+        StaticUrl.objects.create(title="Om oss", category=self.category, url="/pages/om-oss/")
+
+        response = self.client.get(reverse("admin:staticpages_staticpagenav_change", args=[self.category.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'name="staticurl_set-0-url"')
+        self.assertContains(response, 'list="id_staticurl_set-0-url_suggestions"')
+        self.assertContains(response, "<datalist")
+        self.assertContains(response, "/pages/om-oss/")
+
+    def test_static_page_form_shows_only_the_storage_specific_background_image(self):
+        page = StaticPage.objects.create(title="Bakgrund", slug="bakgrund")
+
+        response = self.client.get(reverse("admin:staticpages_staticpage_change", args=[page.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'name="image"')
+        self.assertNotContains(response, 'name="s3_image"')
+        self.assertContains(response, "Bakgrundsbild (lokal)")
+
+    @override_settings(USE_S3=True)
+    def test_static_page_form_shows_the_public_s3_image_when_s3_is_enabled(self):
+        page = StaticPage.objects.create(title="S3-bakgrund", slug="s3-bakgrund")
+
+        response = self.client.get(reverse("admin:staticpages_staticpage_change", args=[page.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'name="s3_image"')
+        self.assertNotContains(response, 'name="image"')
+        self.assertContains(response, "Bakgrundsbild (publik S3)")
+
+    def test_static_page_form_keeps_a_stale_image_from_the_other_storage(self):
+        page = StaticPage.objects.create(title="Gammal bild", slug="gammal-bild", s3_image="pages/old.jpg")
+
+        response = self.client.get(reverse("admin:staticpages_staticpage_change", args=[page.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'name="image"')
+        self.assertContains(response, 'name="s3_image"')
+
+    def test_category_url_is_ignored_when_use_category_url_is_off(self):
+        category = StaticPageNav(category_name="Meny", use_category_url=False, url="pages/legacy/")
+
+        category.full_clean()
+
+    def test_nav_link_rejects_a_relative_url_without_a_leading_slash(self):
+        nav_url = StaticUrl(title="Typo", category=self.category, url="pages/om-oss/")
+
+        with self.assertRaises(ValidationError) as error:
+            nav_url.full_clean()
+
+        self.assertIn("url", error.exception.message_dict)
+
+    def test_nav_link_accepts_external_and_root_relative_urls(self):
+        for url in ("https://example.com/", "mailto:info@example.com", "/pages/om-oss/", "#top"):
+            with self.subTest(url=url):
+                StaticUrl(title="Link", category=self.category, url=url).full_clean()
+
+    def test_category_url_is_required_when_use_category_url_is_checked(self):
+        category = StaticPageNav(category_name="Direct", use_category_url=True, url="")
+
+        with self.assertRaises(ValidationError) as error:
+            category.full_clean()
+
+        self.assertIn("url", error.exception.message_dict)
+
+    def test_static_page_form_shows_where_the_page_is_linked(self):
+        page = StaticPage.objects.create(title="Om oss", slug="om-oss")
+        StaticUrl.objects.create(title="Om oss", category=self.category, url=page.get_absolute_url())
+
+        response = self.client.get(reverse("admin:staticpages_staticpage_change", args=[page.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Länkad i menyn")
+        self.assertContains(
+            response,
+            reverse("admin:staticpages_staticpagenav_change", args=[self.category.pk]),
+        )
+
+    def test_static_page_form_reports_a_page_that_is_not_in_the_menu(self):
+        page = StaticPage.objects.create(title="Ny sida", slug="ny-sida")
+
+        response = self.client.get(reverse("admin:staticpages_staticpage_change", args=[page.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Sidan finns inte i menyn.")
 
 
 class NavigationProcessorTests(TestCase):

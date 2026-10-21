@@ -24,7 +24,11 @@
 
 ## Admin/Ordering
 - `StaticPageNavAdmin` allows inline management of `StaticUrl` rows using `admin-ordering`. Dragging rows updates the `dropdown_element`; category and dropdown URLs render quick open links for checking destinations.
-- `StaticPageAdmin` lists pages with `members_only` badge, per-language translation coverage, and public-page links for quick auditing. The slug field is prepopulated from the title on new pages. When language features are enabled, the local language tabs show one translated title/content version at a time without relying on an external JavaScript CDN.
+- The URL fields use `NavTargetWidget` (`staticpages/widgets.py`), a free-text input with a `<datalist>` of the site's own static pages, a few common section routes, and URLs already used in the menu. It stays a normal text field, so external addresses and hand-written paths are still allowed. `validate_nav_target` in `models.py` rejects bare relative paths such as `pages/om-oss/` and invalid schemes; a category URL is only required and validated when `use_category_url` is on, because the value is ignored otherwise.
+- `StaticPageAdmin` shows only the background image field that matches `settings.USE_S3` and labels it as local or public S3. When a stale image from the other storage is still set, both fields stay visible so it can be cleared. Both fields use `SafeAdminImageWidget`, so a stored file with an unresolvable URL does not break the change form.
+- The page change form adds an `I menyn` read-only row that lists the `StaticUrl` rows pointing at the page (linking to their categories) or says that the page is not linked yet.
+- The shared header matches links to categories by `category_id`, not by the translated category name, so two categories with the same name cannot swap each other's links.
+- `StaticPageAdmin` lists pages with `members_only` badge, per-language translation coverage, and public-page links for quick auditing. The slug field is prepopulated from the title on new pages. When language features are enabled, the local language tabs show one translated title/content version at a time without relying on an external JavaScript CDN. In the stock admin the public-page link is placed at the top of the first fieldset; Unfold keeps its own "View on site" object action.
 
 ## Extending the App
 - Distinguish between external URLs and internal paths when adding menu links. External URLs should remain absolute; internal paths should stay relative so `localized_url` can rewrite them.
