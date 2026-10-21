@@ -1,6 +1,7 @@
 import os
 import subprocess
 import sys
+from concurrent.futures import ThreadPoolExecutor
 
 from django.test import SimpleTestCase
 
@@ -239,28 +240,37 @@ class VariantRouteParityTests(SimpleTestCase):
     Runs in a fresh process so the variant's own INSTALLED_APPS are active.
     """
 
+    def _run_variant(self, variant: str) -> tuple[str, subprocess.CompletedProcess[str]]:
+        """Check one variant in its own process and return the result."""
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-c",
+                CODE,
+                variant,
+                ",".join(EXPECTED_PREFIXES[variant]),
+                ",".join(EXPECTED_URL_NAMES[variant]),
+                ",".join(FORBIDDEN_URL_NAMES.get(variant, [])),
+            ],
+            capture_output=True,
+            text=True,
+            # BOOKING_ENABLED is dropped so the inventory describes each
+            # settings module's default instead of the developer's .env.
+            env={
+                **{k: v for k, v in os.environ.items() if k != "BOOKING_ENABLED"},
+                "PROJECT_NAME": variant,
+            },
+        )
+        return variant, result
+
     def test_variant_route_parity(self):
-        for variant, prefixes in EXPECTED_PREFIXES.items():
+        # Every variant pays a full Django import in its own process, so run
+        # the checks concurrently: seven of them back to back dominated the
+        # whole suite (about 50s of a 110s run).
+        with ThreadPoolExecutor(max_workers=len(EXPECTED_PREFIXES)) as pool:
+            results = list(pool.map(self._run_variant, EXPECTED_PREFIXES))
+        for variant, result in results:
             with self.subTest(variant=variant):
-                result = subprocess.run(
-                    [
-                        sys.executable,
-                        "-c",
-                        CODE,
-                        variant,
-                        ",".join(prefixes),
-                        ",".join(EXPECTED_URL_NAMES[variant]),
-                        ",".join(FORBIDDEN_URL_NAMES.get(variant, [])),
-                    ],
-                    capture_output=True,
-                    text=True,
-                    # BOOKING_ENABLED is dropped so the inventory describes each
-                    # settings module's default instead of the developer's .env.
-                    env={
-                        **{k: v for k, v in os.environ.items() if k != "BOOKING_ENABLED"},
-                        "PROJECT_NAME": variant,
-                    },
-                )
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
 
