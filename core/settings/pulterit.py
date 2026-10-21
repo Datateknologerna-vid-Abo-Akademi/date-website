@@ -1,5 +1,6 @@
-from .common import *  # noqa
+import os
 
+from .common import *  # noqa
 
 TEMPLATES = build_templates('pulterit')
 
@@ -50,3 +51,9 @@ CONTENT_VARIABLES = {
         ["fa-github", ""],
     ],
 }
+
+# Lunch widget fallback coordinates for the association kansli (Geohuset, Akatemiankatu 1).
+LUNCH_KANSLI_LATITUDE = 60.4510752
+LUNCH_KANSLI_LONGITUDE = 22.2788933
+LUNCH_LAT = env('LUNCH_LAT', float, LUNCH_KANSLI_LATITUDE) if os.environ.get('LUNCH_LAT') else LUNCH_KANSLI_LATITUDE
+LUNCH_LNG = env('LUNCH_LNG', float, LUNCH_KANSLI_LONGITUDE) if os.environ.get('LUNCH_LNG') else LUNCH_KANSLI_LONGITUDE

@@ -1,3 +1,5 @@
+import os
+
 from .common import *  # noqa
 
 TEMPLATES = build_templates('impuls', parent_variants=('date',))
@@ -61,3 +63,9 @@ CONTENT_VARIABLES = {
     # Events
     "INTERNATIONAL_EVENT_SLUGS": [],
 }
+
+# Lunch widget fallback coordinates for the association kansli (Arken, Fabriksgatan 2).
+LUNCH_KANSLI_LATITUDE = 60.4565176
+LUNCH_KANSLI_LONGITUDE = 22.2796885
+LUNCH_LAT = env('LUNCH_LAT', float, LUNCH_KANSLI_LATITUDE) if os.environ.get('LUNCH_LAT') else LUNCH_KANSLI_LATITUDE
+LUNCH_LNG = env('LUNCH_LNG', float, LUNCH_KANSLI_LONGITUDE) if os.environ.get('LUNCH_LNG') else LUNCH_KANSLI_LONGITUDE

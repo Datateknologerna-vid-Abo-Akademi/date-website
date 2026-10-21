@@ -1,3 +1,5 @@
+import os
+
 from .common import *  # noqa
 
 TEMPLATES = build_templates('kk')
@@ -57,3 +59,9 @@ CONTENT_VARIABLES = {
 APRIL_HOMEPAGE_ENABLED = True
 KK_EVENT_TEMPLATES_ENABLED = True
 INSTAGRAM_USERNAME = 'kemistklubben'
+
+# Lunch widget fallback coordinates for the association kansli (Aurum, Henriksgatan 2).
+LUNCH_KANSLI_LATITUDE = 60.4548174
+LUNCH_KANSLI_LONGITUDE = 22.2828608
+LUNCH_LAT = env('LUNCH_LAT', float, LUNCH_KANSLI_LATITUDE) if os.environ.get('LUNCH_LAT') else LUNCH_KANSLI_LATITUDE
+LUNCH_LNG = env('LUNCH_LNG', float, LUNCH_KANSLI_LONGITUDE) if os.environ.get('LUNCH_LNG') else LUNCH_KANSLI_LONGITUDE

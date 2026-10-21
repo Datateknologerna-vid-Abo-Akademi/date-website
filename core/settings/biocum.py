@@ -1,3 +1,5 @@
+import os
+
 from .common import *  # noqa
 
 TEMPLATES = build_templates('biocum', parent_variants=('date',))
@@ -51,3 +53,9 @@ CONTENT_VARIABLES = {
         ["fa-instagram", "https://www.instagram.com/biologica_rf/"],
     ],
 }
+
+# Lunch widget fallback coordinates for the association kansli (Biocity, Artillerigatan 6).
+LUNCH_KANSLI_LATITUDE = 60.4493152
+LUNCH_KANSLI_LONGITUDE = 22.2932317
+LUNCH_LAT = env('LUNCH_LAT', float, LUNCH_KANSLI_LATITUDE) if os.environ.get('LUNCH_LAT') else LUNCH_KANSLI_LATITUDE
+LUNCH_LNG = env('LUNCH_LNG', float, LUNCH_KANSLI_LONGITUDE) if os.environ.get('LUNCH_LNG') else LUNCH_KANSLI_LONGITUDE
