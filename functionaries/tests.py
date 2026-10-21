@@ -264,12 +264,19 @@ class FunctionaryTutorSectionTests(TestCase):
         self.assertIn('tutor', role_admin.list_filter)
 
     def test_role_admin_shows_board_and_tutor_on_one_row(self):
-        role_admin = FunctionaryRoleAdmin(FunctionaryRole, admin.site)
-        request = RequestFactory().get('/')
-        request.user = SimpleNamespace(is_superuser=True)
+        admin_user = Member.objects.create_superuser(
+            username='tutor-admin',
+            password='pwd',
+            email='tutor-admin@example.com',
+        )
+        self.client.force_login(admin_user)
 
-        fields = role_admin.get_fields(request)
+        response = self.client.get(reverse('admin:functionaries_functionaryrole_change', args=[self.tutor_role.pk]))
 
-        self.assertIn(('board', 'tutor'), fields)
-        self.assertNotIn('tutor', fields)
-        self.assertTrue(any(isinstance(field, str) and field.startswith('title') for field in fields))
+        self.assertEqual(response.status_code, 200)
+        fieldset_fields = [field for fieldset in response.context['adminform'] for field in fieldset.fields]
+        self.assertIn(('board', 'tutor'), fieldset_fields)
+        self.assertNotIn('tutor', fieldset_fields)
+        self.assertIn('title_sv', fieldset_fields)
+        self.assertContains(response, 'name="board"')
+        self.assertContains(response, 'name="tutor"')
