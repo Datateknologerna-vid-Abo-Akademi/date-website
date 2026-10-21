@@ -131,6 +131,45 @@ To give one association a different icon, put a file at the same path in its own
 
 Shared icons so far: `tiktok`, `linktree` (Font Awesome Free 7.3.1, CC BY 4.0). `sf` renders its own complete footer and does not use this lookup: `templates/sf/core/footer.html` has one branch per platform (instagram, facebook, x, linkedin, tiktok), so a new platform for sf needs a branch added there. Its `tiktok` branch includes the shared `tiktok.svg`.
 
+## Social Share Images
+
+A link shared to a chat or a social platform carries an explicit image; without
+one the crawler picks whatever it finds on the page (usually the footer logo, an
+SVG most platforms cannot render) or the platform falls back to the favicon.
+Every association shell renders the metadata through the `social_meta` tag in
+`date/templatetags/social_meta.py`; the tag output is
+`templates/common/core/social_meta.html` and `templates/common/core/base.html`
+calls it from the `social_meta` block.
+
+Each association ships two PNGs:
+
+- `static/<association>/core/images/social-share.png`: 1200 x 630, the image in
+  the preview card. Flat association colour with the association logo centred,
+  which is the treatment the footer already gives the logo.
+- `static/<association>/core/images/apple-touch-icon.png`: 180 x 180, the icon
+  iOS uses in the share sheet and on the home screen.
+
+`static/common/core/images/` holds the DaTe pair. `date` resolves those, and any
+variant without its own files falls back to them, because the static finders
+check the association directory first and `static/common` last. Adding a variant
+means adding the two files at that path; `core/tests/test_social_meta.py` renders
+the tag and checks that every deployed association resolves a PNG of the
+documented size, so a missing file fails the suite instead of shipping a broken
+preview. Keep both well under 1 MiB (the committed set is 4 to 100 KiB).
+
+The tag emits `og:image` with alt text, dimensions and type,
+`twitter:card=summary_large_image`, `twitter:image`, `og:type`, `og:site_name`,
+`og:url` (the request path) and the `apple-touch-icon` link. Image URLs are
+absolute: the tag qualifies a site-relative static path with the request host,
+leaves an S3/CDN absolute URL alone when `STATIC_S3_ENABLED` is on, and falls
+back to `SITE_URL` when the template renders outside a request.
+
+There is deliberately no `og:title` or `og:description`. Every platform falls
+back to the page's own `<title>` and meta description, and a Django block cannot
+hand its rendered content to a second tag, so emitting them here would replace
+per-page values with the association name. A page that needs a different image
+overrides the `social_meta` block in its own template.
+
 ## Shared CSS And Element Selectors
 
 An association's stylesheets are loaded on every page of that association, and a selector that matches a bare HTML element therefore reaches parts of the page it was not written for. Two rules are enforced:
