@@ -16,10 +16,10 @@
 
 ## Lunch Widget
 - The homepage right column embeds the official lunchmenu.fi student lunch widget below the booking card and above "Annat". The partial is `templates/common/date/components/lunch.html`, included from `templates/date/date/start.html`; its `lunch` CSS grid area sits between `bookings` and `extras` on desktop and after the news card on mobile (`static/date/date/css/homepage.css`).
-- `date/templatetags/lunch.py` provides the `{% raw %}{% lunch_widget count=... heading=... wrapper_class=... %}{% endraw %}` tag. It renders `templates/common/date/components/lunch_widget.html`, returns no markup when `LUNCH_ENABLED` is off, and uses the active language when it is `sv`, `en`, or `fi`, falling back to `sv`.
+- `date/templatetags/lunch.py` provides the `{% raw %}{% lunch_widget count=... heading=... wrapper_class=... %}{% endraw %}` tag. It renders `templates/common/date/components/lunch_widget.html`, returns no markup when `LUNCH_ENABLED` is off, uses the active language when it is `sv`, `en`, or `fi`, falling back to `sv`, and resolves the search origin from the cached association geocode, then `LUNCH_LAT`/`LUNCH_LNG`, then `LUNCH_CITY`.
 - `/lunch/` renders the same widget with 10 entries and an `h2` heading. The view raises 404 when `LUNCH_ENABLED` is off, and the route is mounted only in the DaTe URLconf.
 - Link `/lunch/` from the navigation (admin-managed `Länkar` or its own item); the homepage card's fallback anchor already points there.
-- Settings: `LUNCH_ENABLED` (off in `core/settings/common.py`, on for DaTe), `LUNCH_CITY` (`turku`, used when no coordinates are set), `LUNCH_LAT`/`LUNCH_LNG` (DaTe searches from Arken, the kansli; both set: coordinates replace the city; leave unset, not empty, to use the city), `LUNCH_COUNT` (3, the sidebar count), `LUNCH_ACCENT` (`#3a80c3`).
+- Settings: `LUNCH_ENABLED` (off in `core/settings/common.py`, on for DaTe), `LUNCH_CITY` (`turku`, the last fallback when there are no coordinates), `LUNCH_LAT`/`LUNCH_LNG` (fallback coordinates used when the startup geocode has no cached result; DaTe keeps Arken, the kansli), `LUNCH_COUNT` (3, the sidebar count), `LUNCH_ACCENT` (`#3a80c3`).
 - Set the values in the site's release environment, for example Helm `extraEnv`; the shared `.env.example` leaves the association-specific values unset:
 
   ```dotenv
@@ -27,12 +27,13 @@
   LUNCH_CITY="turku"
   LUNCH_COUNT=3
   LUNCH_ACCENT="#3a80c3"
-  # DaTe defaults to Arken; override with the association's kansli if needed:
+  # Fallback coordinates when the startup geocode has no cached result:
   # LUNCH_LAT="60.4565176"
   # LUNCH_LNG="22.2796885"
   ```
 
 - Other associations opt in by setting the `LUNCH_*` variables and adding `lunch` to their `build_urlpatterns` list. The embed script is served by lunchmenu.fi, so the widget falls back to the `/lunch/` link (or `https://lunchmenu.fi/` without the route) when the third party is unavailable.
+- The association address is geocoded once at startup or deploy by `python manage.py geocode_association_address`. It composes the query from `ASSOCIATION_ADDRESS_L1`, `ASSOCIATION_ADDRESS_L2` and `ASSOCIATION_POSTAL_CODE`, calls Nominatim (OSM), and caches the result under `lunch-coordinates:<PROJECT_NAME>`. The command exits 0 with a warning when Nominatim is unavailable, so the startup continues. The widget uses the cached coordinates first, then `LUNCH_LAT`/`LUNCH_LNG`, then `LUNCH_CITY`. Run the command in each association's startup job; use `--address` when the composed address does not match and `--force` after changing the address. Nominatim wants a descriptive User-Agent and at most one request per second.
 
 ## Calendar Data Structure
 - `format_calendar_events()` converts the event queryset into a `dict["YYYY-MM-DD"] = [event, ...]` used by the front-end calendar widget. Each date maps to a list because several events can share a day; each event includes `link`, `eventFullDate`, and `eventTitle`. The calendar JS builds the popup HTML (and the `modifier`) itself.
