@@ -17,7 +17,14 @@ ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1 PATH="/opt/venv/bin:$PATH"
 COPY --from=builder /opt/venv /opt/venv
 WORKDIR /code
 COPY . /code/
-RUN python manage.py compilemessages -l en -l fi -l sv
+# Bake the repo's compiled translations and per-association static trees into
+# the image. Only an image that serves the app from its own filesystem needs
+# them: production pods read the collected trees and the .mo files, while dev
+# and PR CI bind-mount the checkout over /code and never read either. Those
+# builds pass BUILD_ASSETS=0 to skip the work; anything meant for a deployment
+# keeps the default and gets a complete image.
+ARG BUILD_ASSETS=1
+RUN if [ "${BUILD_ASSETS}" = "1" ]; then python manage.py compilemessages -l en -l fi -l sv; fi
 # Collect static at build time for every association, each into its own tree
 # under /code/static-collected/<variant>. Each variant's STATICFILES_DIRS
 # produce variant-specific collected output (e.g. date/css/homepage.css
@@ -33,18 +40,20 @@ ENV PROJECT_NAME=$PROJECT_NAME
 # unfold's files must be collected with USE_UNFOLD=True or every unfold admin
 # template render 500s on the missing manifest entry (2026-08-30). demo is a
 # dev-only variant and needs no collected tree in the image.
-RUN pids=""; \
-    for variant in date kk pulterit biocum sf impuls; do \
-      echo "Collecting static for ${variant}"; \
-      case "${variant}" in \
-        date|pulterit|sf|impuls) UNFOLD=True ;; \
-        *) UNFOLD=False ;; \
-      esac; \
-      ( USE_UNFOLD="${UNFOLD}" PROJECT_NAME="${variant}" STATIC_ROOT="/code/static-collected/${variant}" \
-          python manage.py collectstatic --noinput --clear ) & \
-      pids="${pids} $!"; \
-    done; \
-    for pid in ${pids}; do wait "${pid}" || exit 1; done
+RUN if [ "${BUILD_ASSETS}" = "1" ]; then \
+      pids=""; \
+      for variant in date kk pulterit biocum sf impuls; do \
+        echo "Collecting static for ${variant}"; \
+        case "${variant}" in \
+          date|pulterit|sf|impuls) UNFOLD=True ;; \
+          *) UNFOLD=False ;; \
+        esac; \
+        ( USE_UNFOLD="${UNFOLD}" PROJECT_NAME="${variant}" STATIC_ROOT="/code/static-collected/${variant}" \
+            python manage.py collectstatic --noinput --clear ) & \
+        pids="${pids} $!"; \
+      done; \
+      for pid in ${pids}; do wait "${pid}" || exit 1; done; \
+    fi
 # The trees share ~99% of their files (common assets plus third-party static
 # such as CKEditor), so deduplicate identical files with hardlinks: ~350 MiB
 # of collected output collapses to ~55 MiB on disk. The source static/ dir
@@ -52,4 +61,4 @@ RUN pids=""; \
 # upload when a site serves static from S3 (STATIC_S3_ENABLED, migration Job
 # runs collectstatic before the app pods roll), and prod serves the collected
 # trees (dev compose bind-mounts the repo).
-RUN python scripts/dedup_static.py /code/static-collected
+RUN if [ "${BUILD_ASSETS}" = "1" ]; then python scripts/dedup_static.py /code/static-collected; fi

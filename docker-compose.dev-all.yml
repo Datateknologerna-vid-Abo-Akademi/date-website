@@ -16,7 +16,10 @@
 
 x-web-common: &web-common
   env_file: .env
-  build: .
+  build:
+    context: .
+    args:
+      BUILD_ASSETS: ${BUILD_ASSETS:-1}
   restart: unless-stopped
   volumes:
     - .:/code
@@ -76,7 +79,10 @@ services:
   # each container serve static files directly from its own STATICFILES_DIRS.
   init:
     env_file: .env
-    build: .
+    build:
+      context: .
+      args:
+        BUILD_ASSETS: ${BUILD_ASSETS:-1}
     restart: "no"
     command: /bin/bash -c "./wait-for-postgres.sh db:5432 && for variant in date kk sf; do PROJECT_NAME=$${variant} python manage.py migrate --noinput || exit 1; done && python manage.py compilemessages -l en -l fi -l sv --verbosity 0"
     volumes:

@@ -173,6 +173,12 @@ tree. `collectstatic` only discovers app static dirs for apps in
 the unfold admin with 500s on the missing `unfold/fonts/inter/styles.css`
 manifest entry (2026-08-30).
 
+The image also carries compiled translations. Both the collected trees and
+the `.mo` files are only read by an image that serves the app from its own
+filesystem: dev and PR CI bind-mount the checkout over `/code`, so they build
+with `BUILD_ASSETS=0` and skip the collection and compilation entirely.
+Anything built for a deployment must leave the default (`BUILD_ASSETS=1`).
+
 If static-on-S3 (see issue) lands, collection moves from the image build to
 a release-time upload into the existing per-association media bucket, and
 pods stop carrying static entirely.

@@ -64,6 +64,10 @@ jobs:
     defaults:
       run:
         shell: bash
+    env:
+      # The checkout is bind-mounted over /code, so the static trees and .mo
+      # files baked into the image are never read. Skip building them.
+      BUILD_ASSETS: "0"
     strategy:
       fail-fast: false
       matrix:
@@ -80,23 +84,16 @@ jobs:
       - name: Prepare environment file
         run: cp .env.example .env
 
-      - name: Ensure docker-compose command exists
-        run: |
-          set -euo pipefail
-          if ! command -v docker-compose >/dev/null 2>&1; then
-            printf '#!/usr/bin/env bash\ndocker compose "$@"\n' | sudo tee /usr/local/bin/docker-compose >/dev/null
-            sudo chmod +x /usr/local/bin/docker-compose
-          fi
-          docker-compose version
-
       - name: Try to use prebuilt image
         id: prebuilt
         env:
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            # PR SHAs have no prebuilt image; skip login and pull retries.
+          # PR SHAs have no prebuilt image, and on the first attempt after a
+          # push the docker_build workflow is still publishing this SHA. Only a
+          # re-run can reuse the published image; a first run always builds.
+          if [ "${{ github.event_name }}" = "pull_request" ] || [ "${{ github.run_attempt }}" -le 1 ]; then
             echo "compose_file=docker-compose.yml" >> "${GITHUB_OUTPUT}"
             exit 0
           fi
@@ -115,10 +112,8 @@ jobs:
           done
 
           if [ "${logged_in}" -eq 1 ]; then
-            # The image for this SHA is published by the docker_build workflow,
-            # which starts at the same time and takes minutes, so a first run
-            # never finds it. Retrying with sleeps only delays the fallback
-            # build; a re-run after publication succeeds on the first attempt.
+            # A re-run can reuse the image published for this SHA; first runs
+            # return above. If the pull still fails, fall back to building.
             if docker pull "${CI_IMAGE}"; then
               printf 'services:\n  init:\n    image: %s\n  web:\n    image: %s\n  celery:\n    image: %s\n' "${CI_IMAGE}" "${CI_IMAGE}" "${CI_IMAGE}" > docker-compose.ci.yml
               echo "compose_file=docker-compose.yml:docker-compose.ci.yml" >> "${GITHUB_OUTPUT}"
@@ -132,14 +127,21 @@ jobs:
         if: steps.prebuilt.outputs.compose_file == 'docker-compose.yml'
         run: |
           set -euo pipefail
-          docker-compose build web celery
+          # Build every service, including init: `docker compose up` builds the
+          # image of any service it cannot find, which used to rebuild the
+          # whole Dockerfile a second time in the smoke-test step. Compose
+          # deduplicates the identical build config, so this is still one build.
+          docker compose build
 
-      - name: Run django unit tests
+      - name: Validate translations and compile locale files
         run: |
           set -euo pipefail
           export COMPOSE_FILE="${{ steps.prebuilt.outputs.compose_file }}"
-          docker-compose run --rm --no-deps web python scripts/validate_translations.py
-          docker-compose run --rm --no-deps web python manage.py compilemessages
+          # Every matrix leg runs on its own runner and the checkout is mounted
+          # over /code, which hides the translations compiled into the image,
+          # so each leg compiles them for itself.
+          docker compose run --rm --no-deps web python scripts/validate_translations.py
+          docker compose run --rm --no-deps web python manage.py compilemessages
 
       - name: Run django unit tests (${{ matrix.label }})
         run: |
@@ -155,7 +157,7 @@ jobs:
         run: |
           set -euo pipefail
           export COMPOSE_FILE="${{ steps.prebuilt.outputs.compose_file }}"
-          docker-compose up -d
+          docker compose up -d
 
       - name: Wait for web container
         if: matrix.label == 'default'
@@ -163,15 +165,15 @@ jobs:
           set -euo pipefail
           export COMPOSE_FILE="${{ steps.prebuilt.outputs.compose_file }}"
           for i in $(seq 1 30); do
-            if [ "$(docker-compose ps -q web | wc -l)" -eq 1 ] && \
-               [ "$(docker inspect -f '{{.State.Running}}' "$(docker-compose ps -q web)")" = "true" ]; then
+            if [ "$(docker compose ps -q web | wc -l)" -eq 1 ] && \
+               [ "$(docker inspect -f '{{.State.Running}}' "$(docker compose ps -q web)")" = "true" ]; then
               exit 0
             fi
             sleep 2
           done
           echo "Web container did not become healthy in time."
-          docker-compose ps
-          docker-compose logs --tail=200 web
+          docker compose ps
+          docker compose logs --tail=200 web
           exit 1
 
       - name: Check HTTP response
@@ -194,15 +196,15 @@ jobs:
         run: |
           set -euo pipefail
           export COMPOSE_FILE="${{ steps.prebuilt.outputs.compose_file }}"
-          docker-compose ps
-          docker-compose logs --tail=200 web db redis
+          docker compose ps
+          docker compose logs --tail=200 web db redis
 
       - name: Tear down containers
         if: always()
         run: |
           set -euo pipefail
           export COMPOSE_FILE="${{ steps.prebuilt.outputs.compose_file }}"
-          docker-compose down -v
+          docker compose down -v
 
   variant_checks:
     runs-on: ubuntu-latest
@@ -210,6 +212,8 @@ jobs:
     defaults:
       run:
         shell: bash
+    env:
+      BUILD_ASSETS: "0"
 
     steps:
       - name: Checkout repository
@@ -218,36 +222,15 @@ jobs:
       - name: Prepare environment file
         run: cp .env.example .env
 
-      - name: Ensure docker-compose command exists
-        run: |
-          set -euo pipefail
-          if ! command -v docker-compose >/dev/null 2>&1; then
-            printf '#!/usr/bin/env bash\ndocker compose "$@"\n' | sudo tee /usr/local/bin/docker-compose >/dev/null
-            sudo chmod +x /usr/local/bin/docker-compose
-          fi
-          docker-compose version
-
       - name: Build image
         run: |
           set -euo pipefail
-          docker-compose build web
+          docker compose build web
 
-      - name: Fresh-process checks for every association
+      - name: Fresh-process checks and migration graph check
         run: |
           set -euo pipefail
-          for variant in date kk biocum pulterit sf impuls demo; do
-            echo "== ${variant}: manage.py check"
-            docker-compose run --rm --no-deps -e PROJECT_NAME="${variant}" web python manage.py check
-          done
-
-      - name: Migration graph check for every app set
-        run: |
-          set -euo pipefail
-          # Distinct app sets: date (broadest), kk (lucia), sf (klotterplanket).
-          for variant in date kk sf; do
-            echo "== ${variant}: makemigrations --check"
-            docker-compose run --rm --no-deps -e PROJECT_NAME="${variant}" web python manage.py makemigrations --check --dry-run
-          done
+          docker compose run --rm --no-deps web python scripts/check_variants.py
 
   lint:
     runs-on: ubuntu-latest
