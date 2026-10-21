@@ -5,7 +5,7 @@ from admin_ordering.admin import OrderableAdmin
 from django.conf import settings
 from django.contrib import admin, messages
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.db.models import Count, IntegerField, JSONField, Max, OuterRef, Subquery, TextField, Value
+from django.db.models import Count, IntegerField, Max, OuterRef, Subquery, TextField, Value
 from django.db.models.functions import Coalesce
 from django.forms import ModelForm
 from django.forms.models import BaseInlineFormSet
@@ -28,7 +28,7 @@ from core.admin_widgets import FLATPICKR_ADMIN_CSS, FLATPICKR_ADMIN_JS
 from events import forms
 from events.models import Event, EventAttendees, EventRegistrationForm, registration_terms_feature_enabled
 
-from .widgets import PrettyJSONWidget
+from .widgets import EventAnswersWidget
 
 logger = logging.getLogger('date')
 
@@ -98,9 +98,39 @@ class EventRegistrationFormInline(AvecAwareMixin, OrderableAdmin, EventTranslati
 
 
 class EventAttendeesForm(ModelForm):
+    # Set per request by EventAttendeesFormInline.get_formset so a child event
+    # signup is edited with the child's questions, not the parent's.
+    default_questions = ()
+    questions_cache = None
+
     class Meta:
         model = EventAttendees
         fields = ['event', 'attendee_nr', 'user', 'email', 'preferences', 'anonymous', 'avec_for', 'original_event']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        field = self.fields.get('preferences')
+        if field is None:
+            return
+        event_id = self.instance.original_event_id or self.instance.event_id
+        questions = self.questions_for(event_id) if event_id else self.default_questions
+        # The inline shows the same empty sentence on every attendee row, so it
+        # gets a compact dash instead; the standalone form keeps the explanation.
+        compact = type(self).questions_cache is not None
+        field.widget = EventAnswersWidget(questions=questions, compact=compact)
+
+    @classmethod
+    def questions_for(cls, event_id):
+        cache = cls.questions_cache
+        if cache is None:
+            return cls._fetch_questions(event_id)
+        if event_id not in cache:
+            cache[event_id] = cls._fetch_questions(event_id)
+        return cache[event_id]
+
+    @staticmethod
+    def _fetch_questions(event_id):
+        return list(EventRegistrationForm.objects.filter(event_id=event_id).order_by('choice_number'))
 
     def _get_validation_exclusions(self):
         exclude = super()._get_validation_exclusions()
@@ -250,10 +280,9 @@ class EventAttendeesFormInline(AvecAwareMixin, OrderableAdmin, EventTranslationI
     formset = EventAttendeesInlineFormSet
     fk_name = 'event'
     extra = 0
-    list_editable = ('user', 'email', 'preferences')
+    show_change_link = True
     formfield_overrides = {
         **UNFOLD_FORMFIELD_OVERRIDES,
-        JSONField: {'widget': PrettyJSONWidget(attrs={'initial': 'parsed'})},
     }
     can_delete = True
     ordering = ['attendee_nr']
@@ -285,6 +314,15 @@ class EventAttendeesFormInline(AvecAwareMixin, OrderableAdmin, EventTranslationI
         if not self._event_uses_avec(obj):
             exclude.append('avec_for')
         kwargs['exclude'] = exclude
+        # The formset class is built per request, so the question cache lives
+        # only for this admin page: an editor who renames a registration field
+        # sees the new label on the next request instead of a process restart.
+        default_questions = EventAttendeesForm._fetch_questions(obj.pk) if obj is not None else ()
+        kwargs['form'] = type(
+            'EventAttendeesInlineForm',
+            (EventAttendeesForm,),
+            {'default_questions': default_questions, 'questions_cache': {}},
+        )
         return super().get_formset(request, obj, **kwargs)
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
@@ -296,6 +334,7 @@ class EventAttendeesFormInline(AvecAwareMixin, OrderableAdmin, EventTranslationI
 
 @admin.register(EventAttendees)
 class EventAttendeesAdmin(ModelAdmin):
+    form = EventAttendeesForm
     list_display = ('event', 'user', 'email', 'time_registered', 'anonymous', 'original_event')
     list_filter = ('anonymous', 'time_registered')
     search_fields = (
@@ -314,7 +353,6 @@ class EventAttendeesAdmin(ModelAdmin):
     date_hierarchy = 'time_registered'
     formfield_overrides = {
         **UNFOLD_FORMFIELD_OVERRIDES,
-        JSONField: {'widget': PrettyJSONWidget(attrs={'initial': 'parsed'})},
     }
 
 

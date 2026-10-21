@@ -3,6 +3,7 @@ import re
 
 from django import forms
 from django.conf import settings
+from django.db.models import Q
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 
@@ -180,13 +181,16 @@ class EventEditForm(UnfoldFormMixin, forms.ModelForm):
             self.fields.pop('require_registration_terms')
         if 'template' in self.fields:
             self.fields['template'].choices = _template_choices()
-        # exclude the current instance from parent choices so an event cannot be its own parent
+        # Keep the parent an edited event already has, even after that parent
+        # has ended. Limiting the dropdown to future events alone silently
+        # cleared the link on the next save, which removed the child from its
+        # parent's registration list.
         try:
             if getattr(self, 'instance', None) and getattr(self.instance, 'pk', None):
-                # limit parent choices to future events and exclude self
-                self.fields['parent'].queryset = Event.objects.filter(event_date_end__gte=now()).exclude(
-                    pk=self.instance.pk
-                )
+                parent_filter = Q(event_date_end__gte=now())
+                if self.instance.parent_id:
+                    parent_filter |= Q(pk=self.instance.parent_id)
+                self.fields['parent'].queryset = Event.objects.filter(parent_filter).exclude(pk=self.instance.pk)
             else:
                 # creation: only future events
                 self.fields['parent'].queryset = Event.objects.filter(event_date_end__gte=now())

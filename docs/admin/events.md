@@ -11,13 +11,13 @@ Create public event pages, manage registration windows, collect attendee data, a
 1. Click **Add event**.
 2. Fill in the form (key sections):
    - **Titel & Innehåll** – what visitors see on the event page (CKEditor field supports images, embeds, etc.).
-   - **Date & time fields** – start/end timestamps plus signup open/close windows. Use the date+time split inputs; keep members/others windows realistic.
+   - **Date & time fields** – start/end timestamps plus signup open/close windows. Use the datetime picker in `YYYY-MM-DD HH:MM` form; keep members/others windows realistic.
    - **Anmälning** – uncheck if no signup is needed (all signup-related fields will be ignored). On an Årsfest page this also removes the Anmälan tab and the sign-up panel, so the page works as a plain information page.
    - **Maximal antal deltagare** – `0` means unlimited.
    - **Avec** – allow partners; extra fields will display when the signup form contains `avec_…` inputs.
    - **Kräv inloggning för innehåll** – gate the event page behind member login.
    - **Passcode** – optional simple password visitors must enter before the signup form appears.
-   - **Background image** – upload locally (`Bakgrundsbild`) or to S3 (`s3_image`) depending on deployment settings.
+   - **Background image** – upload a background image. The form shows the field that matches this deployment's storage (local or public S3).
    - **Redirect Link** – skip the internal page entirely and send visitors to another URL like another student association's event page.
 3. Publishing:
    - Set **Publiceras** to the date and time when the event should become visible.
@@ -40,12 +40,14 @@ Each event can have dynamic questions managed inline:
 4. Save the event to persist form fields.
 
 ## Manage Attendees
-1. Use the **Deltagare** inline table to review or edit registrations. Columns include order number, name, email, anonymous flag, answers (JSON), and timestamps.
-2. If **Avec** is active or the event has child instances, extra columns ("Avec till", "Ursprungligt evenemang") appear automatically.
-3. To export a pretty list, click **Deltagarlista** in the main event row; this opens a printable view with the public answers.
-4. Bulk deletion: select events in the changelist → choose **Delete all attendees for selected events**. You will get a confirmation screen before anything is removed.
-5. Question names must be unique within an event. Names used by standard signup fields, such as `email`, `user`, and avec fields, are rejected to prevent invalid registrations.
-6. On an Årsfest page the **Anmälda** tab follows the list itself: it appears while the event is recent enough to show the list and the event either takes sign-ups or already holds registrations. Registrations you enter by hand therefore keep the tab, even on an event whose sign-up is turned off.
+1. Use the **Deltagare** inline table to review or edit registrations. Columns include order number, name, email, anonymous flag, and timestamps. The **Svar** column shows one input per registration question, so answers are edited as normal values (text, choice or Ja/Nej) instead of JSON.
+2. If a registration question was deleted or renamed after people signed up, its old answer still appears in the row and is marked as no longer matching a field, so it is not lost.
+3. Each inline row has a change link to the participant's own admin page, which shows the same answer fields without the rest of the event.
+4. If **Avec** is active or the event has child instances, extra columns ("Avec till", "Ursprungligt evenemang") appear automatically.
+5. To export a pretty list, click **Deltagarlista** in the main event row; this opens a printable view of the answers collected for that event.
+6. Bulk deletion: select events in the changelist → choose **Delete all attendees for selected events**. You will get a confirmation screen before anything is removed.
+7. Question names must be unique within an event. Names used by standard signup fields, such as `email`, `user`, and avec fields, are rejected to prevent invalid registrations.
+8. On an Årsfest page the **Anmälda** tab follows the list itself: it appears while the event is recent enough to show the list and the event either takes sign-ups or already holds registrations. Registrations you enter by hand therefore keep the tab, even on an event whose sign-up is turned off.
 
 ## Handling Waiting Lists / Child Events
 - The **Parent** dropdown lets you chain events together. Registrations for child events roll up to the parent so attendee numbers stay consistent.

@@ -101,8 +101,16 @@
   rush cannot 500.
 - Custom admin action `delete_participants` prompts for confirmation before
   removing attendee rows.
+- `EventAnswersWidget` (`events/widgets.py`) renders `EventAttendees.preferences`
+  as one control per `EventRegistrationForm` row instead of a JSON textarea:
+  text input for text questions, a select for multiple choice, and Ja/Nej for
+  checkbox questions. Answers whose question was renamed or deleted are still
+  shown, as orphan rows, so they are not silently dropped. The inline builds the
+  question list per request (and per child event, because child signups store
+  their answers on the parent attendee row) and the standalone attendee admin
+  resolves questions from the attendee's `original_event` or `event`.
 - Extra admin URL `/list/` renders `events/list.html` for an event, showing
-  public info answers.
+  the registration answers.
 - `static/common/core/js/eventform.js` (loaded via `EventAdmin.Media`)
   enables/disables the `choice_list` ("Alternativ") input based on the row's
   `type` select, and toggles the whole registration-fields section based on

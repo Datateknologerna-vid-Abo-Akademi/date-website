@@ -29,6 +29,7 @@ from events.models import Event, EventAttendees, EventRegistrationForm
 from events.registration import EventSignupError, register_event_signup
 from events.routing import websocket_urlpatterns
 from events.websocket_utils import ws_data, ws_send
+from events.widgets import EventAnswersWidget
 from members.models import ORDINARY_MEMBER, Member, MembershipType, Subscription, SubscriptionPayment
 from news.models import Category, Post
 from staticpages.models import StaticPage, StaticPageNav, StaticUrl
@@ -1192,6 +1193,24 @@ class EventAdminTests(TestCase):
 
         self.assertEqual(form.clean_slug(), "missing_slug_event")
 
+    def test_edit_form_keeps_an_ended_parent_in_the_parent_choices(self):
+        ended_parent = Event.objects.create(
+            title="Ended Parent",
+            slug="ended-parent",
+            author=self.admin_user,
+            event_date_end=timezone.now() - timezone.timedelta(days=1),
+        )
+        child = Event.objects.create(
+            title="Child Of Ended Parent",
+            slug="child-of-ended-parent",
+            author=self.admin_user,
+            parent=ended_parent,
+        )
+
+        form = EventEditForm(instance=child)
+
+        self.assertIn(ended_parent, form.fields["parent"].queryset)
+
     def test_admin_forms_assume_https_for_redirect_links(self):
         creation_form = EventCreationForm()
         edit_form = EventEditForm(instance=self.event)
@@ -1305,6 +1324,129 @@ class EventAdminTests(TestCase):
         self.assertEqual(events[child_event.pk]._original_event_attendee_count, 2)
         self.assertEqual(event_admin.get_attendee_count(events[self.event.pk]), 2)
         self.assertEqual(event_admin.get_attendee_count(events[child_event.pk]), 2)
+
+    def test_attendee_answers_render_one_control_per_registration_field(self):
+        EventRegistrationForm.objects.create(
+            event=self.event,
+            name="Meal",
+            type="select",
+            choice_list="fish,vegetarian",
+        )
+        EventAttendees.objects.create(
+            event=self.event,
+            user="Answer Editor",
+            email="answer-editor@example.com",
+            time_registered=timezone.now(),
+            preferences={"Meal": "vegetarian"},
+        )
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(reverse("admin:events_event_change", args=[self.event.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "eventattendees_set-0-preferences__key__0")
+        self.assertContains(response, 'value="Meal"')
+        self.assertContains(response, '<option value="vegetarian" selected>')
+        self.assertContains(response, "events/css/admin_event_answers.css")
+        self.assertNotContains(response, 'class="jsonwidget"')
+        self.assertNotContains(response, "prettyjson/prettyjson.js")
+
+    def test_attendee_inline_does_not_repeat_the_no_questions_help(self):
+        EventAttendees.objects.create(
+            event=self.event,
+            user="No Questions",
+            email="no-questions@example.com",
+            time_registered=timezone.now(),
+            preferences={},
+        )
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(reverse("admin:events_event_change", args=[self.event.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'class="event-answers-empty"')
+        self.assertNotContains(response, "Det finns inga anmälningsfält")
+
+    def test_answers_widget_uses_the_active_admin_themes_input_classes(self):
+        question = EventRegistrationForm(name="Meal", type="select", choice_list="fish,vegetarian")
+
+        html = EventAnswersWidget(questions=[question]).render("preferences", {"Meal": "fish"})
+
+        if settings.USE_UNFOLD:
+            self.assertIn("border-base-200", html)
+            self.assertIn("appearance-none", html)
+        else:
+            self.assertNotIn("border-base-200", html)
+
+    def test_attendee_answers_are_saved_from_question_fields(self):
+        EventRegistrationForm.objects.create(
+            event=self.event,
+            name="Meal",
+            type="select",
+            choice_list="fish,vegetarian",
+        )
+        attendee = EventAttendees.objects.create(
+            event=self.event,
+            user="Answer Editor",
+            email="answer-editor@example.com",
+            time_registered=timezone.now(),
+            preferences={"Meal": "fish"},
+        )
+        row = self._attendee_row(0, attendee.pk, attendee.attendee_nr, attendee.user, attendee.email)
+        row.update(
+            {
+                "eventattendees_set-0-preferences__key__0": "Meal",
+                "eventattendees_set-0-preferences__kind__0": "select",
+                "eventattendees_set-0-preferences__value__0": "vegetarian",
+            }
+        )
+
+        formset = self._attendees_formset([row])
+
+        self.assertTrue(formset.is_valid(), formset.errors)
+        formset.save()
+        attendee.refresh_from_db()
+        self.assertEqual(attendee.preferences, {"Meal": "vegetarian"})
+
+    def test_child_event_attendee_uses_the_child_events_questions(self):
+        child = Event.objects.create(
+            title="Child Question Event",
+            slug="child-question-event",
+            author=self.admin_user,
+            parent=self.event,
+        )
+        EventRegistrationForm.objects.create(event=child, name="Child question", type="text")
+        EventAttendees.objects.create(
+            event=self.event,
+            original_event=child,
+            user="Child Attendee",
+            email="child-question@example.com",
+            time_registered=timezone.now(),
+            preferences={"Child question": "Svar"},
+        )
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(reverse("admin:events_event_change", args=[self.event.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Child question")
+        self.assertContains(response, 'value="Svar"')
+
+    def test_answers_without_a_matching_question_are_marked_as_orphans(self):
+        EventAttendees.objects.create(
+            event=self.event,
+            user="Orphan Answer",
+            email="orphan-answer@example.com",
+            time_registered=timezone.now(),
+            preferences={"Removed question": "answer"},
+        )
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(reverse("admin:events_event_change", args=[self.event.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Removed question")
+        self.assertContains(response, "fältet finns inte längre")
 
     def test_registration_list_renders_boolean_preferences_as_icons(self):
         EventRegistrationForm.objects.create(

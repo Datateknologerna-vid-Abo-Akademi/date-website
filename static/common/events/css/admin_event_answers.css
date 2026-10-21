@@ -1,0 +1,47 @@
+.event-answers-widget {
+    display: grid;
+    gap: 0.35rem;
+    max-width: 44rem;
+    padding: 0.35rem 0;
+}
+
+.event-answer-row {
+    display: grid;
+    gap: 0.25rem 0.6rem;
+    grid-template-columns: minmax(6rem, 40%) minmax(7rem, 1fr);
+    align-items: center;
+}
+
+.event-answer-label {
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.event-answer-orphan {
+    font-weight: 400;
+    opacity: 0.65;
+}
+
+.event-answers-empty {
+    opacity: 0.6;
+}
+
+.event-answer-control input[type="text"],
+.event-answer-control select,
+.event-answer-control textarea {
+    box-sizing: border-box;
+    max-width: 100%;
+    width: 100%;
+}
+
+.event-answer-control textarea {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    min-height: 4rem;
+    resize: vertical;
+}
+
+@media (max-width: 768px) {
+    .event-answer-row {
+        grid-template-columns: 1fr;
+    }
+}
