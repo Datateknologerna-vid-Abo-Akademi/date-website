@@ -11,6 +11,7 @@ from date import views as date_views
 # never loaded).
 ROUTES = {
     'index': lambda: path('', date_views.index, name='index'),
+    'lunch': lambda: path('lunch/', date_views.lunch, name='lunch'),
     'news': lambda: path('news/', include('news.urls')),
     'members': lambda: path('members/', include('members.urls')),
     'two_factor': lambda: path(

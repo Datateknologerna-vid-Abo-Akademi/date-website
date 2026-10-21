@@ -1,3 +1,5 @@
+import os
+
 from .common import *  # noqa
 
 TEMPLATES = build_templates('demo')
@@ -43,3 +45,9 @@ CONTENT_VARIABLES = {
         ["fa-github", "https://github.com/Datateknologerna-vid-Abo-Akademi"],
     ],
 }
+
+# Lunch widget fallback coordinates for the association kansli (Agora, Vattenborgsvägen 5).
+LUNCH_KANSLI_LATITUDE = 60.4555079
+LUNCH_KANSLI_LONGITUDE = 22.285437
+LUNCH_LAT = env('LUNCH_LAT', float, LUNCH_KANSLI_LATITUDE) if os.environ.get('LUNCH_LAT') else LUNCH_KANSLI_LATITUDE
+LUNCH_LNG = env('LUNCH_LNG', float, LUNCH_KANSLI_LONGITUDE) if os.environ.get('LUNCH_LNG') else LUNCH_KANSLI_LONGITUDE

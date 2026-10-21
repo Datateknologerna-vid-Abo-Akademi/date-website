@@ -7,7 +7,7 @@ from django.apps import apps
 from django.conf import settings
 from django.core.cache import cache
 from django.db import close_old_connections, connection, transaction
-from django.http import JsonResponse
+from django.http import Http404, JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils import timezone, translation
@@ -189,6 +189,13 @@ def index(request):
     if cache_key is not None:
         cache.set(cache_key, context, HOMEPAGE_CACHE_TTL)
     return render(request, get_homepage_template_name(), context)
+
+
+def lunch(request):
+    """Render the lunchmenu.fi lunch page when the widget is enabled."""
+    if not settings.LUNCH_ENABLED:
+        raise Http404
+    return render(request, 'date/lunch.html')
 
 
 def set_language(request):

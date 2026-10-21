@@ -17,6 +17,7 @@ EXPECTED_PREFIXES = {
     "date": [
         *COMMON_PREFIXES,
         "",
+        "lunch/",
         "news/",
         "members/",
         "members/two-factor/",
@@ -159,6 +160,7 @@ EXPECTED_PREFIXES = {
 EXPECTED_URL_NAMES = {
     "date": [
         "news:index",
+        "lunch",
         "archive:years",
         "ctf:index",
         "publications:pdf_list",

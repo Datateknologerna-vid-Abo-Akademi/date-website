@@ -1566,3 +1566,86 @@ class HomepageBookingTests(TestCase):
 
         self.assertContains(response, reverse("booking:room_detail", args=[self.room.pk]))
         self.assertContains(response, reverse("booking:room_detail", args=[other_room.pk]))
+
+
+class LunchWidgetTests(TestCase):
+    """The lunchmenu.fi student lunch widget on the homepage and /lunch/."""
+
+    def test_homepage_renders_the_widget_when_enabled(self):
+        cache.clear()
+
+        with override_settings(
+            LUNCH_ENABLED=True,
+            LUNCH_LAT=60.4565176,
+            LUNCH_LNG=22.2796885,
+        ):
+            response = self.client.get("/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'class="lunch-container"')
+        self.assertContains(response, "lunchmenu-student-widget")
+        self.assertContains(response, 'data-lat="60.4565176"')
+        self.assertContains(response, 'data-lng="22.2796885"')
+        self.assertNotContains(response, 'data-city="turku"')
+        self.assertContains(response, 'data-lang="sv"')
+        self.assertContains(response, 'data-count="3"')
+        self.assertContains(response, 'data-heading="3"')
+        self.assertContains(response, 'data-accent="#3a80c3"')
+        self.assertContains(response, 'href="/lunch/"')
+        self.assertContains(response, "https://lunchmenu.fi/static/widget/student.js")
+
+    def test_homepage_uses_the_city_when_coordinates_are_unset(self):
+        cache.clear()
+
+        with override_settings(LUNCH_ENABLED=True, LUNCH_LAT=None, LUNCH_LNG=None):
+            response = self.client.get("/")
+
+        self.assertContains(response, 'data-city="turku"')
+        self.assertNotContains(response, 'data-lat=')
+
+    def test_coordinates_replace_the_city_with_dot_decimals(self):
+        cache.clear()
+
+        with override_settings(LUNCH_ENABLED=True, LUNCH_LAT=60.45, LUNCH_LNG=22.27):
+            response = self.client.get("/")
+
+        self.assertContains(response, 'data-lat="60.45"')
+        self.assertContains(response, 'data-lng="22.27"')
+        self.assertNotContains(response, 'data-city="turku"')
+
+    def test_widget_uses_the_active_language(self):
+        cache.clear()
+        self.client.cookies[settings.LANGUAGE_COOKIE_NAME] = "en"
+
+        with override_settings(LUNCH_ENABLED=True):
+            response = self.client.get("/")
+
+        self.assertContains(response, 'data-lang="en"')
+
+    def test_homepage_omits_the_widget_when_disabled(self):
+        cache.clear()
+
+        with override_settings(LUNCH_ENABLED=False):
+            response = self.client.get("/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "lunchmenu-student-widget")
+        self.assertNotContains(response, "https://lunchmenu.fi/static/widget/student.js")
+
+    def test_lunch_page_renders_the_widget_when_enabled(self):
+        with override_settings(LUNCH_ENABLED=True):
+            response = self.client.get(reverse("lunch"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "date/lunch.html")
+        self.assertContains(response, "<h1>Lunch</h1>")
+        self.assertContains(response, 'class="lunch-page"')
+        self.assertContains(response, 'data-count="10"')
+        self.assertContains(response, 'data-heading="2"')
+        self.assertContains(response, "https://lunchmenu.fi/static/widget/student.js")
+
+    def test_lunch_page_is_not_found_when_disabled(self):
+        with override_settings(LUNCH_ENABLED=False):
+            response = self.client.get(reverse("lunch"))
+
+        self.assertEqual(response.status_code, 404)

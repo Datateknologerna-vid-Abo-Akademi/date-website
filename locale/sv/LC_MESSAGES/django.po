@@ -3843,3 +3843,8 @@ msgstr "Inloggningsnyckel"
 #: members/webauthn.py members/two_factor.py
 msgid "Choose a different name."
 msgstr "Välj ett annat namn."
+
+#: templates/common/date/components/lunch_widget.html:6
+#: templates/common/date/lunch.html:5 templates/common/date/lunch.html:9
+msgid "Lunch"
+msgstr "Lunch"

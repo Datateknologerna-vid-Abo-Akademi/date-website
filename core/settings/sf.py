@@ -1,3 +1,5 @@
+import os
+
 from django.utils.translation import gettext_lazy as _
 
 from .common import *  # noqa
@@ -100,3 +102,9 @@ CONTENT_VARIABLES = {
     # Events
     "INTERNATIONAL_EVENT_SLUGS": [],
 }
+
+# Lunch widget fallback coordinates for the association kansli (Astra, Porthansgatan 3).
+LUNCH_KANSLI_LATITUDE = 60.4536234
+LUNCH_KANSLI_LONGITUDE = 22.2797395
+LUNCH_LAT = env('LUNCH_LAT', float, LUNCH_KANSLI_LATITUDE) if os.environ.get('LUNCH_LAT') else LUNCH_KANSLI_LATITUDE
+LUNCH_LNG = env('LUNCH_LNG', float, LUNCH_KANSLI_LONGITUDE) if os.environ.get('LUNCH_LNG') else LUNCH_KANSLI_LONGITUDE

@@ -1,3 +1,5 @@
+import os
+
 from .common import *  # noqa
 
 TEMPLATES = build_templates('date')
@@ -74,3 +76,14 @@ EQUALITY_PLAN_ENABLED = True
 # their releases has no effect. Turn it off here (or on the DaTe release) to
 # remove the public booking pages and the homepage booking block.
 BOOKING_ENABLED = env('BOOKING_ENABLED', bool, True)
+# The lunchmenu.fi student lunch widget is on by default for DaTe. Other
+# associations keep the shared default from core/settings/common.py (off) until
+# their release sets LUNCH_ENABLED.
+LUNCH_ENABLED = env('LUNCH_ENABLED', bool, True)
+# The widget measures from Arken, where the DaTe kansli is (Fabriksgatan 2,
+# 20500 Åbo). Other associations keep the shared city or set their own
+# coordinates. An empty env value falls back to the Arken default.
+ARKEN_LATITUDE = 60.4565176
+ARKEN_LONGITUDE = 22.2796885
+LUNCH_LAT = env('LUNCH_LAT', float, ARKEN_LATITUDE) if os.environ.get('LUNCH_LAT') else ARKEN_LATITUDE
+LUNCH_LNG = env('LUNCH_LNG', float, ARKEN_LONGITUDE) if os.environ.get('LUNCH_LNG') else ARKEN_LONGITUDE
