@@ -3,19 +3,16 @@ import re
 import time
 import unittest
 from datetime import date, timedelta
-from io import StringIO
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
-import requests
 from django.apps import apps
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.admin.models import ADDITION, LogEntry
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
-from django.core.management import call_command
 from django.db import DatabaseError, connection
 from django.http import HttpResponse
 from django.template import Context, Template
@@ -27,7 +24,6 @@ from django.utils import timezone, translation
 
 from ads.models import AdUrl
 from core.admin import admin_site
-from date import geo
 from date.language_utils import localize_url, strip_language_prefix
 from date.middleware import ConnectionLifecycleMiddleware
 from date.templatetags.albins_angels import aa_news_url
@@ -1585,17 +1581,6 @@ class LunchWidgetTests(TestCase):
         self.assertContains(response, 'data-city="turku"')
         self.assertNotContains(response, 'data-lat=')
 
-    def test_cached_geocode_wins_over_the_fallback_coordinates(self):
-        cache.clear()
-        cache.set(geo.cache_key(), {'lat': 61.0, 'lng': 23.0, 'cached_at': time.time()})
-
-        with override_settings(LUNCH_ENABLED=True, LUNCH_LAT=60.0, LUNCH_LNG=22.0):
-            response = self.client.get("/")
-
-        self.assertContains(response, 'data-lat="61.0"')
-        self.assertContains(response, 'data-lng="23.0"')
-        self.assertNotContains(response, 'data-city="turku"')
-
     def test_coordinates_replace_the_city_with_dot_decimals(self):
         cache.clear()
 
@@ -1642,68 +1627,3 @@ class LunchWidgetTests(TestCase):
             response = self.client.get(reverse("lunch"))
 
         self.assertEqual(response.status_code, 404)
-
-
-class _FakeNominatimResponse:
-    def __init__(self, payload):
-        self._payload = payload
-
-    def raise_for_status(self):
-        return None
-
-    def json(self):
-        return self._payload
-
-
-class GeocodeAssociationAddressTests(SimpleTestCase):
-    def tearDown(self):
-        cache.clear()
-
-    def test_geocodes_the_association_address_and_caches_it(self):
-        cache.clear()
-        response = _FakeNominatimResponse([{'lat': '60.4570339', 'lon': '22.2793059', 'display_name': 'Arken, Turku'}])
-        out = StringIO()
-
-        with patch('date.geo.requests.get', return_value=response) as get:
-            call_command('geocode_association_address', stdout=out)
-
-        self.assertIn('Geocoded', out.getvalue())
-        cached = cache.get(geo.cache_key())
-        self.assertEqual(cached['lat'], 60.4570339)
-        self.assertEqual(cached['lng'], 22.2793059)
-        self.assertEqual(cached['display_name'], 'Arken, Turku')
-        params = get.call_args.kwargs['params']
-        self.assertIn('Fabriksgatan 2', params['q'])
-        self.assertEqual(params['countrycodes'], 'fi')
-
-    def test_does_not_fail_when_nominatim_is_down(self):
-        cache.clear()
-        err = StringIO()
-
-        with patch('date.geo.requests.get', side_effect=requests.RequestException('down')):
-            call_command('geocode_association_address', stderr=err)
-
-        self.assertIn('Could not geocode', err.getvalue())
-        self.assertIsNone(cache.get(geo.cache_key()))
-
-    def test_uses_a_fresh_cache_without_calling_nominatim(self):
-        cache.clear()
-        cache.set(geo.cache_key(), {'lat': 60.0, 'lng': 22.0, 'cached_at': time.time()})
-        out = StringIO()
-
-        with patch('date.geo.requests.get') as get:
-            call_command('geocode_association_address', stdout=out)
-
-        get.assert_not_called()
-        self.assertIn('Using cached', out.getvalue())
-
-    def test_address_override_is_used(self):
-        cache.clear()
-        response = _FakeNominatimResponse([{'lat': '60.0', 'lon': '22.0', 'display_name': 'Override'}])
-        out = StringIO()
-
-        with patch('date.geo.requests.get', return_value=response) as get:
-            call_command('geocode_association_address', '--address', 'Custom address 1, Turku', stdout=out)
-
-        self.assertEqual(get.call_args.kwargs['params']['q'], 'Custom address 1, Turku')
-        self.assertIn('Geocoded', out.getvalue())

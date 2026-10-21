@@ -5,8 +5,6 @@ from django.conf import settings
 from django.urls import NoReverseMatch, reverse
 from django.utils.translation import get_language
 
-from date import geo
-
 register = template.Library()
 
 # Languages the widget accepts, with Swedish as the fallback for anything else.
@@ -20,18 +18,6 @@ def _widget_language():
     return language if language in WIDGET_LANGUAGES else 'sv'
 
 
-def _coordinates():
-    """Return the cached geocode, then the configured fallback coordinates."""
-    cached = geo.cached_coordinates()
-    if cached is not None:
-        return cached
-    lat = getattr(settings, 'LUNCH_LAT', None)
-    lng = getattr(settings, 'LUNCH_LNG', None)
-    if lat is not None and lng is not None:
-        return float(lat), float(lng)
-    return None
-
-
 def _widget_attributes(count, heading):
     """Build the widget data attributes in the order the embed documents.
 
@@ -40,11 +26,9 @@ def _widget_attributes(count, heading):
     widget expects a dot decimal separator.
     """
     attributes = []
-    coordinates = _coordinates()
-    if coordinates is not None:
-        lat, lng = coordinates
-        attributes.append(('data-lat', str(lat)))
-        attributes.append(('data-lng', str(lng)))
+    if settings.LUNCH_LAT is not None and settings.LUNCH_LNG is not None:
+        attributes.append(('data-lat', str(settings.LUNCH_LAT)))
+        attributes.append(('data-lng', str(settings.LUNCH_LNG)))
     else:
         attributes.append(('data-city', settings.LUNCH_CITY))
     attributes.append(('data-lang', _widget_language()))
@@ -58,11 +42,9 @@ def _widget_attributes(count, heading):
 def lunch_widget(count=None, heading=3, wrapper_class='lunch-container'):
     """Render the official lunchmenu.fi student lunch widget.
 
-    The widget searches from the cached association geocode, then the
-    ``LUNCH_LAT``/``LUNCH_LNG`` fallback, then the city. Returns no markup when
-    ``LUNCH_ENABLED`` is off. The fallback anchor points at the local lunch page
-    where that route exists and at lunchmenu.fi otherwise, so the link still
-    works on associations without the page.
+    Returns no markup when ``LUNCH_ENABLED`` is off. The fallback anchor points
+    at the local lunch page where that route exists and at lunchmenu.fi
+    otherwise, so the link still works on associations without the page.
     """
     if not settings.LUNCH_ENABLED:
         return {'enabled': False}
