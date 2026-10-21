@@ -863,6 +863,10 @@ msgstr "Ange ett år i formatet YYYY"
 msgid "Styrelse"
 msgstr "Styrelse"
 
+#: functionaries/models.py:10
+msgid "Tutor"
+msgstr "Tutor"
+
 #: functionaries/models.py:12
 msgid "Funktionärspost"
 msgstr "Funktionärspost"
@@ -1893,6 +1897,10 @@ msgstr "Filtrera"
 #: templates/common/members/functionaries.html:44
 msgid "Styrelsen"
 msgstr "Styrelsen"
+
+#: templates/common/members/functionaries.html:78
+msgid "Tutorer"
+msgstr "Tutorer"
 
 #: templates/common/members/functionaries.html:69
 msgid "Övriga Funktionärer"

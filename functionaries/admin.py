@@ -116,11 +116,24 @@ class FunctionaryRoleAdmin(
         ),
     )
     save_on_top = True
-    list_display = ('title', 'translation_status', 'board', 'functionary_count')
-    list_filter = ('board',)
+    list_display = ('title', 'translation_status', 'board', 'tutor', 'functionary_count')
+    list_filter = ('board', 'tutor')
     search_fields = ('title', 'functionary__name', 'functionary__member__first_name', 'functionary__member__last_name')
     ordering = ['title']
     inlines = [FunctionaryInline]
+
+    def get_fieldsets(self, request, obj=None):
+        # Show the board and tutor checkboxes on one row. The grouping happens here rather than in
+        # get_fields because the translation admin rebuilds the fieldsets from the form and flattens
+        # any grouped fields.
+        fieldsets = []
+        for name, options in super().get_fieldsets(request, obj):
+            fields = list(options.get('fields', ()))
+            if 'board' in fields and 'tutor' in fields:
+                fields.remove('tutor')
+                fields[fields.index('board')] = ('board', 'tutor')
+            fieldsets.append((name, {**options, 'fields': fields}))
+        return fieldsets
 
     def get_list_display(self, request):
         list_display = list(super().get_list_display(request))

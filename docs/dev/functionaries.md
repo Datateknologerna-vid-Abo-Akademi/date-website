@@ -8,13 +8,13 @@ The public routes remain under the members URL namespace for compatibility:
 - `/members/functionaries/` (`members:functionaries`) shows the public year/role listing.
 
 ## Models
-- `FunctionaryRole` defines a translated position title and whether it is a board seat.
+- `FunctionaryRole` defines a translated position title and whether it is a board seat (`board`) or a tutor role (`tutor`).
 - `Functionary` links a role to a year and either a `Member` or standalone display `name`.
 - When a linked member has no stored display name, `Functionary.save()` snapshots the member's current full name or username.
 
 ## Forms & Selectors
 - `FunctionaryForm` enforces uniqueness per `(member, role, year)` for member-managed entries.
-- `functionaries.selectors` groups and filters functionaries by year, role, and board/non-board status for the public listing.
+- `functionaries.selectors` groups and filters functionaries by year, role, and section for the public listing. The sections are board, tutors, and other functionaries, and they are mutually exclusive: `board` wins over `tutor`, and the other section excludes both.
 - The public listing is public: signed-out visitors can always view it. The year and role query parameters are applied for anonymous visitors only when `FUNCTIONARIES_ANONYMOUS_FILTERS` is on. The default is off so earlier years are not browsable without signing in. `pulterit` enables the setting because it has no member accounts to sign in with.
 
 ## Admin

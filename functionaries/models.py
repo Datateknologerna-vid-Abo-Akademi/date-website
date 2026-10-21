@@ -7,6 +7,7 @@ from django.utils.translation import gettext_lazy as _
 class FunctionaryRole(models.Model):  # type: ignore[django-manager-missing]
     title = models.CharField(_('Titel'), max_length=200)
     board = models.BooleanField(_('Styrelse'), default=False)
+    tutor = models.BooleanField(_('Tutor'), default=False)
 
     class Meta:
         verbose_name = _("Funktionärspost")
