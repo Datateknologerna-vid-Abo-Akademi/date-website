@@ -215,6 +215,7 @@ When enabled:
 - translated models use the project's local language-tab admin or `TranslationTabularInline`
 - the custom admin template shows a language switcher
 - editors can fill language-specific content from the admin UI
+- the language tabs switch a form row only when that row holds a single language. A tabular inline row keeps every language column visible, because one table row holds the translated inputs, the read-only columns (such as a poll's Votes) and the delete box together.
 
 When disabled:
 
@@ -228,6 +229,7 @@ Relevant files:
 - `polls/admin.py`
 - `staticpages/admin.py`
 - `templates/common/admin/base_site.html`
+- `static/common/js/admin_translation_tabs.js`
 
 ## Tests and Local Development
 
