@@ -32,7 +32,10 @@ services:
   # stack) to apply them.
   init:
     env_file: .env
-    build: .
+    build:
+      context: .
+      args:
+        BUILD_ASSETS: ${BUILD_ASSETS:-1}
     restart: "no"
     command: /bin/bash -c "./wait-for-postgres.sh db:5432 && python manage.py migrate --noinput && python manage.py compilemessages -l en -l fi -l sv --verbosity 0"
     volumes:
@@ -41,7 +44,10 @@ services:
       - db
   web:
     env_file: .env
-    build: .
+    build:
+      context: .
+      args:
+        BUILD_ASSETS: ${BUILD_ASSETS:-1}
     restart: unless-stopped
     command: python manage.py runserver 0.0.0.0:8000
     volumes:
@@ -58,7 +64,10 @@ services:
   celery:
     env_file: .env
     restart: unless-stopped
-    build: .
+    build:
+      context: .
+      args:
+        BUILD_ASSETS: ${BUILD_ASSETS:-1}
     command: celery -A core worker -l info -c 2
     volumes:
       - .:/code
