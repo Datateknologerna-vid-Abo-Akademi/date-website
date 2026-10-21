@@ -151,8 +151,6 @@ DEFAULT_STORE = Path.home() / ".cache" / "date-website" / "css-regression"
 # datecss stack publishes sf on 8015 and impuls on 8016. Verified with
 # `docker inspect datecss-web-sf-1` (binds 8015) and `docker inspect datecss-web-impuls-1`
 # (binds 8016). Override any entry with `--base name=http://host:port`.
-# `demo` is excluded on purpose: it is slated for deletion and is not part of the
-# parity claim, so capturing it would only add noise nobody acts on.
 DEFAULT_BASE_URLS: dict[str, str] = {
     "date": "http://127.0.0.1:8002",
     "biocum": "http://127.0.0.1:8001",
@@ -161,7 +159,6 @@ DEFAULT_BASE_URLS: dict[str, str] = {
     "sf": "http://127.0.0.1:8015",
     "impuls": "http://127.0.0.1:8016",
 }
-EXCLUDED_VARIANTS = {"demo"}
 
 # Optional authentication for gated pages. The sign-in page is the two_factor login
 # template (templates/common/members/registration/login.html, driven by
@@ -1477,12 +1474,6 @@ def parse_base_overrides(values: list[str]) -> dict[str, str]:
 
 
 def resolve_base_urls(overrides: dict[str, str], only: list[str]) -> dict[str, str]:
-    for name in overrides:
-        if name in EXCLUDED_VARIANTS:
-            fail(f"variant {name!r} is excluded from this harness on purpose")
-    excluded = sorted(set(only) & EXCLUDED_VARIANTS)
-    if excluded:
-        fail(f"variant {', '.join(excluded)} is excluded from this harness on purpose")
     bases = dict(DEFAULT_BASE_URLS)
     bases.update(overrides)
     if only:

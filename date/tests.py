@@ -45,7 +45,6 @@ ASSOCIATION_SETTINGS_MODULES = {
     "date": "core.settings.date",
     "kk": "core.settings.kk",
     "biocum": "core.settings.biocum",
-    "demo": "core.settings.demo",
     "pulterit": "core.settings.pulterit",
     "sf": "core.settings.sf",
     "impuls": "core.settings.impuls",
@@ -277,11 +276,8 @@ class SiteShellTemplateTests(TestCase):
     def test_only_date_loads_the_dad_joke_fetcher(self):
         # The joke is DaTe's: every other association includes the calendar script
         # without the fetcher, because none of them renders a #joke-string to put a
-        # joke in, and fetching one anyway is a request on every page load. The demo
-        # variant is outside the association rule and still fetches.
+        # joke in, and fetching one anyway is a request on every page load.
         for association, settings_module in ASSOCIATION_SETTINGS_MODULES.items():
-            if association == "demo":
-                continue
             with self.subTest(association=association):
                 module = importlib.import_module(settings_module)
                 with override_settings(TEMPLATES=module.TEMPLATES):

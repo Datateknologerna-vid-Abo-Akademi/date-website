@@ -33,16 +33,6 @@ under `static/biocum/` falls through to `static/common/`, never to
 `static/date/`.
 
 The shipped variants are `date`, `kk`, `biocum`, `pulterit`, `sf` and `impuls`.
-`demo` still exists in the tree (`core/settings/demo.py`, `static/demo/`) but is
-slated for deletion: the per-association guard rules cover only the six shipped
-variants, and the regression harness skips `demo`. The whole-tree ratchets
-(`!important`, `z-index`, breakpoints, empty linked sheets) still scan its three
-stylesheets, because a ratchet never fails when a file disappears. A shared
-palette token rename does have to reach `demo`, because
-`static/common/events/css/arsfest.css` consumes the token:
-`--primaryColorMid` was renamed in `static/demo/date/css/date-root.css` and
-`static/demo/core/css/base.css` for that reason, and no other `demo` file was
-touched.
 
 Across the six shipped variants, 21 association stylesheets currently sit at a
 logical path that also exists under `static/common/`. Every one of those is a
@@ -452,8 +442,8 @@ pixels and zero computed-style changes, and a tolerance is something a reviewer 
 named run with a reason, not the default the next person inherits.
 
 Captures land under `~/.cache/date-website/css-regression/<label>/` unless
-`--out` names a directory. The harness covers the six shipped variants (it skips
-`demo`) at a 1600x1000 desktop viewport and a 390x844 mobile one, which samples only the
+`--out` names a directory. The harness covers the six shipped variants at a
+1600x1000 desktop viewport and a 390x844 mobile one, which samples only the
 ends of the breakpoint scale: 576, 768, 992 and 1200 are never exercised, so a rule that
 only applies between two of them can change appearance invisibly. Add the widths a change
 touches with `--viewport NAME=WIDTHxHEIGHT` (repeatable), for example

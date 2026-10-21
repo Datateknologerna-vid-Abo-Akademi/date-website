@@ -5,7 +5,7 @@
 The project supports multiple site variants selected by `PROJECT_NAME`. Each variant has its own settings file under `core/settings/<variant>.py`, which builds the Django `TEMPLATES` `DIRS` list with the shared helpers in `core/settings/common.py`:
 
 ```python
-# Variant with no inherited templates (date, kk, pulterit, demo):
+# Variant with no inherited templates (date, kk, pulterit):
 TEMPLATES = build_templates('date')
 
 # Variant inheriting another variant's templates (biocum, sf, impuls):

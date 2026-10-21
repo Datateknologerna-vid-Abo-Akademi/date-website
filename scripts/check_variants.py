@@ -21,7 +21,7 @@ from pathlib import Path
 MANAGE = Path(__file__).resolve().parent.parent / "manage.py"
 
 # Every association variant gets a full settings/app check.
-CHECK_VARIANTS = ("date", "kk", "biocum", "pulterit", "sf", "impuls", "demo")
+CHECK_VARIANTS = ("date", "kk", "biocum", "pulterit", "sf", "impuls")
 # Distinct app sets only: date is the broadest, kk adds lucia, sf adds
 # klotterplanket. The other variants install a subset of these.
 MIGRATION_VARIANTS = ("date", "kk", "sf")

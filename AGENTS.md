@@ -103,7 +103,7 @@ Prefer adding dependencies only when they remove meaningful complexity. This app
 
 Important settings come from `.env`:
 
-- `PROJECT_NAME`: active association/site variant (`date`, `kk`, `biocum`, `demo`, `pulterit`, etc.).
+- `PROJECT_NAME`: active association/site variant (`date`, `kk`, `biocum`, `pulterit`, etc.).
 - `ENABLE_LANGUAGE_FEATURES`: enables runtime language switching and translated admin tabs. Default/off means Swedish-only behavior.
 - `USE_UNFOLD`: enables the Unfold admin theme. Restart/recreate containers after changing it.
 - `USE_S3`: switches uploads from local disk to S3-compatible storage.

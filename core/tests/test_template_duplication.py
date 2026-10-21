@@ -43,7 +43,6 @@ BASE_DIR = Path(__file__).resolve().parents[2]
 TEMPLATES_DIR = BASE_DIR / "templates"
 BASELINE_PATH = Path(__file__).with_name("template_near_copy_baseline.json")
 
-# `demo` is a stock photography demo variant and is deliberately out of scope.
 ASSOCIATIONS = ("date", "kk", "biocum", "pulterit", "sf", "impuls")
 SHARED = "common"
 

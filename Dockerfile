@@ -38,8 +38,7 @@ ENV PROJECT_NAME=$PROJECT_NAME
 # pulterit, sf and impuls variants; kk and biocum keep the stock admin.
 # collectstatic only discovers app static dirs for apps in INSTALLED_APPS, so
 # unfold's files must be collected with USE_UNFOLD=True or every unfold admin
-# template render 500s on the missing manifest entry (2026-08-30). demo is a
-# dev-only variant and needs no collected tree in the image.
+# template render 500s on the missing manifest entry (2026-08-30).
 RUN if [ "${BUILD_ASSETS}" = "1" ]; then \
       pids=""; \
       for variant in date kk pulterit biocum sf impuls; do \

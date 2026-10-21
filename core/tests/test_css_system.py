@@ -63,19 +63,13 @@ small association delta. Both routes are documented in ``docs/dev/css.md`` under
 the legitimate ways to vary an association. A pair that is already frozen fails
 as soon as its ratio rises by more than ``DRIFT_MARGIN`` (0.02) above the frozen
 value, because that is the fork drifting further instead of being reduced. Only
-the variants in ``VARIANTS`` are walked, so ``demo`` is out of scope here exactly
-as it is for the module's other per variant rules, and a variant sheet whose
-logical path has no ``static/common/`` counterpart is not a shadow at all, so it
-is never considered.
+the variants in ``VARIANTS`` are walked, and a variant sheet whose logical path
+has no ``static/common/`` counterpart is not a shadow at all, so it is never
+considered.
 
 ``*.min.css`` and anything under a ``vendor`` directory are skipped everywhere,
 exactly as ``core/tests/test_static_css.py`` does: generated and third-party
-sheets are not ours to police. The variant ``demo`` is deliberately out of scope
-because it is slated for deletion, so it is not in ``VARIANTS`` and its tree is
-not scanned by the per variant rules (1, 5 and 7). The whole-tree ratchets (rules
-2, 3, 4 and 6) still read every project stylesheet, ``demo`` included, because
-dropping one directory there would need a special case with nothing to gain: a
-ratchet never fails when a file disappears.
+sheets are not ours to police.
 """
 
 import difflib
@@ -94,9 +88,8 @@ STATIC_DIR = BASE_DIR / "static"
 TEMPLATES_DIR = BASE_DIR / "templates"
 BASELINE_PATH = Path(__file__).resolve().with_name("css_footgun_baseline.json")
 
-# Associations that ship their own stylesheet tree. ``demo`` is deliberately
-# absent: it is slated for deletion, so it is out of scope for the per variant
-# rules. Keep this in step with ``build_static_dirs`` callers in core/settings/.
+# Associations that ship their own stylesheet tree. Keep this in step with
+# ``build_static_dirs`` callers in core/settings/.
 VARIANTS = ("date", "kk", "biocum", "pulterit", "sf", "impuls")
 
 COMMENT = re.compile(r"/\*.*?\*/", re.S)
