@@ -18,11 +18,27 @@
   }
 
   function translatedRows() {
-    return [...document.querySelectorAll(".mt")]
-      .map((field) => ({ field, language: translatedFieldLanguage(field) }))
-      .filter(({ language }) => language)
-      .map(({ field, language }) => ({ row: field.closest(".form-row"), language }))
-      .filter(({ row }) => row);
+    const rows = new Map();
+    for (const field of document.querySelectorAll(".mt")) {
+      const language = translatedFieldLanguage(field);
+      const row = language && field.closest(".form-row");
+      if (!row) {
+        continue;
+      }
+      if (!rows.has(row)) {
+        rows.set(row, new Set());
+      }
+      rows.get(row).add(language);
+    }
+
+    // A .form-row that holds more than one language is a tabular inline row,
+    // which puts every language's input, the read-only columns and the delete
+    // box in one table row. Hiding it to show one language would hide all of
+    // that (a poll's Votes column, for example), so those rows keep every
+    // language column and only rows that hold a single language follow the tabs.
+    return [...rows]
+      .filter(([, languages]) => languages.size === 1)
+      .map(([row, languages]) => ({ row, language: [...languages][0] }));
   }
 
   function updateRows() {
