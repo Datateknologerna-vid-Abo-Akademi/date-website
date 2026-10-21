@@ -2915,7 +2915,7 @@ class EventTemplateSelectionTests(TestCase):
         self.assertNotContains(info_response, 'data-nav="attendee-list"')
 
     def test_common_arsfest_keeps_the_signup_tab(self):
-        demo_settings = importlib.import_module("core.settings.demo")
+        kk_settings = importlib.import_module("core.settings.kk")
 
         event = Event.objects.create(
             title="Årsfest",
@@ -2923,8 +2923,8 @@ class EventTemplateSelectionTests(TestCase):
             author=self.author,
         )
         with override_settings(
-            TEMPLATES=demo_settings.TEMPLATES,
-            STATICFILES_DIRS=demo_settings.STATICFILES_DIRS,
+            TEMPLATES=kk_settings.TEMPLATES,
+            STATICFILES_DIRS=kk_settings.STATICFILES_DIRS,
         ):
             response = self.client.get(reverse("events:detail", args=[event.slug]))
 
@@ -2932,7 +2932,7 @@ class EventTemplateSelectionTests(TestCase):
 
     def test_every_arsfest_layout_follows_the_event_settings(self):
         layouts = (
-            ("common", "core.settings.demo"),
+            ("kk", "core.settings.kk"),
             ("sf", "core.settings.sf"),
             ("date", "core.settings.date"),
             ("biocum", "core.settings.biocum"),
@@ -3085,7 +3085,7 @@ class EventTemplateSelectionTests(TestCase):
         self.assertFalse(finished.show_attendee_tab())
 
     def test_arsfest_page_shows_both_tabs_when_signups_are_enabled(self):
-        demo_settings = importlib.import_module("core.settings.demo")
+        kk_settings = importlib.import_module("core.settings.kk")
 
         event = Event.objects.create(
             title="Årsfest",
@@ -3094,8 +3094,8 @@ class EventTemplateSelectionTests(TestCase):
             sign_up=True,
         )
         with override_settings(
-            TEMPLATES=demo_settings.TEMPLATES,
-            STATICFILES_DIRS=demo_settings.STATICFILES_DIRS,
+            TEMPLATES=kk_settings.TEMPLATES,
+            STATICFILES_DIRS=kk_settings.STATICFILES_DIRS,
         ):
             response = self.client.get(reverse("events:detail", args=[event.slug]))
 
@@ -3104,7 +3104,7 @@ class EventTemplateSelectionTests(TestCase):
         self.assertContains(response, 'id="sign-up"')
 
     def test_arsfest_page_without_signups_shows_no_registration_tabs(self):
-        demo_settings = importlib.import_module("core.settings.demo")
+        kk_settings = importlib.import_module("core.settings.kk")
 
         event = Event.objects.create(
             title="Årsfest",
@@ -3113,8 +3113,8 @@ class EventTemplateSelectionTests(TestCase):
             sign_up=False,
         )
         with override_settings(
-            TEMPLATES=demo_settings.TEMPLATES,
-            STATICFILES_DIRS=demo_settings.STATICFILES_DIRS,
+            TEMPLATES=kk_settings.TEMPLATES,
+            STATICFILES_DIRS=kk_settings.STATICFILES_DIRS,
         ):
             response = self.client.get(reverse("events:detail", args=[event.slug]))
 
@@ -3124,7 +3124,7 @@ class EventTemplateSelectionTests(TestCase):
         self.assertNotContains(response, 'id="sign-up"')
 
     def test_arsfest_page_keeps_the_attendee_tab_for_editor_added_registrations(self):
-        demo_settings = importlib.import_module("core.settings.demo")
+        kk_settings = importlib.import_module("core.settings.kk")
 
         event = Event.objects.create(
             title="Årsfest",
@@ -3140,8 +3140,8 @@ class EventTemplateSelectionTests(TestCase):
             preferences={},
         )
         with override_settings(
-            TEMPLATES=demo_settings.TEMPLATES,
-            STATICFILES_DIRS=demo_settings.STATICFILES_DIRS,
+            TEMPLATES=kk_settings.TEMPLATES,
+            STATICFILES_DIRS=kk_settings.STATICFILES_DIRS,
         ):
             response = self.client.get(reverse("events:detail", args=[event.slug]))
 

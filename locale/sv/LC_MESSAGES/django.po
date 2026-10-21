@@ -292,7 +292,6 @@ msgstr "Socialt & annonser"
 #: core/admin_ui.py:132 templates/biocum/date/components/mobile.html:52
 #: templates/biocum/date/components/sidebar.html:55
 #: templates/date/date/components/partners.html:3
-#: templates/demo/date/components/partners.html:3
 #: templates/kk/date/april_start.html:110
 #: templates/kk/date/components/partners.html:3
 #: templates/pulterit/date/components/partners.html:3
@@ -1385,8 +1384,6 @@ msgstr "Undermenyer stöder bara en nivå."
 #: templates/biocum/date/components/mobile.html:3
 #: templates/biocum/date/components/sidebar.html:4
 #: templates/date/date/components/events.html:3
-#: templates/demo/date/components/events.html:3
-#: templates/demo/date/components/mobile.html:3
 #: templates/kk/date/april_start.html:88
 #: templates/kk/date/components/events.html:3
 #: templates/pulterit/date/components/events.html:3
@@ -1396,8 +1393,6 @@ msgstr "Evenemang"
 #: templates/biocum/date/components/mobile.html:42
 #: templates/biocum/date/components/sidebar.html:45
 #: templates/date/date/components/events.html:42
-#: templates/demo/date/components/events.html:44
-#: templates/demo/date/components/mobile.html:42
 #: templates/kk/date/components/events.html:42
 #: templates/pulterit/date/components/events.html:42
 msgid "Inga aktiva evenemang hittades"
@@ -1406,8 +1401,6 @@ msgstr "Inga aktiva evenemang hittades"
 #: templates/biocum/date/components/mobile.html:45
 #: templates/biocum/date/components/sidebar.html:48
 #: templates/date/date/components/events.html:45
-#: templates/demo/date/components/events.html:47
-#: templates/demo/date/components/mobile.html:45
 #: templates/kk/date/components/events.html:45
 #: templates/pulterit/date/components/events.html:45
 msgid "Mera evenemang"
@@ -1416,7 +1409,6 @@ msgstr "Mera evenemang"
 #: templates/biocum/date/components/news.html:3
 #: templates/common/news/index.html:6
 #: templates/date/date/components/news.html:3
-#: templates/demo/date/components/news.html:3
 #: templates/kk/date/components/news.html:3
 #: templates/pulterit/date/components/news.html:3
 msgid "Nyheter"
@@ -1424,7 +1416,6 @@ msgstr "Nyheter"
 
 #: templates/biocum/date/components/news.html:11
 #: templates/date/date/components/news.html:14
-#: templates/demo/date/components/news.html:11
 #: templates/kk/date/april_start.html:78
 #: templates/kk/date/components/news.html:10
 #: templates/pulterit/date/components/news.html:14
@@ -1433,7 +1424,6 @@ msgstr "Läs mera"
 
 #: templates/biocum/date/components/news.html:14
 #: templates/date/date/components/news.html:17
-#: templates/demo/date/components/news.html:14
 #: templates/kk/date/components/news.html:13
 #: templates/pulterit/date/components/news.html:17
 msgid "Inga nyheter hittades"
@@ -1441,7 +1431,6 @@ msgstr "Inga nyheter hittades"
 
 #: templates/biocum/date/components/news.html:16
 #: templates/date/date/components/news.html:19
-#: templates/demo/date/components/news.html:16
 #: templates/kk/date/april_start.html:83
 #: templates/kk/date/components/news.html:15
 #: templates/pulterit/date/components/news.html:19
@@ -2501,7 +2490,6 @@ msgid "vid Åbo Akademi rf"
 msgstr "vid Åbo Akademi rf"
 
 #: templates/date/date/components/partners.html:12
-#: templates/demo/date/components/partners.html:12
 msgid "Vill du samarbeta med DaTe?"
 msgstr "Vill du samarbeta med DaTe?"
 

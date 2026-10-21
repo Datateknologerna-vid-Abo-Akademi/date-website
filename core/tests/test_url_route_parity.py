@@ -138,24 +138,6 @@ EXPECTED_PREFIXES = {
         *API_PREFIXES,
         *TRAILING_PREFIXES,
     ],
-    "demo": [
-        *COMMON_PREFIXES,
-        "",
-        "news/",
-        "members/",
-        "members/two-factor/",
-        "archive/",
-        "events/",
-        "pages/",
-        "forms/",
-        "ads/",
-        "social/",
-        "polls/",
-        "admin/",
-        "ckeditor5/",
-        *API_PREFIXES,
-        *TRAILING_PREFIXES,
-    ],
 }
 
 EXPECTED_URL_NAMES = {
@@ -181,7 +163,6 @@ EXPECTED_URL_NAMES = {
         "alumni:alumni_signup",
         "api:events:upcoming",
     ],
-    "demo": ["news:index", "archive:years", "api:events:upcoming"],
 }
 
 FORBIDDEN_URL_NAMES = {
@@ -190,7 +171,6 @@ FORBIDDEN_URL_NAMES = {
     "pulterit": ["archive:years", "booking:index"],
     "sf": ["booking:index"],
     "impuls": ["booking:index"],
-    "demo": ["booking:index"],
 }
 
 CODE = """

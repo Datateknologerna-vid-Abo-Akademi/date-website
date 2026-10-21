@@ -150,10 +150,9 @@ new pods can overlap during rollouts.
 ## Static files
 
 Every production association's static is collected into the image at build
-time, one tree per variant under `/code/static-collected/<PROJECT_NAME>`
-(the dev-only demo variant gets no tree). Settings pick the tree matching
-the runtime `PROJECT_NAME`, so every site serves build-time static and no
-web pod runs `collectstatic` at startup
+time, one tree per variant under `/code/static-collected/<PROJECT_NAME>`.
+Settings pick the tree matching the runtime `PROJECT_NAME`, so every site
+serves build-time static and no web pod runs `collectstatic` at startup
 (`web.collectstaticOnStartup` defaults to false; keep it only for images
 built before this layout).
 
@@ -167,11 +166,10 @@ the variant.
 The build collects each variant's static concurrently into its own tree, and
 collects `django-unfold` static only for the variants that run the unfold
 admin skin (`USE_UNFOLD=True`: date incl. qa, pulterit, sf, impuls); kk and
-biocum keep the stock admin and the dev-only demo variant gets no collected
-tree. `collectstatic` only discovers app static dirs for apps in
-`INSTALLED_APPS`, so a variant collected without `USE_UNFOLD=True` renders
-the unfold admin with 500s on the missing `unfold/fonts/inter/styles.css`
-manifest entry (2026-08-30).
+biocum keep the stock admin. `collectstatic` only discovers app static dirs
+for apps in `INSTALLED_APPS`, so a variant collected without `USE_UNFOLD=True`
+renders the unfold admin with 500s on the missing
+`unfold/fonts/inter/styles.css` manifest entry (2026-08-30).
 
 The image also carries compiled translations. Both the collected trees and
 the `.mo` files are only read by an image that serves the app from its own
