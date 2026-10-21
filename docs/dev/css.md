@@ -7,7 +7,7 @@ for that system: where a sheet lives, which copy wins, what belongs in a
 variant's palette, and the policies for load order, `!important`, breakpoints,
 `z-index` and JavaScript hooks.
 
-The tree holds 89 hand-written stylesheets (91 `.css` files minus the two
+The tree holds 90 hand-written stylesheets (92 `.css` files minus the two
 vendored minified bundles, `static/common/date/css/vanilla-calendar.min.css` and
 `static/common/core/css/flatpickr.min.css`). A handful of them are linked by
 `templates/common/core/base.html` and therefore load on every page; the rest are
@@ -236,7 +236,9 @@ A sheet that must win by order rather than by specificity goes in
 later has to be linked after that sheet. The vanilla-calendar bundle
 (`static/common/date/css/vanilla-calendar.min.css`) is an example: the base
 sheets and Bootstrap are already on the page before it is linked, so only a
-later link can override its calendar rules.
+later link can override its calendar rules. The calendar's site theme,
+`static/common/date/css/vanilla-calendar-theme.css`, is linked from the shared
+homepage shell directly after that bundle for the same reason.
 
 ## The `!important` policy
 

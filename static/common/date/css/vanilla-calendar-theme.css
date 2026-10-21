@@ -1,0 +1,221 @@
+/* Site theme for the homepage calendar.
+
+   The vendored stylesheet ships the library's structure and its light theme, and
+   the light theme is the layer that applies the colour properties, so most of
+   this file only has to set them. The names are the ones the vendored stylesheet
+   reads, because a name it never reads would fail silently.
+
+   The rest of the file restores the metrics the homepage had on vanilla-calendar
+   2.x: 28 px circular day buttons, thin chevron arrows, and the 2.x sizes for the
+   title and the weekday headings. 3.x draws wider pill-shaped day buttons and a
+   large SVG arrow, which is a different calendar than the one this site had. */
+
+.vc {
+  /* panel */
+  --vc-bg: var(--secondaryColor);
+  --vc-color: var(--primaryColor);
+  --vc-header-color: var(--primaryColor);
+  --vc-title-color: var(--primaryColor);
+  --vc-title-color-hover: var(--primaryColorLighter);
+  --vc-title-color-disabled: #d3d3d3;
+
+  /* keyboard focus follows the site's ring colour, not the vendor orange */
+  --vc-focus-outline-color: var(--linkColorLight);
+
+  /* weekday headings */
+  --vc-week-day-color: var(--primaryColorLighter);
+  --vc-week-day-off-color: var(--primaryColorLighter);
+  --vc-week-day-color-hover: var(--primaryColorLighter);
+  --vc-week-day-off-color-hover: var(--primaryColorLighter);
+
+  /* day cells: transparent, so only today and an event get a fill */
+  --vc-date-bg: transparent;
+  --vc-date-color: var(--primaryColor);
+  --vc-date-bg-hover: var(--secondaryColorDarker);
+  --vc-date-hover-bg: var(--secondaryColorDarker);
+  --vc-date-hover-edge-bg: var(--secondaryColorDarker);
+  --vc-date-disabled-color: #d3d3d3;
+
+  /* days outside the current month */
+  --vc-date-outside-color: darkgray;
+  --vc-date-today-outside-color: var(--vc-date-outside-color);
+  --vc-date-selected-outside-bg: transparent;
+  --vc-date-selected-outside-color: var(--vc-date-outside-color);
+  --vc-date-weekend-outside-bg: transparent;
+  --vc-date-weekend-outside-color: var(--vc-date-outside-color);
+  --vc-date-weekend-outside-bg-hover: var(--vc-date-bg-hover);
+  --vc-date-weekend-outside-hover-bg: var(--vc-date-hover-bg);
+
+  /* today */
+  --vc-date-today-bg: var(--secondaryColorDarker);
+  --vc-date-today-color: var(--primaryColorLighter);
+
+  /* selected day: not painted. Clicking a day selects it in the library, but the
+     homepage calendar only navigates or opens a popup, and 2.x never painted the
+     clicked day either. Hover still previews the day, see below. */
+  --vc-date-selected-bg: transparent;
+  --vc-date-selected-color: var(--primaryColor);
+
+  /* weekends follow the palette, including the today and selected combinations:
+     the vendored sheet would otherwise paint a weekend-today number and a
+     selected weekend day with its own rose. */
+  --vc-date-weekend-color: var(--primaryColor);
+  --vc-date-weekend-today-color: var(--vc-date-today-color);
+  --vc-date-weekend-bg-hover: var(--vc-date-bg-hover);
+  --vc-date-weekend-hover-bg: var(--vc-date-hover-bg);
+  --vc-date-weekend-hover-edge-bg: var(--vc-date-hover-bg);
+  --vc-date-weekend-selected-bg: transparent;
+  --vc-date-weekend-selected-color: var(--primaryColor);
+  --vc-date-weekend-disabled-color: var(--vc-date-disabled-color);
+  --vc-date-weekend-today-disabled-color: var(--vc-date-disabled-color);
+  --vc-date-weekend-disabled-outside-color: var(--vc-date-disabled-color);
+  --vc-date-weekend-today-outside-color: var(--vc-date-outside-color);
+
+  /* range modes are unused here, but they must not fall back to the vendored
+     cyan and rose either */
+  --vc-date-range-middle-bg: var(--vc-date-bg-hover);
+  --vc-date-range-middle-color: var(--vc-date-color);
+  --vc-date-range-middle-weekend-bg: var(--vc-date-bg-hover);
+  --vc-date-range-middle-weekend-color: var(--vc-date-color);
+  --vc-date-range-middle-outside-bg: var(--vc-date-bg-hover);
+  --vc-date-range-middle-outside-color: var(--vc-date-color);
+
+  /* month and year views, reachable by clicking the title */
+  --vc-months-years-bg: var(--secondaryColor);
+  --vc-months-years-color: var(--primaryColorLight);
+  --vc-months-years-bg-hover: var(--secondaryColorDarker);
+  --vc-months-years-bg-selected: var(--primaryColorLight);
+  --vc-months-years-color-selected: var(--secondaryColor);
+  --vc-months-years-color-disabled: #d3d3d3;
+
+  /* event popup */
+  --vc-date-popup-bg: var(--secondaryColorDarker);
+  --vc-date-popup-color: var(--primaryColor);
+
+  /* Arrow bar colours, so an association can recolour the arrows without
+     outranking these rules. Pulterit greys them. */
+  --calendar-arrow-color: var(--primaryColor);
+  --calendar-arrow-hover-color: var(--primaryColorLight);
+
+  /* 3.x refuses to shrink below 272 px; 2.x shrank to its own content, which is
+     what the narrow homepage column did on smaller screens. */
+  width: 100%;
+  min-width: min-content;
+  padding: 12px;
+  border-radius: 4px;
+}
+
+/* A clicked day is selected by the library; keep it looking like any other day,
+   including while hovered, where the library would otherwise keep using the
+   selected colour instead of the hover one. Hover is gated the same way the
+   vendored sheet gates it, so touch devices get no sticky fill. */
+@media (hover: hover) and (pointer: fine) {
+  .vc [data-vc-date][data-vc-date-selected] [data-vc-date-btn]:hover {
+    background-color: var(--vc-date-bg-hover);
+    color: var(--vc-date-color);
+  }
+}
+
+/* 28 px circles, the day button the homepage had before the upgrade. */
+.vc [data-vc-date] {
+  padding: 0;
+}
+
+.vc [data-vc-date-btn] {
+  width: 28px;
+  min-width: 28px;
+  height: 28px;
+  min-height: 28px;
+  padding: 1px 6px;
+  border-radius: 50%;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 400;
+}
+
+.vc [data-vc-date][data-vc-date-today] [data-vc-date-btn] {
+  font-weight: 600;
+}
+
+/* 2.x always drew six week rows, so a five-week month kept the same height, and
+   it spaced the columns 2 px apart. */
+.vc [data-vc=dates] {
+  row-gap: 2px;
+  min-height: calc(6 * 28px + 5 * 2px);
+}
+
+.vc [data-vc-dates=row],
+.vc [data-vc=week] {
+  column-gap: 2px;
+}
+
+.vc [data-vc=week] {
+  margin-bottom: 5px;
+}
+
+.vc [data-vc-week-day] {
+  width: 28px;
+  min-width: 28px;
+  height: 18px;
+  min-height: 18px;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.vc [data-vc-header=content] {
+  padding-left: 15px;
+  padding-right: 15px;
+}
+
+.vc [data-vc-month],
+.vc [data-vc-year] {
+  padding: 2px;
+  font-size: 16px;
+  line-height: 20px;
+  font-weight: 700;
+}
+
+/* The arrows are two thin bars in the 2.x sheet rather than the 3.x SVG, so draw
+   them the old way and drop the embedded image and its tint. */
+.vc [data-vc-arrow] {
+  right: 2px;
+  width: 18px;
+  height: 18px;
+  padding: 2px;
+  border-radius: 4px;
+}
+
+.vc [data-vc-arrow]:before {
+  background-image: none;
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 5px;
+  width: 10px;
+  height: 1px;
+  background-color: var(--calendar-arrow-color);
+  transform: rotateZ(45deg);
+}
+
+.vc [data-vc-arrow]:after {
+  content: "";
+  position: absolute;
+  left: 5px;
+  bottom: 5px;
+  width: 10px;
+  height: 1px;
+  background-color: var(--calendar-arrow-color);
+  transform: rotateZ(-45deg);
+}
+
+.vc [data-vc-arrow]:hover:before,
+.vc [data-vc-arrow]:hover:after {
+  background-color: var(--calendar-arrow-hover-color);
+  opacity: 1;
+}
+
+.vc [data-vc-arrow=prev] {
+  right: 0;
+  left: 4px;
+  transform: rotateZ(180deg);
+}

@@ -21,6 +21,10 @@ appears, and which components fill `#main`.
   <link rel="stylesheet"
         href="{% static 'date/css/vanilla-calendar.min.css' %}"
         type="text/css">
+  {# Site colours for the calendar: it reads the theme's custom properties, so it loads after the vendored sheet. #}
+  <link rel="stylesheet"
+        href="{% static 'date/css/vanilla-calendar-theme.css' %}"
+        type="text/css">
   {% block homepage_head_scripts %}
     <script src="{% static 'date/js/vanilla-calendar.min.js' %}"></script>
   {% endblock %}

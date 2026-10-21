@@ -312,20 +312,14 @@ div.calendar-container a {
 }
 
 
-.vanilla-calendar-day__btn_today {
+/* A day that is both today and an event day keeps the event colour, as it did
+   on 2.x: the migrated today selector outranks plain .calendar-eventday. */
+.vc-date[data-vc-date-today] .vc-date__btn:not(.calendar-eventday) {
     color: var(--textColorLight) !important;
     background-color: var(--primaryColor) !important;
 }
 
-.vanilla-calendar-day__btn_today:hover {
-    background-color: var(--primaryColorLight) !important;
-}
-
-.vanilla-calendar-day__btn_selected {
-    background-color: var(--primaryColor) !important;
-}
-
-.vanilla-calendar-day__btn_selected:hover {
+.vc-date[data-vc-date-today] .vc-date__btn:not(.calendar-eventday):hover {
     background-color: var(--primaryColorLight) !important;
 }
 

@@ -217,12 +217,12 @@ div.calendar-container a {
 }
 
 
-.vanilla-calendar-day__btn_today {
+.vc-date[data-vc-date-today] .vc-date__btn {
     color: var(--textColorLight) !important;
     background-color: #545454 !important;
 }
 
-.vanilla-calendar-day__btn_today:hover {
+.vc-date[data-vc-date-today] .vc-date__btn:hover {
     background-color: #282828 !important;
 }
 
@@ -400,39 +400,31 @@ div.calendar-container a {
 }
 
 /* Vanilla calendar contrast overrides */
-.vanilla-calendar-month,
-.vanilla-calendar-year {
+.vc-month,
+.vc-year {
     color: var(--textColorDarkish) !important;
 }
 
-.vanilla-calendar-month:hover,
-.vanilla-calendar-year:hover {
+.vc-month:hover,
+.vc-year:hover {
     color: var(--primaryColorLighter) !important;
 }
 
-.vanilla-calendar-arrow::before,
-.vanilla-calendar-arrow::after {
-    background-color: var(--textColorMedium) !important;
+/* The shared calendar theme draws the arrows as two bars; pulterit greys them
+   and darkens the grey on hover, as the 2.x sheet did. */
+[data-vc-theme].vc {
+    --calendar-arrow-color: var(--textColorMedium);
+    --calendar-arrow-hover-color: var(--textColorDarkish);
 }
 
-.vanilla-calendar-arrow:hover::before,
-.vanilla-calendar-arrow:hover::after {
-    background-color: var(--textColorDarkish) !important;
-}
-
-.vanilla-calendar-day__btn_today {
+/* Pulterit is the exception: on 2.x its today rules came after .calendar-eventday,
+   so a day that is both kept the today colour. The selector stays without a
+   :not() guard, which reproduces that order once it outranks the event rule. */
+.vc-date[data-vc-date-today] .vc-date__btn {
     color: var(--textColorLight) !important;
     background-color: #545454 !important;
 }
 
-.vanilla-calendar-day__btn_today:hover {
+.vc-date[data-vc-date-today] .vc-date__btn:hover {
     background-color: #282828 !important;
-}
-
-.vanilla-calendar-day__btn_selected {
-    background-color: var(--accentColorBright) !important;
-}
-
-.vanilla-calendar-day__btn_selected:hover {
-    background-color: var(--accentColorBrightHover) !important;
 }
