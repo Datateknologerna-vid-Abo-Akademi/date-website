@@ -7,7 +7,7 @@ Publish and organize news articles that appear on the home page and `/news/` lis
 1. Visit **News › Categories** to add or rename sections (e.g., "Albins Angels").
 2. Fields:
    - **Namn** – public label.
-   - **Slug** – used in `/news/<slug>/` category URLs. Keep lowercase and unique.
+   - **Slug** – used in `/news/<slug>/` category URLs. It fills in from the name while you create the category; keep it lowercase and unique. Renaming a category does not change the slug of an existing one.
 
 ## Create a News Post
 1. Open **News › Posts**.
@@ -17,7 +17,7 @@ Publish and organize news articles that appear on the home page and `/news/` lis
    - **Kategori** – optional; un-categorized posts show on the home page by default.
    - **Innehåll** – CKEditor field for body text, images, embeds.
    - **Publiceras** – set the date and time when the post should become visible. Leave empty to keep it hidden as a draft; pick a future time to schedule publication.
-   - **Slug** – type a short identifier; auto-suggest isn’t enabled, so copy a clean version of the title.
+   - **Slug** – fills in from the title while you create the post. Keep it short and readable; leave it as suggested unless you need a specific URL. The suggestion is not applied when editing an existing post, so its public URL stays stable.
 4. Save to publish (or schedule). `Skapad`, `Publiceras`, and `Modifierad` timestamps update automatically.
 
 ## Editing Existing Posts

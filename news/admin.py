@@ -27,6 +27,14 @@ class CategoryAdmin(PublicUrlAdminMixin, TranslationCompletionAdminMixin, NewsTr
     list_display = ('name', 'translation_status')
     search_fields = ('name', 'slug')
     ordering = ('name',)
+    prepopulated_fields = {'slug': ('name',)}
+
+    def get_prepopulated_fields(self, request, obj=None):
+        # Only offer the slug suggestion on creation; an existing public URL
+        # must not change just because the name was edited.
+        if obj is None:
+            return self.prepopulated_fields
+        return {}
 
 
 class PostPublicationFilter(admin.SimpleListFilter):
@@ -60,6 +68,15 @@ class PostAdmin(PublicUrlAdminMixin, TranslationCompletionAdminMixin, NewsTransl
     fieldsets = [
         (None, {'fields': ['title', 'category', 'content', 'published_time', 'slug']}),
     ]
+    prepopulated_fields = {'slug': ('title',)}
+
+    def get_prepopulated_fields(self, request, obj=None):
+        # Only suggest a slug while creating; editing the title of an existing
+        # post must not change its already published URL.
+        if obj is None:
+            return self.prepopulated_fields
+        return {}
+
     list_display = (
         'title',
         'translation_status',

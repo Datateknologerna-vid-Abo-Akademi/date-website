@@ -93,6 +93,12 @@ class ArchiveAdminTests(TestCase):
         )
         self.client.force_login(self.admin_user)
 
+    def test_collection_admin_forms_do_not_expose_the_collection_type(self):
+        from archive.forms import DocumentAdminForm, PublicAdminForm
+
+        self.assertNotIn("type", DocumentAdminForm().fields)
+        self.assertNotIn("type", PublicAdminForm().fields)
+
     def test_album_change_page_renders_when_image_url_cannot_be_resolved(self):
         album = Album.objects.create(
             title="Broken Picture Admin Collection",
