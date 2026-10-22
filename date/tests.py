@@ -1604,8 +1604,21 @@ class LunchWidgetTests(TestCase):
         self.assertContains(response, 'data-count="3"')
         self.assertContains(response, 'data-heading="3"')
         self.assertContains(response, 'data-accent="#3a80c3"')
-        self.assertContains(response, 'href="/lunch/"')
         self.assertContains(response, "https://lunchmenu.fi/static/widget/student.js")
+
+    def test_homepage_html_links_to_lunchmenu_without_javascript(self):
+        # The embed keeps the box's markup until it draws, so the served HTML
+        # has to carry the link itself: crawlers and visitors without
+        # JavaScript never run the script.
+        cache.clear()
+
+        with override_settings(LUNCH_ENABLED=True):
+            response = self.client.get("/")
+
+        self.assertContains(
+            response,
+            '<a href="https://lunchmenu.fi/sv/lunchlistor/abo/idag">Lunch i Åbo</a>',
+        )
 
     def test_homepage_uses_the_city_when_coordinates_are_unset(self):
         cache.clear()
@@ -1634,6 +1647,18 @@ class LunchWidgetTests(TestCase):
             response = self.client.get("/")
 
         self.assertContains(response, 'data-lang="en"')
+        self.assertContains(
+            response,
+            '<a href="https://lunchmenu.fi/en/lunch-lists/turku/today">Lunch in Turku</a>',
+        )
+
+    def test_an_unknown_city_falls_back_to_the_lunchmenu_front_page(self):
+        cache.clear()
+
+        with override_settings(LUNCH_ENABLED=True, LUNCH_CITY="narnia"):
+            response = self.client.get("/")
+
+        self.assertContains(response, '<a href="https://lunchmenu.fi/">Lunch</a>')
 
     def test_homepage_omits_the_widget_when_disabled(self):
         cache.clear()

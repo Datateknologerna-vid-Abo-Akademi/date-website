@@ -1,9 +1,8 @@
-{% load i18n %}
 {% if enabled %}
   <div class="{{ wrapper_class }}">
     <div class="lunchmenu-student-widget"
          {% for name, value in widget_attributes %}{{ name }}="{{ value }}" {% endfor %}>
-      <a href="{{ fallback_url }}">{% trans "Lunch" %}</a>
+      <a href="{{ fallback_url }}">{{ fallback_text }}</a>
     </div>
   </div>
   <script src="https://lunchmenu.fi/static/widget/student.js" async></script>
