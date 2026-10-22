@@ -4,6 +4,8 @@
     <div class="lunchmenu-student-widget"
          {% for name, value in widget_attributes %}{{ name }}="{{ value }}" {% endfor %}>
       <a href="{{ fallback_url }}">{% trans "Lunch" %}</a>
+      <span aria-hidden="true">·</span>
+      <a href="https://lunchmenu.fi/">lunchmenu.fi</a>
     </div>
   </div>
   <script src="https://lunchmenu.fi/static/widget/student.js" async></script>

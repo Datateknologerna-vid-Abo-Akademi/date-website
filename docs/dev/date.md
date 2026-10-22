@@ -33,6 +33,7 @@
   ```
 
 - Other associations opt in by setting `LUNCH_ENABLED=true` and adding `lunch` to their `build_urlpatterns` list; their settings modules already carry the kansli coordinates. The embed script is served by lunchmenu.fi, so the widget falls back to the `/lunch/` link (or `https://lunchmenu.fi/` without the route) when the third party is unavailable.
+- The box's served markup also carries a direct `<a href="https://lunchmenu.fi/">` anchor next to that fallback. The embed draws into a shadow root and replaces the markup, so visitors with JavaScript never see it, but crawlers and visitors without JavaScript get the lunchmenu.fi link without rendering the widget.
 
 ## Calendar Data Structure
 - `format_calendar_events()` converts the event queryset into a `dict["YYYY-MM-DD"] = [event, ...]` used by the front-end calendar widget. Each date maps to a list because several events can share a day; each event includes `link`, `eventFullDate`, and `eventTitle`. The calendar JS builds the popup HTML (and the `modifier`) itself.

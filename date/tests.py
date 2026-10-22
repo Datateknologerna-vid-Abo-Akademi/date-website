@@ -1607,6 +1607,16 @@ class LunchWidgetTests(TestCase):
         self.assertContains(response, 'href="/lunch/"')
         self.assertContains(response, "https://lunchmenu.fi/static/widget/student.js")
 
+    def test_homepage_html_links_to_lunchmenu_without_javascript(self):
+        # The embed draws over the box, so the served markup has to carry the
+        # link itself: crawlers and visitors without JavaScript never run it.
+        cache.clear()
+
+        with override_settings(LUNCH_ENABLED=True):
+            response = self.client.get("/")
+
+        self.assertContains(response, '<a href="https://lunchmenu.fi/">lunchmenu.fi</a>')
+
     def test_homepage_uses_the_city_when_coordinates_are_unset(self):
         cache.clear()
 
