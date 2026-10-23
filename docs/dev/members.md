@@ -16,7 +16,7 @@
 - Functionary roles and assignments live in the `functionaries` app. `members.urls` keeps the old `/members/functionary/` and `/members/functionaries/` routes for compatibility.
 
 ## Forms
-- `MemberCreationForm` validates usernames via `USERNAME_VALIDATOR` (letters, underscores, hyphens). `AdminMemberUpdateForm` uses `ReadOnlyPasswordHashField` and disables password editing unless explicitly changed.
+- `MemberCreationForm` and `SignUpForm` validate usernames via `USERNAME_VALIDATOR` (ASCII letters, numbers, dots, underscores, hyphens). `AdminMemberUpdateForm` only applies the validator when the username changes, so legacy usernames with other characters (e.g. `é`) can still be edited without renaming the member. `AdminMemberUpdateForm` uses `ReadOnlyPasswordHashField` and disables password editing unless explicitly changed.
 - `SignUpForm` collects data for `/members/signup/`, including captcha validation and manual activation flow.
 - Associations can limit public signup fields with `MEMBERS_SIGNUP_FIELDS` and membership names with `MEMBERSHIP_TYPE_NAMES`, and override the city field label with `MEMBERS_SIGNUP_CITY_LABEL`. SF collects username, email, first and last name, city (labeled `Hemort`), a membership type selector (`Ordinarie medlem` / `Evig SF:are` / `Extra medlem`), admission year, and password; `MEMBERS_SIGNUP_DEFAULT_MEMBERSHIP_TYPE` still applies as a fallback when an association hides the selector. SF does not expose contact address, postcode, phone, or country.
 - `CustomPasswordResetForm` overrides `send_mail` to push messages through `send_email_task` (Celery-backed).
