@@ -27,6 +27,9 @@ class LogEntryAdmin(ModelAdmin):
     ordering = ("-action_time",)
     readonly_fields = list_display
     list_select_related = ("user", "content_type")
+    # The audit table is never pruned and the unfiltered total is not worth a
+    # second full count on every page view.
+    show_full_result_count = False
 
     @admin.display(description=_("Ändring"))
     def change_summary(self, obj):

@@ -59,12 +59,20 @@ class Member(AbstractBaseUser, PermissionsMixin):  # type: ignore[django-manager
     def __unicode__(self):
         return f"{self.get_full_name()} ({self.email})"
 
+    def __str__(self):
+        # Admin autocompletes and choice fields label members with this, so
+        # prefer the human name and fall back to the unique username.
+        if self.first_name and self.last_name:
+            return f"{self.first_name} {self.last_name}"
+        return self.username
+
     @cached_property
     def is_staff(self):
         # Cached on the instance: this is a query, and templates and views reach for
         # it several times per request. Each request loads its own instance, so the
-        # cache cannot outlive the group membership it reports.
-        return self.groups.filter(name__in=settings.STAFF_GROUPS).exists() or self.is_superuser
+        # cache cannot outlive the group membership it reports. Superusers are
+        # staff without a group lookup.
+        return self.is_superuser or self.groups.filter(name__in=settings.STAFF_GROUPS).exists()
 
     @property
     def full_name(self):
@@ -162,6 +170,9 @@ class SubscriptionPayment(models.Model):
         verbose_name = _('prenumerationsbetalning')
         verbose_name_plural = _('prenumerationsbetalningar')
         ordering = ('id',)
+        indexes = [
+            models.Index(fields=['date_paid'], name='subpayment_date_idx'),
+        ]
 
     def __str__(self):
         return self.member.get_full_name()

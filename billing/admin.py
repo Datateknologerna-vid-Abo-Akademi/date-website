@@ -43,6 +43,7 @@ class EventInvoiceAdmin(ModelAdmin):
     list_select_related = ('participant', 'participant__event')
     ordering = ('-invoice_date',)
     date_hierarchy = 'invoice_date'
+    show_full_result_count = False
 
     @admin.display(description=_('Event'))
     def event_link(self, obj):
@@ -120,11 +121,11 @@ class EventBillingConfigurationAdmin(ExtraChangeListLinksMixin, ModelAdmin):
 
     @admin.display(description=_('Invoices'))
     def invoice_count(self, obj):
-        count = getattr(
-            obj,
-            'invoice_total',
-            EventInvoice.objects.filter(participant__event=obj.event).count(),
-        )
+        # getattr evaluates its default eagerly; the changelist already
+        # annotates invoice_total, so only fall back when it is absent.
+        count = getattr(obj, 'invoice_total', None)
+        if count is None:
+            count = EventInvoice.objects.filter(participant__event=obj.event).count()
         if not count:
             return '0'
         return format_html(

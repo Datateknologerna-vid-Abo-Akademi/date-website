@@ -254,6 +254,11 @@ class PublicationInline(TabularInline):
         formset.form = ExistingFileReadonlyForm
         return formset
 
+    def get_queryset(self, request):
+        # public_page renders get_absolute_url(), which reads obj.collection.
+        # Join it here so the inline does not run one query per row.
+        return super().get_queryset(request).select_related('collection')
+
     @admin.display(description='Public page')
     def public_page(self, obj):
         if not obj or not obj.pk:
@@ -316,6 +321,7 @@ class PDFFileAdmin(PublicUrlAdminMixin, PublicationAdminMixin, ModelAdmin):
     search_fields = ('title', 'slug', 'description', 'file', 'redirect_url', 'collection__title')
     ordering = ('-uploaded_at',)
     date_hierarchy = 'publication_date'
+    show_full_result_count = False
     prepopulated_fields = {'slug': ('title',)}
     readonly_fields = ('collection_access_details', 'uploaded_at', 'updated_at')
     fieldsets = (

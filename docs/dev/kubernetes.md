@@ -209,6 +209,37 @@ The operator repository holds:
 - the blue-green standbys and the ingress manifests
 - the deploy tooling (see below)
 
+## Admin JavaScript and Cloudflare Rocket Loader
+
+Unfold hides the whole document with `x-cloak` until Alpine boots. If a
+script is blocked, delayed, or fails to load, the admin stays a white page
+until the next request. Cloudflare Rocket Loader rewrites and defers script
+tags, which makes that failure mode more likely; keep Rocket Loader disabled
+for `/admin/*` with a page rule or configuration rule. On the Free plan the
+`matches` operator is not available, so use
+`(http.request.uri.path eq "/admin" or starts_with(http.request.uri.path, "/admin/"))`
+with the Rocket Loader setting off; apply it to every association zone that
+runs the admin.
+
+`templates/common/admin/base_site.html` removes `x-cloak` after 2.5 s in a
+`data-cfasync="false"` script, so a blocked or slow admin script shows the
+page instead of an indefinitely blank one. That is a fallback for a broken
+asset, not a replacement for fixing the CDN behaviour.
+
+## Database indexes
+
+Admin ordering, date hierarchies, and inline filters use concurrent index
+migrations through `core.db_operations.AddIndexConcurrently`. The helper runs
+Django's PostgreSQL `AddIndexConcurrently` and no-ops on SQLite, so the test
+suite keeps working. These migrations set `atomic = False` because
+`CREATE INDEX CONCURRENTLY` cannot run inside a transaction.
+
+After a rollout, check `pg_index.indisvalid` for the new indexes. An
+interrupted concurrent build leaves an invalid index that must be dropped and
+recreated. The `LogEntry.action_time` migration uses `IF NOT EXISTS`; the
+model index migrations do not, so a failed retry may need a manual
+`DROP INDEX CONCURRENTLY`.
+
 ## Redis ownership
 
 PostgreSQL is shared across associations per database, and Redis must be

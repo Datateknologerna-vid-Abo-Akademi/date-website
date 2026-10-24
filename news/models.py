@@ -59,6 +59,8 @@ class Post(models.Model):
             # the uncategorized homepage feed.
             models.Index(fields=['category', 'published_time'], name='post_cat_pub_idx'),
             models.Index(fields=['published_time'], name='post_pub_idx'),
+            # Admin changelist default ordering.
+            models.Index(fields=['created_time'], name='post_created_idx'),
         ]
 
     def __str__(self):

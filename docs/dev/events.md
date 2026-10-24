@@ -99,6 +99,22 @@
   numbers is renumbered from `Event.attendee_nr_counter` (and logged as a
   warning) instead of failing the save, so an admin saving during a signup
   rush cannot 500.
+- The attendee inline is the slowest admin page when an event has many
+  signups, so keep its related lookups bounded. `avec_for` uses
+  `EventScopedAutocompleteSelect`; the widget puts `event_id` in the
+  autocomplete URL and `EventAttendeesAdmin.get_search_results` filters on it,
+  so the field only offers attendees of the event being edited. A plain select
+  made every row query the attendee table and render every attendee as an
+  option (O(n²) on large events). The inline queryset also uses
+  `select_related('original_event')` for the readonly column on parent events.
+  If another FK is added to the inline, use autocomplete or a raw id field and
+  scope it the same way.
+- The attendee inline uses Unfold's paginated inline formset (50 rows per page)
+  when `USE_UNFOLD` is on; stock admin still renders every row. The formset's
+  band shift and restore writes use `bulk_update`, so a reorder is a bounded
+  number of UPDATE statements instead of one per row. `EventAttendees.time_registered`
+  and `Event.event_date_start` have concurrent index migrations for the
+  changelist ordering and date hierarchy.
 - Custom admin action `delete_participants` prompts for confirmation before
   removing attendee rows.
 - `EventAnswersWidget` (`events/widgets.py`) renders `EventAttendees.preferences`
