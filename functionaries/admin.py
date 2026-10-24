@@ -149,7 +149,11 @@ class FunctionaryRoleAdmin(
 
     @admin.display(description=_('Funktionärer'))
     def functionary_count(self, obj):
-        count = getattr(obj, 'functionary_total', obj.functionary_set.count())
+        # getattr evaluates its default eagerly; keep the annotated count and
+        # only fall back to a query when the annotation is absent.
+        count = getattr(obj, 'functionary_total', None)
+        if count is None:
+            count = obj.functionary_set.count()
         if not count:
             return '0'
         return format_html(

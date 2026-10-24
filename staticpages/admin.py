@@ -142,7 +142,12 @@ class StaticPageNavAdmin(TranslationCompletionAdminMixin, StaticPageTranslationA
 
     @admin.display(description=_('Links'))
     def link_count(self, obj):
-        return getattr(obj, 'link_total', obj.staticurl_set.count())
+        # getattr evaluates its default eagerly, so a real .count() was running
+        # even when get_queryset had already annotated link_total.
+        total = getattr(obj, 'link_total', None)
+        if total is None:
+            total = obj.staticurl_set.count()
+        return total
 
 
 @admin.register(StaticPage)

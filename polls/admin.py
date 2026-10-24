@@ -80,6 +80,10 @@ class VoteInline(TabularInline):
     extra = 0
     readonly_fields = ['user']
 
+    def get_queryset(self, request):
+        # The read-only user column renders the related member for every vote.
+        return super().get_queryset(request).select_related('user')
+
     def has_add_permission(self, request, obj=None):
         return False
 

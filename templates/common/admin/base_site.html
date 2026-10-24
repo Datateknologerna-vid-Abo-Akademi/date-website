@@ -52,3 +52,14 @@
     </div>
   {% endif %}
 {% endblock %}
+{% block extrahead %}
+  {{ block.super }}
+  {# Unfold hides the whole document with x-cloak until Alpine boots. If a #}
+  {# script is blocked or a static request fails, the page stays white until #}
+  {# reload. Reveal the content after a short grace period instead. #}
+  <script data-cfasync="false">
+    window.setTimeout(function () {
+      document.documentElement.removeAttribute('x-cloak');
+    }, 2500);
+  </script>
+{% endblock %}

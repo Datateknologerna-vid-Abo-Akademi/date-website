@@ -73,6 +73,10 @@ class Album(models.Model):
     class Meta:
         verbose_name_plural = verbose_name = _('Bildarkiv')
         ordering = ('-pub_date',)
+        indexes = [
+            # Changelist default ordering.
+            models.Index(fields=['pub_date'], name='album_pubdate_idx'),
+        ]
 
     def __str__(self):
         return self.title

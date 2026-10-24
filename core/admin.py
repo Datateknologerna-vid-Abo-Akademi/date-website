@@ -165,14 +165,26 @@ class FixedLanguageAdminSite(AdminSiteOTPRequiredMixin, _AdminSiteBase):  # type
         return ReferringObjectAutocompleteJsonView.as_view(admin_site=self)(request)
 
     def has_permission(self, request):
+        # This runs twice per admin page (admin_view and Unfold's each_context).
+        # Cache the answer on the request so the second factor lookup happens once.
+        cached = getattr(request, '_admin_permission_cache', None)
+        if cached is not None:
+            return cached
+
         if not admin.AdminSite.has_permission(self, request):
+            request._admin_permission_cache = False
             return False
 
         from members.two_factor import member_has_2fa
 
         # Allow access when the user has no second factor (2FA is optional).
         # When one exists (TOTP or passkey) the session must be OTP-verified.
-        return request.user.is_verified() or not member_has_2fa(request.user)
+        if request.user.is_verified():
+            request._admin_permission_cache = True
+            return True
+        allowed = not member_has_2fa(request.user)
+        request._admin_permission_cache = allowed
+        return allowed
 
 
 # When USE_UNFOLD=True, unfold's DefaultAppConfig.ready() preempts Django's lazy
