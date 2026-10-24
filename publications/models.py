@@ -167,6 +167,12 @@ class PDFFile(models.Model):
         verbose_name = _('PDF File')
         verbose_name_plural = _('PDF Files')
         ordering = ['-uploaded_at']
+        indexes = [
+            # Changelist default ordering and the public list ordering.
+            models.Index(fields=['uploaded_at'], name='pdffile_uploaded_idx'),
+            # Admin date hierarchy.
+            models.Index(fields=['publication_date'], name='pdffile_pubdate_idx'),
+        ]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

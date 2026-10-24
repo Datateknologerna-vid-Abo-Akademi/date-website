@@ -158,6 +158,11 @@ class Closure(models.Model):
                 name='closure_end_after_start',
             ),
         ]
+        indexes = [
+            # Overlap lookups and inline filters per room.
+            models.Index(fields=['room', 'start'], name='closure_room_start_idx'),
+            models.Index(fields=['room', 'end'], name='closure_room_end_idx'),
+        ]
 
     def __str__(self):
         start = timezone.localtime(self.start).strftime('%Y-%m-%d %H:%M') if self.start else '-'
@@ -201,6 +206,11 @@ class Booking(models.Model):
                 condition=Q(end__gt=F('start')),
                 name='booking_end_after_start',
             ),
+        ]
+        indexes = [
+            # Overlap lookups and inline filters per room.
+            models.Index(fields=['room', 'start'], name='booking_room_start_idx'),
+            models.Index(fields=['room', 'end'], name='booking_room_end_idx'),
         ]
 
     def __str__(self):

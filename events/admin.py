@@ -4,6 +4,7 @@ import logging
 from admin_ordering.admin import OrderableAdmin
 from django.conf import settings
 from django.contrib import admin, messages
+from django.contrib.admin.widgets import AutocompleteSelect
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db.models import Count, IntegerField, Max, OuterRef, Subquery, TextField, Value
 from django.db.models.functions import Coalesce
@@ -45,6 +46,19 @@ if settings.ENABLE_LANGUAGE_FEATURES:  # type: ignore[misc]
 else:
     EventTranslationInlineBase = TabularInline  # type: ignore[misc, assignment]
     EventTranslationAdminBase = ModelAdmin  # type: ignore[misc, assignment]
+
+
+if settings.USE_UNFOLD:  # type: ignore[misc]
+    from unfold.forms import PaginationInlineFormSet
+
+    # Unfold paginates an inline through this formset: it reads the page from
+    # the request and exposes the page object to its inline template. Without
+    # it every attendee of the event is rendered as its own editable row.
+    class EventAttendeesInlineFormSetBase(PaginationInlineFormSet):  # type: ignore[misc, valid-type]
+        pass
+
+else:
+    EventAttendeesInlineFormSetBase = BaseInlineFormSet  # type: ignore[misc, assignment]
 
 
 class AvecAwareMixin:
@@ -146,7 +160,7 @@ class EventAttendeesForm(ModelForm):
         return exclude
 
 
-class EventAttendeesInlineFormSet(BaseInlineFormSet):
+class EventAttendeesInlineFormSet(EventAttendeesInlineFormSetBase):
     def save(self, commit=True):
         # The admin_ordering drag reorder writes the final attendee_nr values
         # (10, 20, ...) into the forms in original row order, so a drag can
@@ -202,8 +216,12 @@ class EventAttendeesInlineFormSet(BaseInlineFormSet):
         )
         self._original_nrs = {pk: nr for pk, nr in rows}
         base = self._band_base()
-        for index, (pk, _nr) in enumerate(rows):
-            EventAttendees.objects.filter(pk=pk).update(attendee_nr=base + index * 10)
+        # One UPDATE ... CASE for the whole formset instead of one UPDATE per
+        # row. The band values are unique and above every current number, so
+        # the single statement cannot violate unique_attendee_nr_per_event
+        # while it runs.
+        shifted = [EventAttendees(pk=pk, attendee_nr=base + index * 10) for index, (pk, _nr) in enumerate(rows)]
+        EventAttendees.objects.bulk_update(shifted, ['attendee_nr'])
         self._shifted = True
 
     def _band_base(self):
@@ -267,9 +285,34 @@ class EventAttendeesInlineFormSet(BaseInlineFormSet):
 
     def _restore_unchanged_attendee_nrs(self):
         saved_pks = {obj.pk for obj, _changed_data in self.changed_objects}
-        for pk, nr in self._original_nrs.items():
-            if pk not in saved_pks:
-                EventAttendees.objects.filter(pk=pk).update(attendee_nr=nr)
+        restored = [
+            EventAttendees(pk=pk, attendee_nr=nr) for pk, nr in self._original_nrs.items() if pk not in saved_pks
+        ]
+        # One statement for the whole formset, as in _shift_attendee_nrs. The
+        # original numbers are unique, and _resolve_attendee_nr_conflicts kept
+        # every saved row off them, so the restore cannot collide.
+        EventAttendees.objects.bulk_update(restored, ['attendee_nr'])
+
+
+class EventScopedAutocompleteSelect(AutocompleteSelect):
+    """Autocomplete that only offers attendees of the event being edited.
+
+    The inline's ``avec_for`` field is an FK back to EventAttendees. A plain
+    select renders every attendee of the event for every row, which is both
+    one query per row and O(n^2) option HTML. The admin autocomplete widget
+    renders an input instead; this subclass adds the event id to its search
+    URL so the results stay scoped to the same event the old queryset used.
+    """
+
+    def __init__(self, *args, event_id=None, **kwargs):
+        self.event_id = event_id
+        super().__init__(*args, **kwargs)
+
+    def get_url(self):
+        url = super().get_url()
+        if self.event_id:
+            url = f'{url}?event_id={self.event_id}'
+        return url
 
 
 class EventAttendeesFormInline(AvecAwareMixin, OrderableAdmin, EventTranslationInlineBase):
@@ -280,12 +323,22 @@ class EventAttendeesFormInline(AvecAwareMixin, OrderableAdmin, EventTranslationI
     formset = EventAttendeesInlineFormSet
     fk_name = 'event'
     extra = 0
+    # Unfold renders one form row per attendee otherwise; EventAttendeesInlineFormSet
+    # is a PaginationInlineFormSet only when USE_UNFOLD is on. Stock Django admin
+    # ignores this attribute, so the classic admin still lists every attendee.
+    per_page = 50
     show_change_link = True
     formfield_overrides = {
         **UNFOLD_FORMFIELD_OVERRIDES,
     }
     can_delete = True
     ordering = ['attendee_nr']
+    autocomplete_fields = ('avec_for',)
+
+    def get_queryset(self, request):
+        # Rows can show the original event when the event has child events.
+        # Without select_related that is one query per attendee row.
+        return super().get_queryset(request).select_related('original_event')
 
     def get_fields(self, request, event):
         fields = ['attendee_nr', 'user', 'email', 'anonymous', 'preferences', 'time_registered']
@@ -329,6 +382,12 @@ class EventAttendeesFormInline(AvecAwareMixin, OrderableAdmin, EventTranslationI
         event_id = request.resolver_match.kwargs.get('object_id')
         if db_field.name == "avec_for":
             kwargs["queryset"] = EventAttendees.objects.filter(event=event_id)
+            if event_id:
+                kwargs["widget"] = EventScopedAutocompleteSelect(
+                    db_field,
+                    self.admin_site,
+                    event_id=event_id,
+                )
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
@@ -354,6 +413,18 @@ class EventAttendeesAdmin(ModelAdmin):
     formfield_overrides = {
         **UNFOLD_FORMFIELD_OVERRIDES,
     }
+    # The attendee table grows with every signup; counting the whole filtered
+    # set on each changelist page is a full scan nobody reads. The filtered
+    # result count stays visible.
+    show_full_result_count = False
+
+    def get_search_results(self, request, queryset, search_term):
+        # EventScopedAutocompleteSelect puts the event id in the autocomplete
+        # URL so the inline only offers attendees of the event being edited.
+        event_id = request.GET.get('event_id')
+        if event_id and event_id.isdigit():
+            queryset = queryset.filter(event_id=event_id)
+        return super().get_search_results(request, queryset, search_term)
 
 
 class EventPublicationFilter(admin.SimpleListFilter):
@@ -384,6 +455,9 @@ class EventPublicationFilter(admin.SimpleListFilter):
 @admin.register(Event)
 class EventAdmin(PublicUrlAdminMixin, TranslationCompletionAdminMixin, EventTranslationAdminBase):
     save_on_top = True
+    # Counting the whole filtered event set on every changelist page is a full
+    # scan nobody reads. The filtered result count stays visible.
+    show_full_result_count = False
     formfield_overrides = {
         **UNFOLD_FORMFIELD_OVERRIDES,
         TextField: {'widget': CKEditor5Widget},

@@ -12,6 +12,12 @@ class EventInvoice(models.Model):
     amount = models.FloatField(default=0)
     currency = models.CharField(max_length=3, default='EUR')
 
+    class Meta:
+        indexes = [
+            # Admin date hierarchy.
+            models.Index(fields=['invoice_date'], name='invoice_date_idx'),
+        ]
+
     def __str__(self):
         return f"{self.participant.event.title} - {self.participant.user} - {self.invoice_number}"
 

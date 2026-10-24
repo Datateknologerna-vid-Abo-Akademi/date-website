@@ -250,13 +250,6 @@ class SignUpForm(forms.ModelForm):
             self.fields['city'].label = city_label
 
 
-class SubscriptionPaymentChoiceField(forms.ModelChoiceField):
-    def label_from_instance(self, obj):
-        if not obj.first_name or not obj.last_name:
-            return obj.username
-        return f"{obj.first_name} {obj.last_name}"
-
-
 class MemberEditForm(forms.ModelForm):
     first_name = forms.CharField(required=True)
     last_name = forms.CharField(required=True)
