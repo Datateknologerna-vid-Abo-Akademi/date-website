@@ -6,6 +6,7 @@ the singleton settings admins ask the database once per request, and the news
 changelist skips the full result count.
 """
 
+import uuid
 from types import SimpleNamespace
 
 from django.contrib import admin
@@ -25,13 +26,15 @@ from news.models import Post
 from publications.admin import PublicationInline
 from publications.models import PDFFile, PublicationCollection
 
+RUN_ID = uuid.uuid4().hex[:6]
+
 
 class AdminUserTestCase(TestCase):
     def setUp(self):
         self.admin_user = Member.objects.create_superuser(
-            username="perf-content-admin",
+            username=f"pc-{RUN_ID}",
             password="pass",
-            email="perf-content-admin@example.com",
+            email=f"pc-{RUN_ID}@example.com",
         )
         self.client.force_login(self.admin_user)
 
@@ -41,7 +44,7 @@ class PublicationInlineQueryTests(AdminUserTestCase):
         super().setUp()
         self.collection = PublicationCollection.objects.create(
             title="Performance collection",
-            slug="performance-collection",
+            slug=f"performance-collection-{RUN_ID}",
         )
         self._create_publications(0, 5)
         self.request = RequestFactory().get(
@@ -55,7 +58,7 @@ class PublicationInlineQueryTests(AdminUserTestCase):
             PDFFile.objects.create(
                 collection=self.collection,
                 title=f"Performance publication {index}",
-                slug=f"performance-publication-{index}",
+                slug=f"performance-publication-{RUN_ID}-{index}",
             )
 
     def test_get_queryset_selects_the_collection(self):
@@ -93,8 +96,7 @@ class GalleryPreviewTests(TestCase):
 
 class SingletonPermissionQueryTests(AdminUserTestCase):
     def test_feedback_settings_queries_once_per_request(self):
-        FeedbackFormSettings.objects.all().delete()
-        FeedbackFormSettings.objects.create(pk=5, intro_text="Performance")
+        FeedbackFormSettings.objects.get_or_create(pk=1, defaults={"intro_text": "Performance"})
         request = RequestFactory().get("/admin/feedback/feedbackformsettings/")
         request.user = self.admin_user
         model_admin = FeedbackFormSettingsAdmin(FeedbackFormSettings, admin.site)

@@ -1,3 +1,10 @@
+// Unfold hides the document with x-cloak until Alpine boots. If a script is
+// blocked or delayed, reveal the page after a short grace period instead of
+// leaving an indefinitely blank admin page.
+window.setTimeout(function () {
+    document.documentElement.removeAttribute('x-cloak');
+}, 2500);
+
 // Keep Unfold's filter sheet open when filter actions reload the changelist.
 (function () {
     const KEY = 'admin_reopen_filter_sheet';
