@@ -6,6 +6,7 @@ indexes the event admin changelists rely on. The full reorder semantics stay in
 """
 
 import importlib
+import uuid
 from unittest import skipIf, skipUnless
 
 from django.conf import settings
@@ -22,6 +23,7 @@ from events.admin import EventAttendeesFormInline, EventAttendeesInlineFormSet
 from events.models import Event, EventAttendees
 from members.models import Member
 
+RUN_ID = uuid.uuid4().hex[:6]
 UNFOLD_ENABLED = getattr(settings, 'USE_UNFOLD', False)
 
 
@@ -76,13 +78,13 @@ class AttendeeReorderBulkUpdateTests(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.admin_user = Member.objects.create_superuser(
-            username='perf-reorder-admin',
+            username=f'pr-{RUN_ID}',
             password='pass',
-            email='perf-reorder-admin@example.com',
+            email=f'pr-{RUN_ID}@example.com',
         )
         cls.event = Event.objects.create(
             title='Reorder event',
-            slug='reorder-event',
+            slug=f'reorder-{RUN_ID}',
             author=cls.admin_user,
         )
 
@@ -154,13 +156,13 @@ class _AttendeeAdminFixture(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.admin_user = Member.objects.create_superuser(
-            username='perf-page-admin',
+            username=f'pp-{RUN_ID}',
             password='pass',
-            email='perf-page-admin@example.com',
+            email=f'pp-{RUN_ID}@example.com',
         )
         cls.event = Event.objects.create(
             title='Paginated event',
-            slug='paginated-event',
+            slug=f'paginated-{RUN_ID}',
             author=cls.admin_user,
         )
         EventAttendees.objects.bulk_create(

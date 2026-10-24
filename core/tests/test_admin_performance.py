@@ -5,6 +5,9 @@ of the slowest pages rather than exact query counts: the page must not issue
 one query (or one full option list) per related row.
 """
 
+import uuid
+from pathlib import Path
+
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth.models import Group
@@ -20,13 +23,15 @@ from members.models import ORDINARY_MEMBER, Member, MembershipType
 from polls.models import Choice, Question, Vote
 from staticpages.models import StaticPageNav, StaticUrl
 
+RUN_ID = uuid.uuid4().hex[:6]
+
 
 class AdminPerformanceTestCase(TestCase):
     def setUp(self):
         self.admin_user = Member.objects.create_superuser(
-            username="perf-admin",
+            username=f"perf-admin-{RUN_ID}",
             password="pass",
-            email="perf-admin@example.com",
+            email=f"perf-admin-{RUN_ID}@example.com",
         )
         self.client.force_login(self.admin_user)
 
@@ -36,7 +41,7 @@ class EventAttendeeInlineTests(AdminPerformanceTestCase):
         super().setUp()
         self.event = Event.objects.create(
             title="Performance event",
-            slug="performance-event",
+            slug=f"performance-event-{RUN_ID}",
             author=self.admin_user,
             sign_up=True,
             sign_up_avec=True,
@@ -50,7 +55,7 @@ class EventAttendeeInlineTests(AdminPerformanceTestCase):
                     event=self.event,
                     attendee_nr=(index + 1) * 10,
                     user=f"Perf Person {index}",
-                    email=f"perf-{index}@example.com",
+                    email=f"perf-{RUN_ID}-{index}@example.com",
                     time_registered=timezone.now(),
                 )
                 for index in range(count)
@@ -61,7 +66,7 @@ class EventAttendeeInlineTests(AdminPerformanceTestCase):
         self._attendees(25)
         other_event = Event.objects.create(
             title="Other event",
-            slug="other-event",
+            slug=f"other-event-{RUN_ID}",
             author=self.admin_user,
         )
         other = EventAttendees.objects.create(
@@ -114,14 +119,14 @@ class MemberAdminPerformanceTests(AdminPerformanceTestCase):
     def setUp(self):
         super().setUp()
         self.membership_type = MembershipType.objects.create(
-            name="Ordinary",
+            name=f"Ordinary {RUN_ID}",
             permission_profile=ORDINARY_MEMBER,
         )
         for index in range(60):
             Member.objects.create_user(
-                username=f"perf-member-{index}",
+                username=f"pm-{RUN_ID}-{index}",
                 password="pass",
-                email=f"perf-member-{index}@example.com",
+                email=f"pm-{RUN_ID}-{index}@example.com",
                 membership_type=self.membership_type,
             )
 
@@ -133,8 +138,8 @@ class MemberAdminPerformanceTests(AdminPerformanceTestCase):
         self.assertLess(len(queries.captured_queries), 60)
 
     def test_staff_flag_comes_from_the_changelist_annotation(self):
-        group = Group.objects.create(name=settings.STAFF_GROUPS[0])
-        member = Member.objects.get(username="perf-member-0")
+        group, _ = Group.objects.get_or_create(name=settings.STAFF_GROUPS[0])
+        member = Member.objects.get(username=f"pm-{RUN_ID}-0")
         member.groups.add(group)
         request = RequestFactory().get("/admin/members/member/")
         request.user = self.admin_user
@@ -154,7 +159,7 @@ class PollInlinePerformanceTests(AdminPerformanceTestCase):
     def setUp(self):
         super().setUp()
         self.membership_type = MembershipType.objects.create(
-            name="Ordinary",
+            name=f"Ordinary {RUN_ID}",
             permission_profile=ORDINARY_MEMBER,
         )
         self.question = Question.objects.create(
@@ -172,9 +177,9 @@ class PollInlinePerformanceTests(AdminPerformanceTestCase):
 
         voters = [
             Member.objects.create_user(
-                username=f"perf-voter-{index}",
+                username=f"pv-{RUN_ID}-{index}",
                 password="pass",
-                email=f"perf-voter-{index}@example.com",
+                email=f"pv-{RUN_ID}-{index}@example.com",
                 membership_type=self.membership_type,
             )
             for index in range(20)
@@ -219,8 +224,13 @@ class AdminWhiteScreenTests(AdminPerformanceTestCase):
         response = self.client.get(reverse("admin:index"))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "removeAttribute('x-cloak')")
-        self.assertContains(response, 'data-cfasync="false"')
+        js_path = Path(settings.BASE_DIR) / "date/static/date/js/admin_sidebar.js"
+        self.assertIn("removeAttribute('x-cloak')", js_path.read_text(encoding="utf-8"))
+        if settings.USE_UNFOLD:
+            self.assertContains(response, "date/js/admin_sidebar.js")
+        else:
+            self.assertContains(response, "removeAttribute('x-cloak')")
+            self.assertContains(response, 'data-cfasync="false"')
 
 
 class AdminPermissionCacheTests(AdminPerformanceTestCase):

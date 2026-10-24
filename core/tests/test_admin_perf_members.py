@@ -1,6 +1,7 @@
 """Focused tests for the member admin performance changes."""
 
 import importlib
+import uuid
 
 from django.contrib import admin
 from django.contrib.admin.widgets import AutocompleteSelect
@@ -18,7 +19,8 @@ from members.models import (
     SubscriptionPayment,
 )
 
-STAFF_GROUP = "perf-payment-editors"
+RUN_ID = uuid.uuid4().hex[:6]
+STAFF_GROUP = f"perf-payment-editors-{RUN_ID}"
 
 
 class MemberAdminTestCase(TestCase):
@@ -26,9 +28,9 @@ class MemberAdminTestCase(TestCase):
     def setUpTestData(cls):
         cls.membership_type = MembershipType.objects.get(permission_profile=ORDINARY_MEMBER)
         cls.admin_user = Member.objects.create_superuser(
-            username="perf-admin",
+            username=f"pa-{RUN_ID}",
             password="pass",
-            email="perf-admin@example.com",
+            email=f"pa-{RUN_ID}@example.com",
             membership_type=cls.membership_type,
         )
 
@@ -44,30 +46,32 @@ class MemberAdminTestCase(TestCase):
 class MemberToManySearchTests(MemberAdminTestCase):
     def test_group_search_matches_without_duplicating_the_member(self):
         member = Member.objects.create_user(
-            username="group-search-member",
+            username=f"gsm-{RUN_ID}",
             password="pass",
-            email="group-search@example.com",
+            email=f"gsm-{RUN_ID}@example.com",
             first_name="Group",
             last_name="Searcher",
             membership_type=self.membership_type,
         )
-        member.groups.add(Group.objects.create(name="board"), Group.objects.create(name="board-alumni"))
+        member.groups.add(
+            Group.objects.create(name=f"board-{RUN_ID}"), Group.objects.create(name=f"board-alumni-{RUN_ID}")
+        )
 
         response, results = self.member_search("board")
 
         self.assertEqual([result.pk for result in results], [member.pk])
-        self.assertContains(response, "group-search-member")
+        self.assertContains(response, member.username)
 
     def test_subscription_search_matches_without_duplicating_the_member(self):
         member = Member.objects.create_user(
-            username="sub-search-member",
+            username=f"ssm-{RUN_ID}",
             password="pass",
-            email="subscription-search@example.com",
+            email=f"ssm-{RUN_ID}@example.com",
             first_name="Subscription",
             last_name="Searcher",
             membership_type=self.membership_type,
         )
-        for name in ("Lifetime membership", "Lifetime supporter"):
+        for name in (f"Lifetime membership {RUN_ID}", f"Lifetime supporter {RUN_ID}"):
             subscription = Subscription.objects.create(
                 name=name,
                 does_expire=False,
@@ -84,20 +88,20 @@ class MemberToManySearchTests(MemberAdminTestCase):
         response, results = self.member_search("Lifetime")
 
         self.assertEqual([result.pk for result in results], [member.pk])
-        self.assertContains(response, "sub-search-member")
+        self.assertContains(response, member.username)
 
     def test_group_and_subscription_terms_still_combine_with_text_terms(self):
         member = Member.objects.create_user(
-            username="combo-search-member",
+            username=f"csm-{RUN_ID}",
             password="pass",
-            email="combined-search@example.com",
+            email=f"csm-{RUN_ID}@example.com",
             first_name="Combined",
             last_name="Searcher",
             membership_type=self.membership_type,
         )
-        member.groups.add(Group.objects.create(name="combined-board"))
+        member.groups.add(Group.objects.create(name=f"combined-board-{RUN_ID}"))
         subscription = Subscription.objects.create(
-            name="combined-lifetime",
+            name=f"combined-lifetime-{RUN_ID}",
             does_expire=False,
             renewal_scale=None,
             renewal_period=None,
@@ -112,7 +116,7 @@ class MemberToManySearchTests(MemberAdminTestCase):
         response, results = self.member_search("Combined combined-board")
 
         self.assertEqual([result.pk for result in results], [member.pk])
-        self.assertContains(response, "combo-search-member")
+        self.assertContains(response, member.username)
 
 
 class MemberStringTests(TestCase):
@@ -131,15 +135,15 @@ class SubscriptionPaymentAutocompleteTests(MemberAdminTestCase):
     def setUpTestData(cls):
         super().setUpTestData()
         cls.payment_member = Member.objects.create_user(
-            username="payment-member",
+            username=f"paym-{RUN_ID}",
             password="pass",
-            email="payment-member@example.com",
+            email=f"paym-{RUN_ID}@example.com",
             first_name="Payment",
             last_name="Member",
             membership_type=cls.membership_type,
         )
         cls.subscription = Subscription.objects.create(
-            name="Payment subscription",
+            name=f"Payment subscription {RUN_ID}",
             does_expire=False,
             renewal_scale=None,
             renewal_period=None,
@@ -147,9 +151,9 @@ class SubscriptionPaymentAutocompleteTests(MemberAdminTestCase):
         )
         for index in range(25):
             Member.objects.create_user(
-                username=f"pay-option-{index:03d}",
+                username=f"po-{RUN_ID}-{index:03d}",
                 password="pass",
-                email=f"pay-option-{index:03d}@example.com",
+                email=f"po-{RUN_ID}-{index:03d}@example.com",
                 first_name="Pay",
                 last_name=f"Option {index:03d}",
                 membership_type=cls.membership_type,
@@ -163,7 +167,7 @@ class SubscriptionPaymentAutocompleteTests(MemberAdminTestCase):
         widget = form.fields["member"].widget
         self.assertIsInstance(getattr(widget, "widget", widget), AutocompleteSelect)
         self.assertContains(response, 'data-field-name="member"')
-        self.assertNotContains(response, "pay-option-000")
+        self.assertNotContains(response, f"po-{RUN_ID}-000")
 
     def test_change_form_renders_member_autocomplete(self):
         payment = SubscriptionPayment.objects.create(
@@ -177,7 +181,7 @@ class SubscriptionPaymentAutocompleteTests(MemberAdminTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'data-field-name="member"')
         self.assertContains(response, "Payment Member")
-        self.assertNotContains(response, "pay-option-000")
+        self.assertNotContains(response, f"po-{RUN_ID}-000")
 
     def test_member_autocomplete_labels_members_with_their_full_name(self):
         response = self.client.get(
@@ -219,9 +223,9 @@ class SubscriptionPaymentAutocompletePermissionTests(TestCase):
         membership_type = MembershipType.objects.get(permission_profile=ORDINARY_MEMBER)
         editor_group = Group.objects.create(name=STAFF_GROUP)
         cls.editor = Member.objects.create_user(
-            username="payment-editor",
+            username=f"pe-{RUN_ID}",
             password="pass",
-            email="payment-editor@example.com",
+            email=f"pe-{RUN_ID}@example.com",
             membership_type=membership_type,
         )
         cls.editor.groups.add(editor_group)
@@ -232,9 +236,9 @@ class SubscriptionPaymentAutocompletePermissionTests(TestCase):
             )
         )
         cls.searchable = Member.objects.create_user(
-            username="searchable-member",
+            username=f"sm-{RUN_ID}",
             password="pass",
-            email="searchable@example.com",
+            email=f"sm-{RUN_ID}@example.com",
             first_name="Searchable",
             last_name="Member",
             membership_type=membership_type,
