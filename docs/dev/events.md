@@ -5,7 +5,9 @@
 - `Event` (`events/models.py`) drives everything: content, schedule, signup
   windows, capacity, avec support, optional captcha/passcode, parent-child
   relationships, and background images (`ImageField` or `PublicFileField`
-  depending on storage).
+  depending on storage). `background_image_layout` (`BackgroundImageLayout`:
+  `full` or `sides`) picks how the generic detail page shows that picture; see
+  "Background picture layouts" under Extending / Gotchas.
 - `EventRegistrationForm` defines dynamic signup fields. `choice_number`
   controls ordering (auto-incremented by tens). `choice_list` stores
   comma-separated options for select/checkbox questions.
@@ -192,6 +194,71 @@
 
 ## Extending / Gotchas
 
+- Background picture layouts: `templates/common/events/detail.html` renders the
+  picture as `<img>` elements styled by `static/common/events/css/background.css`,
+  which it links only when the event has a picture. It is a separate sheet because
+  `pulterit` and `sf` replace `events/css/detail.css`, so rules there would not reach
+  them. `full` puts a `position: fixed` image with `object-fit: cover` inside an
+  absolutely positioned layer with `clip-path: inset(0)`, so the picture is sized
+  against the viewport on every device and clipped to the page wrapper instead of
+  painting over the footer. The old inline `background-size: cover` was sized
+  against the whole page on phones (where `background-attachment: fixed` is off),
+  which zoomed the picture far past the screen. `sides` shows the picture as a
+  banner above the title below 1200px. From 1200px it shows two sticky copies in
+  the gaps beside the 800px `.container-size` text column (not `container-md`,
+  which is far wider than the visible text). Each picture is capped to stay slightly
+  smaller than the event card. Each column is at most 90% of the text column wide and
+  as tall as the card, because `.content`'s margins collapse through
+  `.container-size`. The picture box is at most the column's height and is inset by
+  1.5rem of padding, so on a short event the side pictures are small by design.
+  Because the box never outgrows its column, sticky positioning always has room to
+  work. Layering relies on positioning and DOM order, not `z-index`.
+- Background tint: `Event.background_image_color` (`#rrggbb`, not editable) holds the
+  picture's dominant colour. `events.images` finds it by reducing a
+  64px thumbnail to 5 colours and taking the largest cluster, skipping transparent
+  pixels. When it is set, the template adds `event-bg--tinted` and an inline
+  `--event-bg-color`, and the stylesheet paints the page background with that colour
+  mixed 75/25 with black. Without a colour, no background is set, so the page keeps
+  its own. Pictures stored before the field existed are filled in by
+  `manage.py backfill_event_background_colors` (see `operations.md`). Only the generic detail page honours the field: the baal,
+  wappmiddag, kk100 and Årsfest templates keep their own background CSS.
+  The column has a `db_default` as well as a `default`, so the previous release
+  can still insert events into the shared database during a blue-green deploy.
+- Background picture uploads: `Event.save()` passes a newly assigned `image` or
+  `s3_image` (an uncommitted `FieldFile`) to
+  `events.images.process_background_image`. That reads the file once and returns a
+  copy shrunk to fit within 1920x1080, keeping its shape, together with its
+  dominant colour. It never crops or enlarges. Every picture is first normalised
+  to RGB, RGBA, L or LA. Wide greyscale is scaled rather than converted, because
+  Pillow's `convert()` clips values above 255 to white. 16-bit pictures are scaled
+  from 0-65535, and 32-bit pictures that go beyond that are scaled by their
+  brightest pixel. Palette or colour-key transparency becomes an alpha channel.
+  The EXIF orientation is applied before resizing, because re-encoding drops all
+  EXIF data (GPS position included) and phone photos would otherwise end up
+  sideways. JPEG, PNG and WebP keep their format. A lossless WebP stays lossless,
+  detected from its `VP8L` chunk because Pillow does not report it. Other still
+  formats become PNG when they have transparency and JPEG otherwise. The ICC
+  colour profile (iPhone photos are Display P3) is kept unless the colour space
+  changed, for example CMYK to RGB. HEIC/HEIF is readable because
+  `EventsConfig.ready()` registers `pillow_heif`; `gallery` does the same, but not
+  every association installs it. A picture that already fits and is upright is
+  stored byte for byte. Animated GIF, PNG and WebP files, and unreadable files,
+  are stored as uploaded. Pillow's `is_animated` only means "more than one frame",
+  so other multi-frame files (phone JPEGs with an embedded second picture, which
+  open as MPO, multi-page TIFFs, multi-image HEIFs) are processed from their first
+  frame. Pictures that are already stored are never reprocessed.
+- Tint bookkeeping: `background_image_color` always describes the picture the page
+  shows, which is `image` before `s3_image`, as in `background_image_url`. A new
+  upload to the field that is not shown leaves the colour alone. When the shown
+  picture changes without an upload (for example `image` is cleared and an older
+  `s3_image` takes over), `save()` compares against the stored row and reads the
+  colour from storage. Clearing both pictures clears the colour. A
+  `save(update_fields=[...])` that includes a picture field also saves
+  `background_image_color`. A call without picture fields skips the processing.
+  Assign the file to the field (as forms do) rather than calling
+  `event.image.save(name, content)`. That writes the file to storage immediately,
+  so `save()` sees an already-stored file and neither resizes it nor reads its
+  colour.
 - Association capabilities: `REGISTRATION_TERMS_ENABLED` (date) adds the terms
   checkbox to registration forms and the admin field;
   `KK_EVENT_TEMPLATES_ENABLED` (kk) adds the kk event-template choices to the

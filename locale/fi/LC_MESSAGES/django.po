@@ -703,6 +703,26 @@ msgstr "Pääsykoodi"
 msgid "Bakgrundsbild"
 msgstr "Taustakuva"
 
+#: events/models.py
+msgid "Bakgrundsbildens layout"
+msgstr "Taustakuvan asettelu"
+
+#: events/models.py
+msgid "Bakgrundsbildens huvudfärg"
+msgstr "Taustakuvan pääväri"
+
+#: events/models.py
+msgid "Fyll hela bakgrunden"
+msgstr "Täytä koko tausta"
+
+#: events/models.py
+msgid "Visa bilden på sidorna"
+msgstr "Näytä kuva sivuilla"
+
+#: events/models.py
+msgid "Hur bakgrundsbilden visas på evenemangssidan. \"Visa bilden på sidorna\" visar bilden förminskad till vänster och höger om texten, och som en banderoll ovanför texten på smala skärmar."
+msgstr "Miten taustakuva näytetään tapahtumasivulla. \"Näytä kuva sivuilla\" näyttää kuvan pienennettynä tekstin vasemmalla ja oikealla puolella sekä bannerina tekstin yläpuolella kapeilla näytöillä."
+
 #: events/models.py:105
 msgid "Captcha"
 msgstr "Captcha"

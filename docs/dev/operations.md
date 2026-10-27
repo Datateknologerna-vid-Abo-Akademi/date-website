@@ -255,6 +255,19 @@ python manage.py redact_harassment_logs
 
 It replaces report text in the log with a label such as `Trakasserianmälan #12`, keeps the report id, and reports how many entries it changed. It is safe to run repeatedly and reports `0` when the log is already clean. Backup dumps taken before the deploy still contain the text; decide separately whether those need to expire earlier than the normal retention.
 
+## Event Maintenance
+
+### `backfill_event_background_colors`
+
+Event pages tint their background with the dominant colour of the event's background picture. The colour is recorded when a picture is uploaded, so pictures uploaded before that release have none, and their pages keep the plain page background. Run the command once after the release is live to fill those in:
+
+```bash
+python manage.py backfill_event_background_colors --dry-run
+python manage.py backfill_event_background_colors
+```
+
+It reads each picture from storage (local or S3), skips events that already have a colour, and reports pictures it could not read, such as files that are missing from storage. It writes with `QuerySet.update()`, so it does not change `modified_time` and does not resize the stored picture. It is safe to run repeatedly.
+
 ## Data Import / Export Helpers
 
 These scripts are more task-specific and should usually be run only by someone familiar with the target app and data shape:
