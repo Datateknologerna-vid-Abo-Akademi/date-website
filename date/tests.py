@@ -1603,7 +1603,7 @@ class LunchWidgetTests(TestCase):
         self.assertContains(response, 'data-lang="sv"')
         self.assertContains(response, 'data-count="3"')
         self.assertContains(response, 'data-heading="3"')
-        self.assertContains(response, 'data-accent="#3a80c3"')
+        self.assertContains(response, 'data-accent="#9a7a1a"')
         self.assertContains(response, "https://lunchmenu.fi/static/widget/student.js")
 
     def test_homepage_html_links_to_lunchmenu_without_javascript(self):

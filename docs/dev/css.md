@@ -160,6 +160,19 @@ association that does not define it:
 --pub-card-bg: var(--pubCardBg, var(--secondaryColor));
 ```
 
+The same pattern lets one association re-colour a shared sheet without forking
+it: the shared rule reads a token with its old literal as the fallback, and only
+that association defines the token. DaTe's gold palette uses this for the
+members forms and passkey buttons (`--form-button-bg`, `--form-accent`,
+`--form-link` and their states in `static/common/members/style.css` and
+`static/common/members/css/two-factor.css`) and the cookie banner
+(`--cookie-accept-bg`, `--cookie-accept-fg` in
+`static/common/core/css/cookie-banner.css`); other associations keep the
+green/blue fallbacks. DaTe also overrides Bootstrap's blue defaults (focus glow,
+`.btn-primary`, the active language item) and sets `accent-color` in
+`static/date/core/css/base.css`; Bootstrap loads after that sheet, so those
+rules carry an `html` prefix to outrank it.
+
 A custom property consumed by a shared sheet must be defined either in every
 association that loads that sheet or at the use site in a `var()` fallback. An
 undefined `var()` with no fallback silently drops the declaration, so the rule
