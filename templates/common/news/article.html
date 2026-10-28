@@ -12,7 +12,7 @@
     <div class="container-size break-words">
       {% block article_badge %}{% endblock %}
       <div class="content overflow-auto">
-        <h2>{{ article.title }}</h2>
+        <h2{% if article.title_shine %} class="title-shine"{% endif %}>{{ article.title }}</h2>
         <h4 class="author">
           {% blocktranslate with published_time=article.published_time trimmed %}
             Skriven {{ published_time }} av

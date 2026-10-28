@@ -1,6 +1,8 @@
+import functools
 import logging
 import secrets
 import time
+import zlib
 from urllib.parse import urlsplit, urlunsplit
 
 from django.apps import apps
@@ -92,6 +94,7 @@ def format_calendar_events(all_events):
                 "link": event_url,
                 "eventFullDate": event.event_date_start,
                 "eventTitle": event.title,
+                "titleShine": event.title_shine,
             }
         )
     return calendar_events
@@ -133,6 +136,25 @@ def bump_homepage_version(**kwargs):
             cache.add(_homepage_version_key(), time.time_ns(), timeout=None)
 
     transaction.on_commit(_bump)
+
+
+@functools.cache
+def _homepage_schema():
+    """Fingerprint of the model fields the cached homepage context pickles.
+
+    Blue-green releases share the cache. An instance pickled by a release that
+    lacks a field unpickles without it, and every template access to that field
+    then costs a deferred-field query. Keying on the fields keeps releases with
+    different models on separate cache entries. crc32, not hash(), so every
+    process agrees on the value.
+    """
+    models = [Event, Post, AdUrl, IgUrl]
+    if apps.is_installed('booking'):
+        models += [apps.get_model('booking', 'Booking'), apps.get_model('booking', 'Room')]
+    fields = ",".join(
+        f"{model._meta.label}.{field.attname}" for model in models for field in model._meta.concrete_fields
+    )
+    return format(zlib.crc32(fields.encode()), "08x")
 
 
 def _homepage_context(now=None):
@@ -178,7 +200,7 @@ def index(request):
     cache_key = None
     if not request.user.is_authenticated:
         cache_key = (
-            f"homepage:{settings.PROJECT_NAME}:{get_language()}:"
+            f"homepage:{settings.PROJECT_NAME}:{_homepage_schema()}:{get_language()}:"
             f"{getattr(settings, 'APRIL_HOMEPAGE_ENABLED', False)}:{_homepage_version()}"
         )
         cached = cache.get(cache_key)

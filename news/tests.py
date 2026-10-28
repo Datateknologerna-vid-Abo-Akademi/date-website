@@ -1,6 +1,7 @@
 from datetime import timedelta
 
-from django.test import Client, TestCase
+from django.core.cache import cache
+from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
@@ -244,3 +245,47 @@ class AlbinsAngelsBadgeTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertNotContains(response, "aa-img")
+
+
+class TitleShineTests(TestCase):
+    """The title_shine checkbox adds the title-shine class on the list and article."""
+
+    def setUp(self):
+        cache.clear()  # /news/ caches its list for 60 seconds
+        self.admin = Member.objects.create_superuser(username='shine-admin', password='pwd', email='a@example.com')
+        published = timezone.now() - timedelta(seconds=1)
+        self.shiny = Post.objects.create(
+            title='Shiny', slug='shiny', author=self.admin, published_time=published, title_shine=True
+        )
+        self.plain = Post.objects.create(title='Plain', slug='plain', author=self.admin, published_time=published)
+
+    def test_new_posts_do_not_shine_by_default(self):
+        self.assertFalse(self.plain.title_shine)
+
+    def test_index_marks_only_ticked_posts(self):
+        response = self.client.get(reverse('news:index'))
+
+        self.assertContains(response, '<h2 class="title-shine">Shiny</h2>', html=True)
+        self.assertContains(response, '<h2>Plain</h2>', html=True)
+
+    def test_article_title_shines_when_ticked(self):
+        self.assertContains(self.client.get(self.shiny.get_absolute_url()), 'class="title-shine"')
+        self.assertNotContains(self.client.get(self.plain.get_absolute_url()), 'class="title-shine"')
+
+    @override_settings(TITLE_SHINE_ENABLED=True)
+    def test_admin_shows_the_checkbox_when_enabled(self):
+        self.client.force_login(self.admin)
+
+        self.assertContains(self.client.get(reverse('admin:news_post_add')), 'name="title_shine"')
+        self.assertContains(
+            self.client.get(reverse('admin:news_post_change', args=[self.plain.pk])), 'name="title_shine"'
+        )
+
+    @override_settings(TITLE_SHINE_ENABLED=False)
+    def test_admin_hides_the_checkbox_when_disabled(self):
+        self.client.force_login(self.admin)
+
+        self.assertNotContains(self.client.get(reverse('admin:news_post_add')), 'name="title_shine"')
+        self.assertNotContains(
+            self.client.get(reverse('admin:news_post_change', args=[self.plain.pk])), 'name="title_shine"'
+        )

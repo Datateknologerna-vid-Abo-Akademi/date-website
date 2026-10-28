@@ -71,6 +71,7 @@ CONTENT_VARIABLES = {
 # Association capabilities
 REGISTRATION_TERMS_ENABLED = True
 EQUALITY_PLAN_ENABLED = True
+TITLE_SHINE_ENABLED = True
 # Room booking is live for DaTe only. Other associations keep the default from
 # core/settings/common.py and never parse this variable, so setting it on one of
 # their releases has no effect. Turn it off here (or on the DaTe release) to
@@ -87,3 +88,4 @@ ARKEN_LATITUDE = 60.4565176
 ARKEN_LONGITUDE = 22.2796885
 LUNCH_LAT = env('LUNCH_LAT', float, ARKEN_LATITUDE) if os.environ.get('LUNCH_LAT') else ARKEN_LATITUDE
 LUNCH_LNG = env('LUNCH_LNG', float, ARKEN_LONGITUDE) if os.environ.get('LUNCH_LNG') else ARKEN_LONGITUDE
+LUNCH_ACCENT = env('LUNCH_ACCENT', str, '#7a6012')

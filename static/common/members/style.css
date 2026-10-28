@@ -85,7 +85,7 @@ form{
             box-shadow: 0 0 20px 0 rgba(255,255,255,0.5), 0 5px 5px 0 rgba(200,200,200,0.12);
 }
 .consent-form-group a {
-  color:blue !important;
+  color: var(--form-consent-link, blue) !important;
 }
 
 .members-form a:not(.theme-button) {

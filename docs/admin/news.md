@@ -14,6 +14,7 @@ Publish and organize news articles that appear on the home page and `/news/` lis
 2. Click **Add post**.
 3. Complete the form:
    - **Titel** – headline. If translation features are enabled, fill the translated title/content tabs as needed.
+   - **Glanseffekt på titeln** – tick to show the headline with the gold shine on the home page, in the `/news/` list and on the article page. Leave it unticked for ordinary posts, because the effect only stands out when few posts use it. The checkbox only appears on sites whose styles support it (currently DaTe).
    - **Kategori** – optional; un-categorized posts show on the home page by default.
    - **Innehåll** – CKEditor field for body text, images, embeds.
    - **Publiceras** – set the date and time when the post should become visible. Leave empty to keep it hidden as a draft; pick a future time to schedule publication.

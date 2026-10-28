@@ -324,7 +324,7 @@ class BookingConfirmationBodyTests(SimpleTestCase):
         self.assertNotIn('<img', html)
         self.assertNotIn('http://', html)
         self.assertIn('#202020', html)
-        self.assertIn('rgb(208, 255, 0)', html)
+        self.assertIn('#e6b445', html)
         self.assertIn('max-width: 600px', html)
 
     def test_both_bodies_say_why_the_mail_was_sent(self):
