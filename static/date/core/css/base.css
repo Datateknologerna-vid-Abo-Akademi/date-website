@@ -18,11 +18,15 @@ div a:hover{
     color: var(--linkColorLightHover);
 }
 
-/* Gold shine on the event card titles of the events page, matching the homepage
-   cards, and on the album titles of the picture archive. Hovering anywhere on the
-   card sweeps the highlight across the title. The album selector outranks
-   .album-card .card-title in the shared archive sheet, which loads later. */
-.event-card > div.card .card-title,
+/* Gold shine on the event and news titles an editor marked with title_shine
+   (the .title-shine class), and on the album titles of the picture archive.
+   Hovering the title, or the card or content box around it, sweeps the highlight
+   across. The gradient suits the dark content boxes; homepage.css swaps it on the
+   light news column. The album selector outranks .album-card .card-title in the
+   shared archive sheet, and the .ball-content one outranks .ball-content h1 in the
+   arsfest sheets; both load later. */
+.title-shine,
+.ball-content .title-shine,
 .album-card-link .album-card .card-title {
     background-image: var(--gold-shine-on-dark);
     background-size: 250% 100%;
@@ -33,13 +37,16 @@ div a:hover{
     transition: background-position 0.6s ease;
 }
 
-.event-card > div.card:hover .card-title,
+.title-shine:hover,
+.card:hover .title-shine,
+.content:hover .title-shine,
 .album-card-link:hover .album-card .card-title {
     background-position: 0 0;
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .event-card > div.card .card-title,
+    .title-shine,
+    .ball-content .title-shine,
     .album-card-link .album-card .card-title {
         transition: none;
     }
@@ -55,7 +62,7 @@ div a:hover{
 html .form-control:focus,
 html .form-select:focus {
     border-color: var(--linkColorLight);
-    box-shadow: 0 0 0 0.25rem rgba(230, 180, 69, 0.25);
+    box-shadow: 0 0 0 0.25rem color-mix(in srgb, var(--linkColorLight) 25%, transparent);
 }
 
 html .btn-primary {
@@ -75,14 +82,14 @@ html .btn-primary.active {
 
 html .btn-primary:focus,
 html .btn-primary:active:focus {
-    box-shadow: 0 0 0 0.25rem rgba(230, 180, 69, 0.5);
+    box-shadow: 0 0 0 0.25rem color-mix(in srgb, var(--linkColorLight) 50%, transparent);
 }
 
 /* header.css means the current language to get the nav highlight, but Bootstrap's
-   .dropdown-item.active blue wins there. */
+   .dropdown-item.active blue wins there. The text stays white: header.css pins
+   .dropdown-item to --textColorLight with !important. */
 html .dropdown-menu .language-dropdown-item.active {
     background-color: var(--navClickHighlight);
-    color: var(--linkColorLight);
 }
 
 .content{

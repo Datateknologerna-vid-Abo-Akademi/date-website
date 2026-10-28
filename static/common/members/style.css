@@ -85,7 +85,7 @@ form{
             box-shadow: 0 0 20px 0 rgba(255,255,255,0.5), 0 5px 5px 0 rgba(200,200,200,0.12);
 }
 .consent-form-group a {
-  color: var(--form-link, blue) !important;
+  color: var(--form-consent-link, blue) !important;
 }
 
 .members-form a:not(.theme-button) {
@@ -128,18 +128,18 @@ form{
   font-family: 'Josefin Sans', sans-serif;
   text-transform: uppercase;
   outline: 0;
-  background: var(--form-button-bg, #4CAF50);
+  background: #4CAF50;
   width: 100%;
   border: 0;
   padding: 15px;
-  color: var(--form-button-fg, var(--textColorLight));
+  color: var(--textColorLight);
   font-size: 14px;
   -webkit-transition: all 0.3s ease;
   transition: all 0.3s ease;
   cursor: pointer;
 }
 .members-form button:hover,.members-form button:active,.members-form button:focus {
-  background: var(--form-button-bg-hover, #43A047);
+  background: #43A047;
 }
 
 .github-login {
@@ -156,18 +156,18 @@ form{
     justify-content: center;
     gap: 0.75rem;
     min-height: 56px;
-    border: 2px solid var(--form-accent, #4CAF50);
+    border: 2px solid #4CAF50;
     border-radius: 8px;
     background: transparent;
-    color: var(--form-accent-text, #2e7d32);
+    color: #2e7d32;
     font-size: 15px;
     line-height: 1.2;
 }
 
 .members-form button.passkey-button:hover,
 .members-form button.passkey-button:focus {
-    background: var(--form-accent-tint, rgba(76, 175, 80, 0.12));
-    color: var(--form-accent-text-hover, #1b5e20);
+    background: rgba(76, 175, 80, 0.12);
+    color: #1b5e20;
 }
 
 .members-form button.passkey-button::before {
@@ -254,7 +254,7 @@ form{
   font-size: 12px;
 }
 .members-form .message a {
-  color: var(--form-link, #4CAF50);
+  color: #4CAF50;
   text-decoration: none;
 }
 .members-form .register-members-form {
@@ -264,11 +264,11 @@ form{
 .pw-reset-button {
     text-transform: uppercase;
     outline: 0;
-    background: var(--form-button-bg, #4CAF50);
+    background: #4CAF50;
     width: 100%;
     border: 0;
     padding: 15px;
-    color: var(--form-button-fg, var(--textColorLight));
+    color: var(--textColorLight);
     font-size: 14px;
     -webkit-transition: all 0.3s ease;
     transition: all 0.3s ease;

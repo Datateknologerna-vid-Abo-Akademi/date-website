@@ -208,16 +208,16 @@
     width: auto;
     flex-shrink: 0;
     padding: 0.6rem 0.9rem;
-    border: 1px solid var(--form-accent, #4CAF50);
+    border: 1px solid #4CAF50;
     border-radius: 6px;
     background: transparent;
-    color: var(--form-accent-text, #2e7d32);
+    color: #2e7d32;
     font-size: 13px;
 }
 
 .members-form button.passkey-action:hover,
 .members-form button.passkey-action:focus {
-    background: var(--form-accent-tint, rgba(76, 175, 80, 0.12));
+    background: rgba(76, 175, 80, 0.12);
 }
 
 .members-form button.passkey-action--danger {
@@ -249,13 +249,13 @@
 .passkey-notice {
     margin-top: 1.25rem;
     padding: 0.75rem 1rem;
-    border-left: 3px solid var(--form-accent, #4CAF50);
-    background: var(--form-accent-tint, rgba(76, 175, 80, 0.08));
+    border-left: 3px solid #4CAF50;
+    background: rgba(76, 175, 80, 0.08);
     border-radius: 0 6px 6px 0;
 }
 
 .passkey-notice a {
-    color: var(--form-accent-text, #2e7d32);
+    color: #2e7d32;
     text-decoration: underline;
 }
 

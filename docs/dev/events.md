@@ -6,6 +6,13 @@
   windows, capacity, avec support, optional captcha/passcode, parent-child
   relationships, and background images (`ImageField` or `PublicFileField`
   depending on storage).
+- `Event.title_shine` (default `False`, with a `db_default` for blue-green
+  deploys) adds the `title-shine` class to the title on the homepage event
+  cards, the `/events/` list, the detail page, the arsfest page and the
+  passcode page. Only DaTe styles the class, so `EventAdmin.get_fields` drops
+  the field unless `TITLE_SHINE_ENABLED` is on; the admin builds its form from
+  those fields, so the event forms carry no gate of their own and saving with
+  the flag off leaves a ticked event's value alone.
 - `EventRegistrationForm` defines dynamic signup fields. `choice_number`
   controls ordering (auto-incremented by tens). `choice_list` stores
   comma-separated options for select/checkbox questions.

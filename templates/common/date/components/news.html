@@ -8,7 +8,7 @@
   <div class="news-container">
     {% for ne in news %}
       <div class="news-content news-box header-border-bottom">
-        <h3 class="news-title">{{ ne.title }}</h3>
+        <h3 class="news-title{% if ne.title_shine %} title-shine{% endif %}">{{ ne.title }}</h3>
         <h5 class="news-date">{{ ne.published_time }}</h5>
         <div>{{ ne.content|safe|truncatewords_html:"50" }}</div>
         <a class="news-button" href="{% url 'news:detail' ne.slug %}">{% block icon_read %}<i class="fab fa-readme"></i>{% endblock %} {% trans 'Läs mera' %}...</a>
