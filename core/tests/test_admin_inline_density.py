@@ -42,6 +42,12 @@ class CompactTabularInlineTests(TestCase):
 class BookingDescriptionWidgetTests(TestCase):
     """Long descriptions must not be clipped into an 80 pixel input."""
 
+    def test_booking_and_closure_are_stacked_blocks(self):
+        for inline_class in (BookingInline, ClosureInline):
+            with self.subTest(inline=inline_class.__name__):
+                self.assertTrue(issubclass(inline_class, admin.StackedInline))
+                self.assertFalse(issubclass(inline_class, admin.TabularInline))
+
     def test_booking_and_closure_descriptions_render_as_textareas(self):
         for inline_class, model in ((BookingInline, Booking), (ClosureInline, Closure)):
             with self.subTest(inline=inline_class.__name__):
@@ -49,11 +55,4 @@ class BookingDescriptionWidgetTests(TestCase):
                 formfield = inline.formfield_for_dbfield(model._meta.get_field('description'), None)
 
                 self.assertIsInstance(formfield.widget, forms.Textarea)
-                self.assertEqual(formfield.widget.attrs.get('rows'), 2)
-
-    def test_inline_media_loads_the_scoped_stylesheet(self):
-        for inline_class, model in ((BookingInline, Booking), (ClosureInline, Closure)):
-            with self.subTest(inline=inline_class.__name__):
-                inline = inline_class(model, admin.site)
-
-                self.assertIn('booking/css/admin_booking_inline.css', str(inline.media))
+                self.assertEqual(formfield.widget.attrs.get('rows'), 3)
