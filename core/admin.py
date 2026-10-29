@@ -161,6 +161,11 @@ class ReferringObjectAutocompleteJsonView(AutocompleteJsonView):
 class FixedLanguageAdminSite(AdminSiteOTPRequiredMixin, _AdminSiteBase):  # type: ignore[misc, valid-type]
     """Mirror the default admin site while preserving normal locale resolution."""
 
+    # The stock dashboard extends admin/base.html directly, so it bypasses
+    # base_site.html and the x-cloak fallback there. Point the site at a
+    # template that extends the dashboard and adds the same fallback.
+    index_template = 'admin/admin_index.html'
+
     def autocomplete_view(self, request):
         return ReferringObjectAutocompleteJsonView.as_view(admin_site=self)(request)
 

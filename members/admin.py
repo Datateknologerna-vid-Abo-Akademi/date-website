@@ -283,6 +283,12 @@ class UserAdmin(_UserAdminBase):
 
         # Match whole terms the same way Django's keyword search does: every
         # term has to match one field (AND across terms, OR within a term).
+        # Groups and subscriptions are matched with one EXISTS per term, not a
+        # shared join. Two terms can therefore match two different related rows
+        # for the same member, where the join version required one row to
+        # contain both. This widening is deliberate; docs/dev/members.md
+        # documents it and the tests in core/tests/test_admin_perf_members.py
+        # pin it.
         text_query = Q()
         for term in smart_split(search_term):
             if term.startswith(('"', "'")) and term[0] == term[-1]:

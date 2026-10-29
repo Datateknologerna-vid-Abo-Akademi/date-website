@@ -176,15 +176,24 @@ class EventAttendeesInlineFormSet(EventAttendeesInlineFormSetBase):
             return
         initial_forms = self.initial_forms
         ranks = [form.cleaned_data.get('attendee_nr') for form in initial_forms]
+        # A native drag submits exactly the ranks 0..n-1 for the rows on screen.
+        # If the page changed in the database since it was rendered (a signup
+        # arrived, a row was removed), those ranks no longer describe this
+        # page's slots, and mapping them would move the rows to the front of
+        # the event. Refuse the drag instead of guessing.
+        looks_like_drag = bool(initial_forms) and set(ranks) == set(range(len(initial_forms)))
+        stale_page = len(initial_forms) != len(self._page_attendee_nrs) or any(
+            form.instance.pk not in self._page_attendee_nrs for form in initial_forms
+        )
+        if looks_like_drag and stale_page:
+            raise ValidationError(_('Deltagarlistan ändrades medan sidan var öppen. Ladda om sidan och försök igen.'))
         if self.extra_forms and any('attendee_nr' in form.changed_data for form in initial_forms):
             all_ranks = [form.cleaned_data.get('attendee_nr') for form in self.forms]
             if set(all_ranks) == set(range(len(self.forms))):
                 # A new row has no existing global slot. Do not let its native
                 # rank turn into a low attendee number or displace another page.
                 raise ValidationError(_('Spara nya deltagare innan du ändrar ordningen.'))
-        if len(initial_forms) != len(self._page_attendee_nrs) or set(ranks) != set(range(len(initial_forms))):
-            return
-        if any(form.instance.pk not in self._page_attendee_nrs for form in initial_forms):
+        if not looks_like_drag or stale_page:
             return
         # Unfold's native sortRecords sends zero-based ranks for this page,
         # not global attendee numbers. Only permute this page's existing slots;

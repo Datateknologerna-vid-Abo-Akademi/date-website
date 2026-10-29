@@ -180,6 +180,17 @@ class MemberQuotedSearchTests(MemberAdminTestCase):
         _, results = self.member_search('"Ada Maria" Missing')
         self.assertEqual(results, [])
 
+    def test_terms_can_match_two_different_related_rows(self):
+        # Each term gets its own EXISTS, so one term may match a group and the
+        # next a different group. Django's shared join required a single row to
+        # contain both and returned nothing here. Pinned as the intended
+        # behaviour; docs/dev/members.md documents the widening.
+        self.member.groups.add(Group.objects.create(name=f"Finance {RUN_ID}"))
+
+        _, results = self.member_search(f'"Board alumni {RUN_ID}" Finance')
+
+        self.assertEqual([member.pk for member in results], [self.member.pk])
+
     def test_member_autocomplete_handles_quoted_and_escaped_phrases(self):
         for query in (
             '"Ada Maria"',

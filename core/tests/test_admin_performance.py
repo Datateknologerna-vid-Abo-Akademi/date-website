@@ -225,12 +225,25 @@ class AdminWhiteScreenTests(AdminPerformanceTestCase):
 
         self.assertEqual(response.status_code, 200)
         js_path = Path(settings.BASE_DIR) / "date/static/date/js/admin_sidebar.js"
-        self.assertIn("removeAttribute('x-cloak')", js_path.read_text(encoding="utf-8"))
+        js = js_path.read_text(encoding="utf-8")
+        self.assertIn("removeAttribute('x-cloak')", js)
+        # The paginated attendee inline replaces the table on every page change,
+        # and Unfold binds the add button only at window load.
+        self.assertIn("htmx:afterSettle", js)
+        self.assertIn(".add-row", js)
+        # The dashboard extends admin/base.html and bypasses base_site.html, so
+        # the inline fallback has to come from the site's index template too.
+        self.assertContains(response, "removeAttribute('x-cloak')")
+        self.assertContains(response, 'data-cfasync="false"')
         if settings.USE_UNFOLD:
             self.assertContains(response, "date/js/admin_sidebar.js")
-        else:
-            self.assertContains(response, "removeAttribute('x-cloak')")
-            self.assertContains(response, 'data-cfasync="false"')
+
+    def test_changelist_also_carries_the_inline_fallback(self):
+        response = self.client.get(reverse("admin:events_event_changelist"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "removeAttribute('x-cloak')")
+        self.assertContains(response, 'data-cfasync="false"')
 
 
 class AdminPermissionCacheTests(AdminPerformanceTestCase):

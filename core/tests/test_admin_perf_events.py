@@ -405,6 +405,57 @@ class AttendeeInlinePaginationTests(_AttendeeAdminFixture):
             dict(EventAttendees.objects.filter(event=self.event).values_list('pk', 'attendee_nr')), expected
         )
 
+    def test_native_drag_is_rejected_when_the_page_grew_before_the_save(self):
+        fragment = self._fragment(self.client.get(self.change_url, {'eventattendees_set-page': '2'}))
+        before = dict(EventAttendees.objects.filter(event=self.event).values_list('pk', 'attendee_nr'))
+        page_rows = list(EventAttendees.objects.filter(event=self.event).order_by('attendee_nr'))[50:]
+        for index in range(len(page_rows)):
+            fragment.data[f'eventattendees_set-{index}-attendee_nr'] = str(len(page_rows) - 1 - index)
+        # A signup arrives between the page load and the save, so the page the
+        # browser submitted no longer matches the rows the ranks describe.
+        EventAttendees.objects.create(
+            event=self.event,
+            attendee_nr=610,
+            user='Late signup',
+            email='late-signup@example.com',
+            time_registered=timezone.now(),
+            preferences={},
+        )
+
+        formset = self._bound_fragment(fragment)
+
+        self.assertFalse(formset.is_valid())
+        self.assertEqual(
+            formset.non_form_errors(),
+            ['Deltagarlistan ändrades medan sidan var öppen. Ladda om sidan och försök igen.'],
+        )
+        self.assertEqual(
+            dict(EventAttendees.objects.filter(pk__in=before).values_list('pk', 'attendee_nr')),
+            before,
+        )
+
+    def test_editing_a_stale_page_without_dragging_is_still_saved(self):
+        fragment = self._fragment(self.client.get(self.change_url, {'eventattendees_set-page': '2'}))
+        before = dict(EventAttendees.objects.filter(event=self.event).values_list('pk', 'attendee_nr'))
+        fragment.data['eventattendees_set-0-user'] = 'Edited after the signup'
+        EventAttendees.objects.create(
+            event=self.event,
+            attendee_nr=610,
+            user='Late signup',
+            email='late-signup@example.com',
+            time_registered=timezone.now(),
+            preferences={},
+        )
+
+        formset = self._bound_fragment(fragment)
+
+        self.assertTrue(formset.is_valid(), formset.errors)
+        formset.save()
+        self.assertEqual(
+            dict(EventAttendees.objects.filter(pk__in=before).values_list('pk', 'attendee_nr')),
+            before,
+        )
+
     def test_inline_paginates_fifty_attendees_per_page(self):
         self.assertEqual(EventAttendeesFormInline.per_page, 50)
 
