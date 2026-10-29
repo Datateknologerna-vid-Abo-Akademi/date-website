@@ -1,0 +1,98 @@
+{% extends 'core/base.html' %}
+{% load i18n %}
+{% load static %}
+{% block title %}
+  {% translate "Kostnadsersättning" %} #{{ claim.pk }}
+{% endblock title %}
+{% block extra_head %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'expenses/css/expenses.css' %}">
+{% endblock extra_head %}
+{% block content %}
+  <div class="container container-margin-top">
+    <div class="row justify-content-center">
+      <div class="col-md-8">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+          <h1 class="h3 mb-0">{% translate "Kostnadsersättning" %} #{{ claim.pk }}</h1>
+          <a href="{% url 'expenses:list' %}"
+             class="btn btn-outline-secondary btn-sm">{% translate "Tillbaka till listan" %}</a>
+        </div>
+        <dl class="row">
+          <dt class="col-sm-4">{% translate "Mottagare" %}</dt>
+          <dd class="col-sm-8">
+            {{ claim.recipient_name }}
+          </dd>
+          <dt class="col-sm-4">{% translate "Beskrivning" %}</dt>
+          <dd class="col-sm-8 expenses-pre-wrap">
+            {{ claim.description }}
+          </dd>
+          <dt class="col-sm-4">{% translate "Belopp" %}</dt>
+          <dd class="col-sm-8">
+            {{ claim.amount }} EUR
+          </dd>
+          <dt class="col-sm-4">{% translate "Betalningsmetod" %}</dt>
+          <dd class="col-sm-8">
+            {{ claim.get_payment_method_display }}
+          </dd>
+          {% if claim.bank_account %}
+            <dt class="col-sm-4">{% translate "Bankkonto" %}</dt>
+            <dd class="col-sm-8">
+              {{ claim.bank_account }}
+            </dd>
+          {% endif %}
+          <dt class="col-sm-4">{% translate "Inskickad" %}</dt>
+          <dd class="col-sm-8">
+            {{ claim.submitted_at|date:"d.m.Y H:i" }}
+          </dd>
+          {% if is_staff %}
+            <dt class="col-sm-4">{% translate "Inskickad av" %}</dt>
+            <dd class="col-sm-8">
+              {{ claim.submitted_by }}
+            </dd>
+          {% endif %}
+          <dt class="col-sm-4">{% translate "Status" %}</dt>
+          <dd class="col-sm-8">
+            {% include 'expenses/partials/status_badge.html' with claim=claim %}
+          </dd>
+          {% if claim.reviewed_by %}
+            <dt class="col-sm-4">{% translate "Behandlad av" %}</dt>
+            <dd class="col-sm-8">
+              {{ claim.reviewed_by }} {{ claim.reviewed_at|date:"d.m.Y" }}
+            </dd>
+          {% endif %}
+          {% with receipts=claim.receipts.all %}
+            {% if receipts %}
+              <dt class="col-sm-4">{% translate "Kvitton" %}</dt>
+              <dd class="col-sm-8">
+                <div class="d-flex flex-wrap gap-2">
+                  {% for receipt in receipts %}
+                    <a href="{% url 'expenses:receipt' receipt.pk %}"
+                       target="_blank"
+                       rel="noopener">
+                      {% if receipt.is_pdf %}
+                        <span class="btn btn-outline-secondary btn-sm">{% translate "Kvitto" %} {{ forloop.counter }} (PDF)</span>
+                      {% else %}
+                        <img src="{% url 'expenses:receipt' receipt.pk %}"
+                             class="expenses-receipt-thumb"
+                             alt="{% translate 'Kvitto' %} {{ forloop.counter }}">
+                      {% endif %}
+                    </a>
+                  {% endfor %}
+                </div>
+              </dd>
+            {% endif %}
+          {% endwith %}
+        </dl>
+        {% if is_staff %}
+          <div class="mt-3">
+            {% if claim.pdf %}
+              <a href="{% url 'expenses:pdf' claim.pk %}" class="btn btn-primary">{% translate "Ladda ned PDF" %}</a>
+            {% else %}
+              <span class="text-muted fst-italic">{% translate "PDF:en genereras. Ladda om sidan om en stund." %}</span>
+            {% endif %}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+{% endblock content %}

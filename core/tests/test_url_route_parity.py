@@ -35,6 +35,7 @@ EXPECTED_PREFIXES = {
         "publications/",
         "alumni/",
         "attendance/",
+        "expenses/",
         "booking/",
         *API_PREFIXES,
         *TRAILING_PREFIXES,
@@ -149,6 +150,7 @@ EXPECTED_URL_NAMES = {
         "publications:pdf_list",
         "alumni:alumni_signup",
         "attendance-index",
+        "expenses:list",
         "booking:index",
         "api:events:upcoming",
     ],
@@ -166,11 +168,11 @@ EXPECTED_URL_NAMES = {
 }
 
 FORBIDDEN_URL_NAMES = {
-    "kk": ["booking:index"],
-    "biocum": ["booking:index"],
-    "pulterit": ["archive:years", "booking:index"],
-    "sf": ["booking:index"],
-    "impuls": ["booking:index"],
+    "kk": ["booking:index", "expenses:list"],
+    "biocum": ["booking:index", "expenses:list"],
+    "pulterit": ["archive:years", "booking:index", "expenses:list"],
+    "sf": ["booking:index", "expenses:list"],
+    "impuls": ["booking:index", "expenses:list"],
 }
 
 CODE = """

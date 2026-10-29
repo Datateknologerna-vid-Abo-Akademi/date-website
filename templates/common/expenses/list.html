@@ -1,0 +1,81 @@
+{% extends 'core/base.html' %}
+{% load i18n %}
+{% load static %}
+{% block title %}
+  {% translate "Kostnadsersättningar" %}
+{% endblock title %}
+{% block extra_head %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'expenses/css/expenses.css' %}">
+{% endblock extra_head %}
+{% block content %}
+  <div class="container container-margin-top">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+      <h1 class="h3 mb-0">{% translate "Kostnadsersättningar" %}</h1>
+      <a href="{% url 'expenses:create' %}" class="btn btn-primary">{% translate "Skicka in ny kostnadsersättning" %}</a>
+    </div>
+    <p class="text-muted">
+      {% translate "Här ser du dina inskickade utlägg och deras status. Kvittona är bara synliga för dig och för styrelsen." %}
+    </p>
+    {% if claims %}
+      <div class="table-responsive">
+        <table class="table table-hover expenses-table">
+          <thead class="table-dark">
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">{% translate "Mottagare" %}</th>
+              <th scope="col">{% translate "Beskrivning" %}</th>
+              <th scope="col">{% translate "Belopp" %}</th>
+              <th scope="col">{% translate "Betalningsmetod" %}</th>
+              <th scope="col">{% translate "Status" %}</th>
+              <th scope="col">{% translate "Inskickad" %}</th>
+              {% if is_staff %}
+                <th scope="col">{% translate "Inskickad av" %}</th>
+              {% endif %}
+              <th scope="col"><span class="visually-hidden">{% translate "Åtgärder" %}</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for claim in claims %}
+              <tr>
+                <td>{{ claim.pk }}</td>
+                <td>{{ claim.recipient_name }}</td>
+                <td>{{ claim.description|truncatechars:60 }}</td>
+                <td>{{ claim.amount }} EUR</td>
+                <td>{{ claim.get_payment_method_display }}</td>
+                <td>{% include 'expenses/partials/status_badge.html' with claim=claim %}</td>
+                <td>{{ claim.submitted_at|date:"d.m.Y" }}</td>
+                {% if is_staff %}<td>{{ claim.submitted_by }}</td>{% endif %}
+                <td>
+                  <a href="{% url 'expenses:detail' claim.pk %}"
+                     class="btn btn-outline-primary btn-sm">{% translate "Visa" %}</a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% if claims.paginator.num_pages > 1 %}
+        <nav aria-label="{% translate 'Sidnavigering' %}">
+          <ul class="pagination">
+            {% if claims.has_previous %}
+              <li class="page-item">
+                <a class="page-link" href="?page={{ claims.previous_page_number }}">&laquo;</a>
+              </li>
+            {% endif %}
+            <li class="page-item disabled">
+              <span class="page-link">{{ claims.number }} / {{ claims.paginator.num_pages }}</span>
+            </li>
+            {% if claims.has_next %}
+              <li class="page-item">
+                <a class="page-link" href="?page={{ claims.next_page_number }}">&raquo;</a>
+              </li>
+            {% endif %}
+          </ul>
+        </nav>
+      {% endif %}
+    {% else %}
+      <p class="text-muted">{% translate "Inga kostnadsersättningar hittades." %}</p>
+    {% endif %}
+  </div>
+{% endblock content %}

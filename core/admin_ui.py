@@ -144,6 +144,19 @@ SIDEBAR_NAVIGATION = (
             ),
         ),
     ),
+    # The same drop-out rule as booking and attendance: the group disappears on
+    # an association without the app or for a reader without the permission.
+    AdminSidebarGroup(
+        _('Expenses'),
+        (
+            AdminLink(
+                _('Expense claims'),
+                icon='receipt_long',
+                url_name='admin:expenses_expenseclaim_changelist',
+                permission='expenses.view_expenseclaim',
+            ),
+        ),
+    ),
     AdminSidebarGroup(
         _('Members'),
         (

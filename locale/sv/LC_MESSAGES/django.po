@@ -3876,3 +3876,220 @@ msgstr "Visar titeln med glanseffekt på startsidan, i nyhetslistan och på nyhe
 #: events/models.py
 msgid "Visar titeln med glanseffekt på startsidan, i evenemangslistan och på evenemangssidan."
 msgstr "Visar titeln med glanseffekt på startsidan, i evenemangslistan och på evenemangssidan."
+
+# Expenses app
+msgid "Varje kvitto får vara högst %(megabytes)d MB."
+msgstr "Varje kvitto får vara högst %(megabytes)d MB."
+
+msgid "Kontant"
+msgstr "Kontant"
+
+msgid "Banköverföring"
+msgstr "Banköverföring"
+
+msgid "Väntar"
+msgstr "Väntar"
+
+msgid "Godkänd"
+msgstr "Godkänd"
+
+msgid "Nekad"
+msgstr "Nekad"
+
+msgid "Mottagare"
+msgstr "Mottagare"
+
+msgid "Belopp (EUR)"
+msgstr "Belopp (EUR)"
+
+msgid "Beloppet i euro, till exempel 25.50."
+msgstr "Beloppet i euro, till exempel 25.50."
+
+msgid "Betalningsmetod"
+msgstr "Betalningsmetod"
+
+msgid "Bankkonto (IBAN)"
+msgstr "Bankkonto (IBAN)"
+
+msgid "Krävs endast för banköverföring, till exempel FI21 1234 5600 0007 85."
+msgstr "Krävs endast för banköverföring, till exempel FI21 1234 5600 0007 85."
+
+msgid "Inskickad av"
+msgstr "Inskickad av"
+
+msgid "Inskickad"
+msgstr "Inskickad"
+
+msgid "Behandlad av"
+msgstr "Behandlad av"
+
+msgid "Behandlad"
+msgstr "Behandlad"
+
+msgid "Kassörens signeringsdatum"
+msgstr "Kassörens signeringsdatum"
+
+msgid "PDF"
+msgstr "PDF"
+
+msgid "PDF genererad"
+msgstr "PDF genererad"
+
+msgid "kostnadsersättning"
+msgstr "kostnadsersättning"
+
+msgid "kostnadsersättningar"
+msgstr "kostnadsersättningar"
+
+msgid "Bankkonto (IBAN) krävs för banköverföring."
+msgstr "Bankkonto (IBAN) krävs för banköverföring."
+
+msgid "Ogiltigt IBAN-nummer."
+msgstr "Ogiltigt IBAN-nummer."
+
+msgid "Kostnadsersättning"
+msgstr "Kostnadsersättning"
+
+msgid "Fil"
+msgstr "Fil"
+
+msgid "Endast bilder (JPEG, PNG, GIF, WebP) och PDF-filer är tillåtna."
+msgstr "Endast bilder (JPEG, PNG, GIF, WebP) och PDF-filer är tillåtna."
+
+msgid "Uppladdad"
+msgstr "Uppladdad"
+
+msgid "kvitto"
+msgstr "kvitto"
+
+msgid "kvitton"
+msgstr "kvitton"
+
+msgid "JPEG-, PNG-, GIF- eller WebP-bilder och PDF-filer"
+msgstr "JPEG-, PNG-, GIF- eller WebP-bilder och PDF-filer"
+
+msgid "Du kan skicka med högst %(count)d kvitton per utlägg."
+msgstr "Du kan skicka med högst %(count)d kvitton per utlägg."
+
+msgid "Kvittona får tillsammans vara högst %(megabytes)d MB."
+msgstr "Kvittona får tillsammans vara högst %(megabytes)d MB."
+
+msgid "Endast %(types)s är tillåtna."
+msgstr "Endast %(types)s är tillåtna."
+
+msgid "Filen är inte en giltig bild eller PDF."
+msgstr "Filen är inte en giltig bild eller PDF."
+
+msgid "Kvitton"
+msgstr "Kvitton"
+
+msgid "Du kan välja flera filer samtidigt. Varje fil får vara högst 10 MB."
+msgstr "Du kan välja flera filer samtidigt. Varje fil får vara högst 10 MB."
+
+msgid "Kostnadsersättningen har skickats in."
+msgstr "Kostnadsersättningen har skickats in."
+
+msgid "Kvittot finns inte."
+msgstr "Kvittot finns inte."
+
+msgid "PDF:en har inte genererats än."
+msgstr "PDF:en har inte genererats än."
+
+msgid "Kvitto"
+msgstr "Kvitto"
+
+msgid "Öppna kvitto"
+msgstr "Öppna kvitto"
+
+msgid "Inte genererad"
+msgstr "Inte genererad"
+
+msgid "Ladda ned PDF"
+msgstr "Ladda ned PDF"
+
+msgid "Generera PDF på nytt"
+msgstr "Generera PDF på nytt"
+
+msgid "PDF-generering startad för {count} utlägg."
+msgstr "PDF-generering startad för {count} utlägg."
+
+msgid "Godkänn valda utlägg"
+msgstr "Godkänn valda utlägg"
+
+
+msgid "Neka valda utlägg"
+msgstr "Neka valda utlägg"
+
+
+msgid "Kostnadsersättningar"
+msgstr "Kostnadsersättningar"
+
+msgid "Skicka in ny kostnadsersättning"
+msgstr "Skicka in ny kostnadsersättning"
+
+msgid "Här ser du dina inskickade utlägg och deras status. Kvittona är bara synliga för dig och för styrelsen."
+msgstr "Här ser du dina inskickade utlägg och deras status. Kvittona är bara synliga för dig och för styrelsen."
+
+msgid "Belopp"
+msgstr "Belopp"
+
+msgid "Åtgärder"
+msgstr "Åtgärder"
+
+msgid "Visa"
+msgstr "Visa"
+
+msgid "Inga kostnadsersättningar hittades."
+msgstr "Inga kostnadsersättningar hittades."
+
+msgid "Bankkonto"
+msgstr "Bankkonto"
+
+msgid "PDF:en genereras. Ladda om sidan om en stund."
+msgstr "PDF:en genereras. Ladda om sidan om en stund."
+
+msgid "Skicka in kostnadsersättning"
+msgstr "Skicka in kostnadsersättning"
+
+msgid "Fyll i vad utlägget gäller och bifoga kvittona. Styrelsen behandlar ansökan och betalar ut beloppet enligt den valda betalningsmetoden."
+msgstr "Fyll i vad utlägget gäller och bifoga kvittona. Styrelsen behandlar ansökan och betalar ut beloppet enligt den valda betalningsmetoden."
+
+msgid "Skicka in"
+msgstr "Skicka in"
+
+# Admin sidebar section for the expenses app
+msgid "Expenses"
+msgstr "Utlägg"
+
+msgid "Expense claims"
+msgstr "Kostnadsersättningar"
+
+
+# Expenses app follow-up strings
+msgid "godkända"
+msgstr "godkända"
+
+msgid "nekade"
+msgstr "nekade"
+
+msgid "{count} utlägg markerade som {label}."
+msgstr "{count} utlägg markerade som {label}."
+
+msgid "{count} utlägg hoppades över eftersom de redan hade behandlats."
+msgstr "{count} utlägg hoppades över eftersom de redan hade behandlats."
+
+msgid "PDF-generering kunde inte startas för {count} utlägg."
+msgstr "PDF-generering kunde inte startas för {count} utlägg."
+
+msgid "Sidnavigering"
+msgstr "Sidnavigering"
+
+msgid "Bilden har för många pixlar. Förminska den och försök igen."
+msgstr "Bilden har för många pixlar. Förminska den och försök igen."
+
+msgid "PDF:en har för många sidor."
+msgstr "PDF:en har för många sidor."
+
+msgid "Kvitto #%(pk)s"
+msgstr "Kvitto #%(pk)s"
+
