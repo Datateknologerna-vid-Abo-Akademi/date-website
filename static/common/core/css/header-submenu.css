@@ -1,0 +1,32 @@
+/* Nested header links (a StaticUrl with a parent), rendered by
+   core/header_nav_items.html for every association. Linked after
+   core/css/header.css so it applies whichever copy of that sheet an
+   association uses; colours stay in the association header sheets.
+   The list is not a Bootstrap .dropdown-menu, so it resets its own list styles. */
+.navbar-nav .dropdown-submenu-list {
+    display: none;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.navbar-nav .dropdown-submenu:hover > .dropdown-submenu-list,
+.navbar-nav .dropdown-submenu:focus-within > .dropdown-submenu-list {
+    display: block;
+}
+
+.dropdown-submenu-toggle {
+    text-align: left;
+}
+
+.navbar-nav .dropdown-submenu-list .dropdown-item {
+    padding-left: 2rem;
+}
+
+/* The collapsed navbar has no hover to open a submenu, so list every child link. */
+@media (max-width: 991.98px) {
+    .navbar-nav .dropdown-submenu-list {
+        display: block;
+        margin-left: 0.5rem;
+    }
+}

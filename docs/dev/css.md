@@ -7,7 +7,7 @@ for that system: where a sheet lives, which copy wins, what belongs in a
 variant's palette, and the policies for load order, `!important`, breakpoints,
 `z-index` and JavaScript hooks.
 
-The tree holds 89 hand-written stylesheets (91 `.css` files minus the two
+The tree holds 88 hand-written stylesheets (90 `.css` files minus the two
 vendored minified bundles, `static/common/date/css/vanilla-calendar.min.css` and
 `static/common/core/css/flatpickr.min.css`). A handful of them are linked by
 `templates/common/core/base.html` and therefore load on every page; the rest are
@@ -227,7 +227,7 @@ model which apps a variant installs.
 2. The CDN vendor sheets: Bootstrap 5.1.3, bootstrap-icons, Line Awesome, then
    jQuery.
 3. `{% raw %}{% block extra_head %}{% endraw %}`.
-4. `core/css/header.css`.
+4. `core/css/header.css`, then `core/css/header-submenu.css`.
 5. `{% raw %}{% block extra_header_css %}{% endraw %}`.
 6. `core/css/footer.css`.
 7. `{% raw %}{% block extra_css %}{% endraw %}`.

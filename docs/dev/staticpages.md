@@ -4,7 +4,8 @@
 - `StaticPageNav` stores menu categories. `use_category_url` shortcuts the category click to a custom `url`. `nav_element` defines ordering.
 - `StaticPage` is the CKEditor-backed page content. `members_only` gates access, and `slug` is unique (max 50 chars). `update()` stamps `modified_time`.
 - `StaticUrl` represents dropdown entries linked to a `StaticPageNav`. `logged_in_only` hides links from anonymous users, and `dropdown_element` controls ordering for the admin ordering widget. A `parent` self-relation lets a `StaticUrl` carry nested children.
-- Nested navigation is rendered by `templates/common/core/header_nav_items.html` only when the header include passes `show_submenus=True` (pulterit, sf, impuls). Associations enabling it also need submenu styles in their header CSS, since the shared `core/css/header.css` has none.
+- Nested navigation is rendered by `templates/common/core/header_nav_items.html` for every association. The layout (hidden until hover or keyboard focus, always expanded in the collapsed mobile navbar) lives in `static/common/core/css/header-submenu.css`, which `core/base.html` links right after `core/css/header.css`; an association header sheet only sets the child link colours, if it wants them to differ from its other dropdown items.
+- The child list is a plain `ul.dropdown-submenu-list`, not a Bootstrap `.dropdown-menu`. Bootstrap 5.1's dropdown keyboard handler attaches to the closest `.dropdown-menu` around the focused item and throws on a nested one, which stopped arrow-key navigation and Escape inside a submenu. `date/tests.py` (`test_every_association_header_renders_nav_submenus`) guards both.
 
 ## Views & Routing
 - `StaticPageView` (`staticpages/views.py`) is the only view. It loads the page by slug, checks `members_only`, and either renders `staticpages/staticpage.html` or redirects unauthenticated users to `/members/login`.

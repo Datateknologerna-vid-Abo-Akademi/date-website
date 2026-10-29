@@ -28,42 +28,35 @@
                 </form>
               </li>
             {% else %}
-              {% if show_submenus %}
-                {% with children=page.children.all %}
-                  {% if children %}
-                    <li class="dropdown-submenu">
-                      {% if page.url %}
-                        <a class="dropdown-item dropdown-toggle"
-                           href="{{ page.url|localized_url }}">{{ page.title }}</a>
-                      {% else %}
-                        <button class="dropdown-item dropdown-toggle dropdown-submenu-toggle"
-                                type="button">{{ page.title }}</button>
-                      {% endif %}
-                      <ul class="dropdown-menu dropdown-menu-dark">
-                        {% for child in children %}
-                          {% if child.url %}
-                            <li>
-                              <a class="dropdown-item" href="{{ child.url|localized_url }}">{{ child.title }}</a>
-                            </li>
-                          {% endif %}
-                        {% endfor %}
-                      </ul>
-                    </li>
-                  {% else %}
+              {% with children=page.children.all %}
+                {% if children %}
+                  <li class="dropdown-submenu">
                     {% if page.url %}
-                      <li>
-                        <a class="dropdown-item" href="{{ page.url|localized_url }}">{{ page.title }}</a>
-                      </li>
+                      <a class="dropdown-item dropdown-toggle"
+                         href="{{ page.url|localized_url }}">{{ page.title }}</a>
+                    {% else %}
+                      <button class="dropdown-item dropdown-toggle dropdown-submenu-toggle"
+                              type="button">{{ page.title }}</button>
                     {% endif %}
-                  {% endif %}
-                {% endwith %}
-              {% else %}
-                {% if page.url %}
-                  <li>
-                    <a class="dropdown-item" href="{{ page.url|localized_url }}">{{ page.title }}</a>
+                    {# Not a .dropdown-menu: Bootstrap's arrow-key handler binds to the closest .dropdown-menu and crashes on a nested one. #}
+                    <ul class="dropdown-submenu-list">
+                      {% for child in children %}
+                        {% if child.url %}
+                          <li>
+                            <a class="dropdown-item" href="{{ child.url|localized_url }}">{{ child.title }}</a>
+                          </li>
+                        {% endif %}
+                      {% endfor %}
+                    </ul>
                   </li>
+                {% else %}
+                  {% if page.url %}
+                    <li>
+                      <a class="dropdown-item" href="{{ page.url|localized_url }}">{{ page.title }}</a>
+                    </li>
+                  {% endif %}
                 {% endif %}
-              {% endif %}
+              {% endwith %}
             {% endif %}
           {% endif %}
         {% endfor %}
