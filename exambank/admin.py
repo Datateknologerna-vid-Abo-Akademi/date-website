@@ -8,7 +8,12 @@ from django.urls import path, reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 
-from core.admin_base import UNFOLD_FORMFIELD_OVERRIDES, ExtraChangeListLinksMixin, ModelAdmin, TabularInline
+from core.admin_base import (
+    UNFOLD_FORMFIELD_OVERRIDES,
+    CompactTabularInline,
+    ExtraChangeListLinksMixin,
+    ModelAdmin,
+)
 from core.admin_ui import AdminLink
 from core.admin_widgets import (
     FLATPICKR_ADMIN_CSS,
@@ -51,7 +56,7 @@ class ExamBankAdminMixin(ExtraChangeListLinksMixin):
     )
 
 
-class ExamFileInline(TabularInline):
+class ExamFileInline(CompactTabularInline):
     model = ExamFile
     fk_name = 'archive'
     can_delete = True

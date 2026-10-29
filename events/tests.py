@@ -832,7 +832,7 @@ class EventAdminTests(TestCase):
         Production runs without translation inlines, so the exclude list our
         override passes up reaches Django's InlineModelAdmin.get_formset,
         which applies kwargs after its defaults and would otherwise drop the
-        readonly-field exclusion and leave time_registered required.
+        readonly-field exclusion and leave the readonly display fields required.
         """
         request = RequestFactory().get("/admin/events/event/change/")
         request.user = self.admin_user
@@ -841,7 +841,7 @@ class EventAdminTests(TestCase):
         inline.get_formset(request, obj=self.event)
 
         _, kwargs = get_formset.call_args
-        self.assertCountEqual(kwargs["exclude"], ["time_registered", "avec_for"])
+        self.assertCountEqual(kwargs["exclude"], ["registered_at", "open_link", "avec_for"])
 
     def _attendees_formset(self, rows, initial_forms=None):
         data = {

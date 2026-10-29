@@ -14,6 +14,7 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.template.response import TemplateResponse
 from django.urls import re_path, reverse
+from django.utils import formats
 from django.utils.html import format_html
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
@@ -85,6 +86,7 @@ class EventRegistrationFormSet(BaseInlineFormSet):
 
 class EventRegistrationFormInline(AvecAwareMixin, OrderableAdmin, EventTranslationInlineBase):
     line_numbering = 0
+    show_title = False
     model = EventRegistrationForm
     formset = EventRegistrationFormSet
     fk_name = 'event'
@@ -381,7 +383,12 @@ class EventAttendeesFormInline(AvecAwareMixin, OrderableAdmin, EventTranslationI
     per_page = 50
     if settings.USE_UNFOLD:  # type: ignore[misc]
         template = 'admin/events/attendees_tabular.html'
-    show_change_link = True
+    # Unfold repeats the attendee name in a full-width title row above every
+    # form row and puts the per-row change link there. That row doubled the
+    # height of an already long table for information the first field already
+    # shows, so the change link moved into its own column instead.
+    show_title = False
+    show_change_link = False
     formfield_overrides = {
         **UNFOLD_FORMFIELD_OVERRIDES,
     }
@@ -389,13 +396,39 @@ class EventAttendeesFormInline(AvecAwareMixin, OrderableAdmin, EventTranslationI
     ordering = ['attendee_nr']
     autocomplete_fields = ('avec_for',)
 
+    class Media:
+        css = {'all': ('events/css/admin_attendee_inline.css',)}
+
     def get_queryset(self, request):
         # Rows can show the original event when the event has child events.
         # Without select_related that is one query per attendee row.
         return super().get_queryset(request).select_related('original_event')
 
+    @admin.display(description=_('Registrerad'))
+    def registered_at(self, obj):
+        # The short admin format keeps the column on one line; the model field
+        # itself is still in the form exclusion list, this only displays it.
+        if not obj or not obj.time_registered:
+            return '-'
+        return format_html(
+            '<span style="white-space: nowrap">{}</span>',
+            formats.date_format(obj.time_registered, 'SHORT_DATETIME_FORMAT'),
+        )
+
+    @admin.display(description='')
+    def open_link(self, obj):
+        # The per-row change link Unfold rendered in the removed title row.
+        if not obj or not obj.pk:
+            return ''
+        return format_html(
+            '<a href="{}" title="{}" style="white-space: nowrap">{}</a>',
+            reverse('admin:events_eventattendees_change', args=[obj.pk]),
+            _('Open the attendee page'),
+            _('Ändra'),
+        )
+
     def get_fields(self, request, event):
-        fields = ['attendee_nr', 'user', 'email', 'anonymous', 'preferences', 'time_registered']
+        fields = ['attendee_nr', 'open_link', 'user', 'email', 'anonymous', 'preferences', 'registered_at']
         if event and event.children.exists():
             fields.append('original_event')
         if self._event_uses_avec(event):
@@ -406,7 +439,7 @@ class EventAttendeesFormInline(AvecAwareMixin, OrderableAdmin, EventTranslationI
         return [(None, {'fields': self.get_fields(request, event)})]
 
     def get_readonly_fields(self, request, event=None):
-        readonly_fields = ['time_registered']
+        readonly_fields = ['registered_at', 'open_link']
         if event and event.children.exists():
             readonly_fields.append('original_event')
         return readonly_fields

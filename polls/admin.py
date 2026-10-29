@@ -9,7 +9,7 @@ from core.admin import (
     LanguageTabbedTranslationAdmin,
     TranslationCompletionAdminMixin,
 )
-from core.admin_base import ModelAdmin, TabularInline
+from core.admin_base import CompactTabularInline, ModelAdmin, TabularInline
 from core.admin_widgets import (
     FLATPICKR_ADMIN_CSS,
     FLATPICKR_ADMIN_JS,
@@ -73,9 +73,10 @@ class ChoiceInline(PollTranslationInlineBase):
     model = Choice
     extra = 0
     readonly_fields = ['votes']
+    show_title = False
 
 
-class VoteInline(TabularInline):
+class VoteInline(CompactTabularInline):
     model = Vote
     extra = 0
     readonly_fields = ['user']

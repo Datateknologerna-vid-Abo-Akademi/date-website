@@ -1,0 +1,66 @@
+/* Attendee inline: keep the editable content readable.
+ *
+ * A paginated attendee table has nine columns, and auto layout gave the width
+ * to the number input while the name and email fields clipped their content.
+ * The table now uses a fixed layout with a share per column, so the text
+ * fields fill their cell at any usable width instead of being sized by the
+ * widest input. The min-width keeps the table from collapsing on a narrow
+ * screen; the wrapper already scrolls horizontally there.
+ *
+ * Scoped to the inline's own group id so no other admin inline is affected.
+ */
+#eventattendees_set-group table {
+  table-layout: fixed;
+  width: 100%;
+  min-width: 56rem;
+}
+
+/* Unfold's widgets carry min-w-20 and w-full; the fixed layout needs the
+   widgets to follow the column instead of their own minimum. */
+#eventattendees_set-group table input {
+  min-width: 0;
+}
+
+#eventattendees_set-group .column-attendee_nr {
+  width: 8%;
+}
+
+#eventattendees_set-group .column-open_link {
+  width: 6%;
+}
+
+#eventattendees_set-group .column-user {
+  width: 18%;
+}
+
+#eventattendees_set-group .column-email {
+  width: 23%;
+}
+
+#eventattendees_set-group .column-anonymous {
+  width: 6%;
+}
+
+#eventattendees_set-group .column-preferences {
+  width: 8%;
+}
+
+#eventattendees_set-group .column-registered_at {
+  width: 11%;
+}
+
+#eventattendees_set-group .column-avec_for {
+  width: 15%;
+}
+
+#eventattendees_set-group th:last-child {
+  width: 5%;
+}
+
+#eventattendees_set-group .field-registered_at {
+  white-space: nowrap;
+}
+
+#eventattendees_set-group .field-avec_for .select2-container {
+  max-width: 100%;
+}

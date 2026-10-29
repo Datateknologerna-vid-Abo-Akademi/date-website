@@ -118,6 +118,14 @@
   `select_related('original_event')` for the readonly column on parent events.
   If another FK is added to the inline, use autocomplete or a raw id field and
   scope it the same way.
+- The attendee and registration-field inlines drop Unfold's repeated row title
+  (`show_title = False`, or `CompactTabularInline` for inlines with no change
+  link), which repeated the name in a full-width line above every row and
+  doubled its height. The attendee inline renders the per-row change link in
+  its own `Ändra` column instead, and
+  `static/common/events/css/admin_attendee_inline.css` gives the table a fixed
+  column layout so the name and email fields fill their cell rather than being
+  sized by the widest input. The stylesheet is scoped to the inline's group id.
 - The attendee inline uses Unfold's paginated inline formset (50 rows per page)
   when `USE_UNFOLD` is on; stock admin still renders every row. Its scoped
   template keeps the management form inside the pagination response target, so

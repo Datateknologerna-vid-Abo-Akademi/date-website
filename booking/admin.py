@@ -7,7 +7,7 @@ from django.forms.models import BaseInlineFormSet
 from django.utils import formats, timezone
 from django.utils.translation import gettext_lazy as _
 
-from core.admin_base import ModelAdmin, TabularInline
+from core.admin_base import TEXTAREA_WIDGET, CompactTabularInline, ModelAdmin, TabularInline
 
 from . import access
 from .models import Booking, BookingSettings, Closure, Room
@@ -113,7 +113,25 @@ class BookingWriteLockMixin:
         return pks
 
 
-class BookingInline(TabularInline):
+class DescriptionTextareaMixin:
+    """Show the free-text description in a textarea, not an 80 pixel input.
+
+    Booking descriptions run to 400 characters and closure ones to 255. A
+    single-line input in a table cell showed only the first few words, so both
+    inlines render the field as a two-row textarea that fills its column.
+    """
+
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        formfield = super().formfield_for_dbfield(db_field, request, **kwargs)
+        if db_field.name == 'description' and formfield is not None:
+            formfield.widget = TEXTAREA_WIDGET(attrs={'rows': 2, 'cols': 40})
+        return formfield
+
+    class Media:
+        css = {'all': ('booking/css/admin_booking_inline.css',)}
+
+
+class BookingInline(DescriptionTextareaMixin, TabularInline):
     model = Booking
     formset = BookingInlineFormSet
     fk_name = 'room'
@@ -195,7 +213,7 @@ class BookingOriginFilter(admin.SimpleListFilter):
         return queryset
 
 
-class ClosureInline(TabularInline):
+class ClosureInline(DescriptionTextareaMixin, CompactTabularInline):
     model = Closure
     fk_name = 'room'
     extra = 0
