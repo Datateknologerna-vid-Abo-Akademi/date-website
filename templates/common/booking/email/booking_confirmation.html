@@ -43,6 +43,9 @@
                   <div style="padding-top: 6px; font-size: 15px; color: #c7c7c7">
                     {{ start_local|short_date }} {{ start_local|date:"H:i" }} - {% if start_local|date:"Ymd" != end_local|date:"Ymd" %}{{ end_local|short_date }} {% endif %}{{ end_local|date:"H:i" }}
                   </div>
+                  {% if booking.title %}
+                    <div style="padding-top: 6px; font-size: 16px; color: #ffffff">{{ booking.title }}</div>
+                  {% endif %}
                 </td>
               </tr>
             </table>

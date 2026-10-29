@@ -3071,11 +3071,9 @@ msgstr "Verkkosivusto:"
 msgid "Mina bokningar"
 msgstr "Omat varaukseni"
 
-#: templates/common/booking/my_bookings.html:20
-msgid ""
-"Här ser du dina kommande bokningar och kan ta bort en som inte längre passar."
-msgstr ""
-"Tässä ovat tulevat varauksesi, ja voit poistaa sellaisen, joka ei enää sovi."
+#: templates/common/booking/my_bookings.html
+msgid "Här ser du dina kommande bokningar och kan ändra eller ta bort en som inte längre passar."
+msgstr "Tässä näet tulevat varauksesi ja voit muuttaa tai poistaa sellaisen, joka ei enää sovi."
 
 #: templates/common/booking/my_bookings.html:36
 msgid "Du har inga kommande bokningar."
@@ -3944,3 +3942,47 @@ msgstr "Näyttää otsikon kiiltoefektillä etusivulla, uutislistassa ja uutissi
 #: events/models.py
 msgid "Visar titeln med glanseffekt på startsidan, i evenemangslistan och på evenemangssidan."
 msgstr "Näyttää otsikon kiiltoefektillä etusivulla, tapahtumalistassa ja tapahtumasivulla."
+
+#: booking/models.py
+msgid "Ange en kort titel för bokningen."
+msgstr "Anna varaukselle lyhyt otsikko."
+
+#: booking/models.py
+msgid "Visas offentligt för alla som tittar på bokningarna."
+msgstr "Näkyy julkisesti kaikille varauksia katseleville."
+
+#: booking/forms.py
+msgid "Visas offentligt på bokningssidorna. Skriv kort vad bokningen gäller."
+msgstr "Näkyy julkisesti varaussivuilla. Kirjoita lyhyesti, mitä varausta varten."
+
+#: templates/common/booking/cancel_booking.html
+msgid "Ändra bokningen"
+msgstr "Muokkaa varausta"
+
+#: templates/common/booking/partials/edit_booking_form.html
+msgid "Ändra titeln eller tiden och spara."
+msgstr "Muuta otsikkoa tai aikaa ja tallenna."
+
+#: templates/common/booking/partials/edit_booking_form.html
+msgid "Samma avbokningskod gäller fortfarande."
+msgstr "Sama peruutuskoodi käy edelleen."
+
+#: templates/common/booking/cancel_booking.html
+msgid "Spara ändringen"
+msgstr "Tallenna muutokset"
+
+#: booking/views.py
+msgid "Bokningen är uppdaterad."
+msgstr "Varaus on päivitetty."
+
+#: templates/common/booking/email/booking_confirmation.txt
+msgid "Titel:"
+msgstr "Otsikko:"
+
+#: templates/common/booking/edit_booking.html
+msgid "Tillbaka till mina bokningar"
+msgstr "Takaisin omiin varauksiini"
+
+#: templates/common/booking/my_bookings.html
+msgid "Ändra"
+msgstr "Muokkaa"

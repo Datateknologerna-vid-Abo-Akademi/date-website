@@ -118,7 +118,7 @@ class BookingInline(TabularInline):
     formset = BookingInlineFormSet
     fk_name = 'room'
     extra = 0
-    fields = ('start', 'end', 'author', 'booker_name', 'description')
+    fields = ('title', 'start', 'end', 'author', 'booker_name', 'description')
     autocomplete_fields = ('author',)
     show_change_link = True
 
@@ -291,10 +291,10 @@ class RoomAdmin(BookingWriteLockMixin, ModelAdmin):
 
 @admin.register(Booking)
 class BookingAdmin(BookingWriteLockMixin, ModelAdmin):
-    list_display = ('room', 'time_range', 'booker_display', 'no_account')
+    list_display = ('room', 'time_range', 'title', 'booker_display', 'no_account')
     list_filter = (BookingOriginFilter, 'room', 'start')
     date_hierarchy = 'start'
-    search_fields = ('booker_name', 'booker_email', 'description')
+    search_fields = ('title', 'booker_name', 'booker_email', 'description')
     list_select_related = ('room', 'author')
     autocomplete_fields = ('room', 'author')
     readonly_fields = ('booker_display', 'no_account')

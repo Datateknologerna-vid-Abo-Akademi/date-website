@@ -3,7 +3,11 @@
 {% load static %}
 {% load i18n %}
 {% block title %}
-  {% trans "Avboka en bokning" %}
+  {% if edit_form %}
+    {% trans "Ändra bokningen" %}
+  {% else %}
+    {% trans "Avboka en bokning" %}
+  {% endif %}
 {% endblock %}
 {% block extra_head %}
   {{ block.super }}
@@ -15,20 +19,38 @@
   <div class="container-md min-vh-100 container-margin-top">
     <div class="container-size break-words">
       <div class="content">
-        <h1 class="booking-heading">{% trans "Avboka en bokning" %}</h1>
-        {% if booking %}
+        <h1 class="booking-heading">
+          {% if edit_form %}
+            {% trans "Ändra bokningen" %}
+          {% else %}
+            {% trans "Avboka en bokning" %}
+          {% endif %}
+        </h1>
+        {% if edit_form %}
+          {% include 'booking/partials/edit_booking_form.html' %}
+        {% elif booking %}
           <p class="booking-help">{% trans "Stämmer bokningen nedan? Avboka den bara om du verkligen vill ta bort den." %}</p>
           <ul class="booking-list">
             <li class="booking-list-item">
               <span class="booking-badge">{{ booking.start|short_date }}</span>
-              <span class="booking-time">{{ booking.start|date:"H:i" }} - {% if booking.start|date:"Ymd" != booking.end|date:"Ymd" %}{{ booking.end|short_date }} {% endif %}{{ booking.end|date:"H:i" }}</span>
-              <span class="booking-room-name">{{ booking.room.name }}</span>
+              <span class="booking-details">
+                {% if booking.title %}<span class="booking-title">{{ booking.title }}</span>{% endif %}
+                <span class="booking-meta">
+                  <span class="booking-time">{{ booking.start|date:"H:i" }} - {% if booking.start|date:"Ymd" != booking.end|date:"Ymd" %}{{ booking.end|short_date }} {% endif %}{{ booking.end|date:"H:i" }}</span>
+                  <span class="booking-room-name">{{ booking.room.name }}</span>
+                </span>
+              </span>
             </li>
           </ul>
           <form method="post" class="booking-code-form">
             {% csrf_token %}
             <input type="hidden" name="code" value="{{ form.code.value|default:'' }}">
             <button class="theme-button" type="submit" name="confirm" value="1">{% trans "Avboka bokningen" %}</button>
+          </form>
+          <form method="post" class="booking-code-form">
+            {% csrf_token %}
+            <input type="hidden" name="code" value="{{ form.code.value|default:'' }}">
+            <button class="theme-button" type="submit" name="edit" value="1">{% trans "Ändra bokningen" %}</button>
           </form>
         {% else %}
           <p class="booking-help">

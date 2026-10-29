@@ -17,18 +17,27 @@
       <div class="content">
         <h1 class="booking-heading">{% trans "Mina bokningar" %}</h1>
         {% if bookings %}
-          <p class="booking-help">{% trans "Här ser du dina kommande bokningar och kan ta bort en som inte längre passar." %}</p>
+          <p class="booking-help">{% trans "Här ser du dina kommande bokningar och kan ändra eller ta bort en som inte längre passar." %}</p>
           <ul class="booking-list">
             {% for booking in bookings %}
               <li class="booking-list-item">
                 <span class="booking-badge">{{ booking.start|short_date }}</span>
-                <span class="booking-time">{{ booking.start|date:"H:i" }} - {% if booking.start|date:"Ymd" != booking.end|date:"Ymd" %}{{ booking.end|short_date }} {% endif %}{{ booking.end|date:"H:i" }}</span>
-                <span class="booking-room-name">{{ booking.room.name }}</span>
-                <form method="post" class="booking-cancel-form">
-                  {% csrf_token %}
-                  <input type="hidden" name="booking" value="{{ booking.pk }}">
-                  <button class="theme-button booking-cancel-button" type="submit">{% trans "Avboka" %}</button>
-                </form>
+                <span class="booking-details">
+                  {% if booking.title %}<span class="booking-title">{{ booking.title }}</span>{% endif %}
+                  <span class="booking-meta">
+                    <span class="booking-time">{{ booking.start|date:"H:i" }} - {% if booking.start|date:"Ymd" != booking.end|date:"Ymd" %}{{ booking.end|short_date }} {% endif %}{{ booking.end|date:"H:i" }}</span>
+                    <span class="booking-room-name">{{ booking.room.name }}</span>
+                  </span>
+                </span>
+                <span class="booking-actions">
+                  <a class="theme-button booking-action-button"
+                     href="{% url 'booking:edit_my_booking' booking.pk %}">{% trans "Ändra" %}</a>
+                  <form method="post" class="booking-cancel-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="booking" value="{{ booking.pk }}">
+                    <button class="theme-button booking-action-button" type="submit">{% trans "Avboka" %}</button>
+                  </form>
+                </span>
               </li>
             {% endfor %}
           </ul>

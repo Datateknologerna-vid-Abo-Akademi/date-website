@@ -3055,11 +3055,9 @@ msgstr "Webbplatsen:"
 msgid "Mina bokningar"
 msgstr "Mina bokningar"
 
-#: templates/common/booking/my_bookings.html:20
-msgid ""
-"Här ser du dina kommande bokningar och kan ta bort en som inte längre passar."
-msgstr ""
-"Här ser du dina kommande bokningar och kan ta bort en som inte längre passar."
+#: templates/common/booking/my_bookings.html
+msgid "Här ser du dina kommande bokningar och kan ändra eller ta bort en som inte längre passar."
+msgstr "Här ser du dina kommande bokningar och kan ändra eller ta bort en som inte längre passar."
 
 #: templates/common/booking/my_bookings.html:36
 msgid "Du har inga kommande bokningar."
@@ -3876,3 +3874,47 @@ msgstr "Visar titeln med glanseffekt på startsidan, i nyhetslistan och på nyhe
 #: events/models.py
 msgid "Visar titeln med glanseffekt på startsidan, i evenemangslistan och på evenemangssidan."
 msgstr "Visar titeln med glanseffekt på startsidan, i evenemangslistan och på evenemangssidan."
+
+#: booking/models.py
+msgid "Ange en kort titel för bokningen."
+msgstr "Ange en kort titel för bokningen."
+
+#: booking/models.py
+msgid "Visas offentligt för alla som tittar på bokningarna."
+msgstr "Visas offentligt för alla som tittar på bokningarna."
+
+#: booking/forms.py
+msgid "Visas offentligt på bokningssidorna. Skriv kort vad bokningen gäller."
+msgstr "Visas offentligt på bokningssidorna. Skriv kort vad bokningen gäller."
+
+#: templates/common/booking/cancel_booking.html
+msgid "Ändra bokningen"
+msgstr "Ändra bokningen"
+
+#: templates/common/booking/partials/edit_booking_form.html
+msgid "Ändra titeln eller tiden och spara."
+msgstr "Ändra titeln eller tiden och spara."
+
+#: templates/common/booking/partials/edit_booking_form.html
+msgid "Samma avbokningskod gäller fortfarande."
+msgstr "Samma avbokningskod gäller fortfarande."
+
+#: templates/common/booking/cancel_booking.html
+msgid "Spara ändringen"
+msgstr "Spara ändringen"
+
+#: booking/views.py
+msgid "Bokningen är uppdaterad."
+msgstr "Bokningen är uppdaterad."
+
+#: templates/common/booking/email/booking_confirmation.txt
+msgid "Titel:"
+msgstr "Titel:"
+
+#: templates/common/booking/edit_booking.html
+msgid "Tillbaka till mina bokningar"
+msgstr "Tillbaka till mina bokningar"
+
+#: templates/common/booking/my_bookings.html
+msgid "Ändra"
+msgstr "Ändra"

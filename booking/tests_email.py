@@ -122,6 +122,13 @@ class BookingInviteTests(SimpleTestCase):
         self.assertIn('STATUS:CONFIRMED', lines)
         self.assertRegex(property_value(content, 'DTSTAMP'), r'^\d{8}T\d{6}Z$')
 
+    def test_a_title_names_the_calendar_event(self):
+        # The event in the booker's calendar is about the booking, not only about
+        # the room, so the title is what it is called when there is one.
+        _booking, content = self.build(title='Årsmöte')
+
+        self.assertEqual(property_value(content, 'SUMMARY'), 'Årsmöte')
+
     def test_every_line_ends_with_crlf(self):
         _booking, content = self.build()
 
@@ -273,6 +280,20 @@ class BookingConfirmationBodyTests(SimpleTestCase):
         for template in (HTML_TEMPLATE, TEXT_TEMPLATE):
             with self.subTest(template=template):
                 self.assertIn('Repetition', render_body(template))
+
+    def test_the_title_is_shown_in_both_bodies(self):
+        booking = make_booking(title='Årsmöte')
+
+        for template in (HTML_TEMPLATE, TEXT_TEMPLATE):
+            with self.subTest(template=template):
+                self.assertIn('Årsmöte', render_body(template, booking=booking))
+
+    def test_a_booking_without_a_title_shows_no_title_line(self):
+        # A row from before the field existed still renders a complete mail.
+        for template in (HTML_TEMPLATE, TEXT_TEMPLATE):
+            with self.subTest(template=template):
+                body = render_body(template, booking=make_booking(title=''))
+                self.assertNotIn('Titel:', body)
 
     def test_a_booking_without_a_description_shows_no_description_line(self):
         for template in (HTML_TEMPLATE, TEXT_TEMPLATE):

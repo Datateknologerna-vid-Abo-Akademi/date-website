@@ -44,8 +44,13 @@
             {% for booking in bookings %}
               <li class="booking-list-item">
                 <span class="booking-badge">{{ booking.start|short_date }}</span>
-                <span class="booking-time">{{ booking.start|date:"H:i" }} - {% if booking.start|date:"Ymd" != booking.end|date:"Ymd" %}{{ booking.end|short_date }} {% endif %}{{ booking.end|date:"H:i" }}</span>
-                <span class="booking-room-name">{{ booking.room.name }}</span>
+                <span class="booking-details">
+                  {% if booking.title %}<span class="booking-title">{{ booking.title }}</span>{% endif %}
+                  <span class="booking-meta">
+                    <span class="booking-time">{{ booking.start|date:"H:i" }} - {% if booking.start|date:"Ymd" != booking.end|date:"Ymd" %}{{ booking.end|short_date }} {% endif %}{{ booking.end|date:"H:i" }}</span>
+                    <span class="booking-room-name">{{ booking.room.name }}</span>
+                  </span>
+                </span>
               </li>
             {% empty %}
               <li class="booking-list-item booking-list-empty">{% trans "Inga kommande bokningar." %}</li>

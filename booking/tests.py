@@ -401,6 +401,7 @@ class BookingModelTests(TestCase):
             room=self.room,
             start=self.start + datetime.timedelta(minutes=15),
             end=self.end + datetime.timedelta(minutes=15),
+            title='Något',
             booker_name='Någon',
         )
 
@@ -415,6 +416,7 @@ class BookingModelTests(TestCase):
             room=self.room,
             start=self.end,
             end=self.end + datetime.timedelta(hours=1),
+            title='Något',
             booker_name='Någon',
         )
 
@@ -422,7 +424,7 @@ class BookingModelTests(TestCase):
 
     def test_overlapping_booking_in_another_room_is_allowed(self):
         make_booking(self.room, self.start, self.end)
-        other = Booking(room=self.other_room, start=self.start, end=self.end, booker_name='Någon')
+        other = Booking(room=self.other_room, start=self.start, end=self.end, title='Något', booker_name='Någon')
 
         other.full_clean()
 
@@ -433,12 +435,36 @@ class BookingModelTests(TestCase):
         booking.full_clean()
 
     def test_external_booking_needs_a_booker_name(self):
-        booking = Booking(room=self.room, start=self.start, end=self.end, booker_name='   ')
+        booking = Booking(room=self.room, start=self.start, end=self.end, title='Något', booker_name='   ')
 
         with self.assertRaises(ValidationError) as raised:
             booking.full_clean()
 
         self.assertIn('booker_name', raised.exception.message_dict)
+
+    def test_a_new_booking_without_a_title_is_rejected(self):
+        booking = Booking(room=self.room, start=self.start, end=self.end, booker_name='Någon')
+
+        with self.assertRaises(ValidationError) as raised:
+            booking.full_clean()
+
+        self.assertIn('title', raised.exception.message_dict)
+
+    def test_a_blank_title_is_rejected_for_a_new_booking(self):
+        booking = Booking(room=self.room, start=self.start, end=self.end, title='   ', booker_name='Någon')
+
+        with self.assertRaises(ValidationError) as raised:
+            booking.full_clean()
+
+        self.assertIn('title', raised.exception.message_dict)
+
+    def test_an_existing_booking_may_keep_a_blank_title(self):
+        # The field arrived after these rows did, so the board can still correct
+        # one without inventing a title for it.
+        booking = make_booking(self.room, self.start, self.end, booker_name='Någon')
+        booking.description = 'Rättad i efterhand'
+
+        booking.full_clean()
 
     def test_deleting_the_room_deletes_its_bookings(self):
         room = make_room(name='Rivs')
@@ -577,6 +603,7 @@ class BookingModelTests(TestCase):
             room=self.room,
             start=recent,
             end=recent + datetime.timedelta(hours=1),
+            title='Något',
             booker_name='Någon',
         )
 
@@ -599,7 +626,12 @@ class BookingModelTests(TestCase):
 
     def test_booking_form_rejects_end_before_start(self):
         form = BookingForm(
-            data={'start': local_input_time(self.end), 'end': local_input_time(self.start), 'description': ''},
+            data={
+                'title': 'Något',
+                'start': local_input_time(self.end),
+                'end': local_input_time(self.start),
+                'description': '',
+            },
             room=self.room,
             author=make_member('booking-form-author'),
         )
@@ -614,6 +646,7 @@ class BookingModelTests(TestCase):
         make_booking(self.room, self.start, self.end)
         form = BookingForm(
             data={
+                'title': 'Något',
                 'start': local_input_time(self.start + datetime.timedelta(minutes=10)),
                 'end': local_input_time(self.end + datetime.timedelta(minutes=10)),
                 'description': '',
@@ -634,6 +667,21 @@ class BookingModelTests(TestCase):
         self.assertFalse(form.is_valid())
         self.assertIn('booker_name', form.errors)
         self.assertIn('booker_email', form.errors)
+
+    def test_booking_form_requires_a_title(self):
+        form = BookingForm(
+            data={
+                'title': '   ',
+                'start': local_input_time(self.start),
+                'end': local_input_time(self.end),
+                'description': '',
+            },
+            room=self.room,
+            author=make_member('booking-form-title'),
+        )
+
+        self.assertFalse(form.is_valid())
+        self.assertIn('title', form.errors)
 
 
 class BookingDateFilterTests(PinnedNowMixin, SimpleTestCase):
@@ -685,6 +733,7 @@ class BookingAvailabilityRulesTests(TestCase):
 
     def booking(self, room=None, start=None, hours=1, **kwargs):
         start = start or self.start
+        kwargs.setdefault('title', 'Något')
         return Booking(
             room=room or self.room,
             start=start,
@@ -772,6 +821,7 @@ class BookingAvailabilityRulesTests(TestCase):
                 room=self.room,
                 start=monday,
                 end=tuesday.replace(hour=20),
+                title='Något',
                 booker_name='Någon',
             ).full_clean()
 
@@ -873,6 +923,7 @@ class BookingAnonymousFlowTests(PinnedNowMixin, TestCase):
         payload = {
             'start': local_input_time(start),
             'end': local_input_time(end),
+            'title': 'Besökarens ärende',
             'description': 'Bokad av besökare',
             'booker_name': 'Extern Besökare',
             'booker_email': 'besokare@example.com',
@@ -895,11 +946,12 @@ class BookingAnonymousFlowTests(PinnedNowMixin, TestCase):
         self.assertNotIn('form', response.context)
         self.assertContains(response, 'Bastun')
 
-    def test_public_pages_never_expose_the_code_or_the_booker(self):
+    def test_public_pages_show_the_title_but_not_the_booker(self):
         make_booking(
             self.room,
             self.now + datetime.timedelta(hours=2),
             self.now + datetime.timedelta(hours=3),
+            title='Offentlig titel',
             booker_name='Hemlig Bokare',
             booker_email='hemlig@example.com',
             description='Hemlig beskrivning',
@@ -909,10 +961,24 @@ class BookingAnonymousFlowTests(PinnedNowMixin, TestCase):
             with self.subTest(url=url):
                 response = self.client.get(url)
                 self.assertEqual(response.status_code, 200)
+                # The title is the one part of the booking written for everyone
+                # who looks at the room; the rest stays with the board and the
+                # booker.
+                self.assertContains(response, 'Offentlig titel')
                 self.assertNotContains(response, self.current_code())
                 self.assertNotContains(response, 'Hemlig Bokare')
                 self.assertNotContains(response, 'hemlig@example.com')
                 self.assertNotContains(response, 'Hemlig beskrivning')
+
+    def test_a_booking_without_a_title_is_refused(self):
+        self.unlock()
+
+        with patch('booking.views.validate_captcha', return_value=True):
+            response = self.client.post(self.room_url, self.booking_payload(title=''))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('title', response.context['form'].errors)
+        self.assertFalse(Booking.objects.exists())
 
     def test_posting_booking_data_without_an_unlock_creates_nothing(self):
         response = self.client.post(self.room_url, self.booking_payload())
@@ -1005,6 +1071,7 @@ class BookingAnonymousFlowTests(PinnedNowMixin, TestCase):
         self.assertTrue(booking.is_external)
         self.assertEqual(booking.booker_name, 'Extern Besökare')
         self.assertEqual(booking.booker_email, 'besokare@example.com')
+        self.assertEqual(booking.title, 'Besökarens ärende')
         self.assertEqual(booking.room, self.room)
 
     def test_the_room_list_badge_carries_the_weekday(self):
@@ -1219,7 +1286,12 @@ class BookingMemberFlowTests(TestCase):
     def booking_payload(self, **overrides):
         start = timezone.now() + datetime.timedelta(days=1)
         end = start + datetime.timedelta(hours=1)
-        payload = {'start': local_input_time(start), 'end': local_input_time(end), 'description': 'Medlemsbokning'}
+        payload = {
+            'title': 'Medlemsbokning',
+            'start': local_input_time(start),
+            'end': local_input_time(end),
+            'description': 'Medlemsbokning',
+        }
         payload.update(overrides)
         return payload
 
@@ -1239,7 +1311,15 @@ class BookingMemberFlowTests(TestCase):
         # The member's display name is snapshotted so the booking still says who
         # booked it after the account is deleted.
         self.assertEqual(booking.booker_name, str(self.member))
+        self.assertEqual(booking.title, 'Medlemsbokning')
         self.assertFalse(booking.is_external)
+
+    def test_member_booking_without_a_title_is_rejected(self):
+        response = self.client.post(self.room_url, self.booking_payload(title=''))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('title', response.context['form'].errors)
+        self.assertFalse(Booking.objects.exists())
 
     def test_member_booking_in_the_past_is_rejected(self):
         past = timezone.now() - datetime.timedelta(days=1)
@@ -1336,6 +1416,115 @@ class BookingMemberFlowTests(TestCase):
         self.assertEqual(Booking.objects.count(), 1)
         self.assertIn('start', response.context['form'].errors)
 
+    def member_booking(self, **kwargs):
+        start = kwargs.pop('start', timezone.now() + datetime.timedelta(days=1))
+        details = {'author': self.member, 'title': 'Gammal titel'}
+        details.update(kwargs)
+        return make_booking(self.room, start, start + datetime.timedelta(hours=1), **details)
+
+    def test_the_bookings_page_offers_an_edit_link(self):
+        booking = self.member_booking()
+
+        response = self.client.get(reverse('booking:my_bookings'))
+
+        self.assertContains(response, reverse('booking:edit_my_booking', args=[booking.pk]))
+
+    def test_a_member_edits_their_own_booking(self):
+        booking = self.member_booking()
+        edit_url = reverse('booking:edit_my_booking', args=[booking.pk])
+        new_start = (booking.start + datetime.timedelta(hours=1)).replace(second=0, microsecond=0)
+
+        shown = self.client.get(edit_url)
+
+        self.assertEqual(shown.status_code, 200)
+        self.assertContains(shown, 'name="title"')
+        self.assertContains(shown, 'Gammal titel')
+
+        response = self.client.post(
+            edit_url,
+            {
+                'title': 'Ny titel',
+                'start': local_input_time(new_start),
+                'end': local_input_time(new_start + datetime.timedelta(hours=2)),
+                'description': 'Ny beskrivning',
+            },
+        )
+
+        self.assertRedirects(response, reverse('booking:my_bookings'))
+        booking.refresh_from_db()
+        self.assertEqual(booking.title, 'Ny titel')
+        self.assertEqual(booking.description, 'Ny beskrivning')
+        self.assertEqual(booking.start, new_start)
+        # The account the booking belongs to is not part of the form, so the
+        # edit cannot hand it to somebody else.
+        self.assertEqual(booking.author, self.member)
+
+    def test_a_member_cannot_edit_somebody_else_s_booking(self):
+        booking = self.member_booking(author=make_member('annan-medlem'))
+
+        response = self.client.get(reverse('booking:edit_my_booking', args=[booking.pk]))
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_a_member_cannot_edit_a_finished_booking(self):
+        past = timezone.now() - datetime.timedelta(days=2)
+        booking = self.member_booking(start=past)
+
+        response = self.client.get(reverse('booking:edit_my_booking', args=[booking.pk]))
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_the_edit_page_requires_a_signed_in_member(self):
+        booking = self.member_booking()
+        self.client.logout()
+
+        response = self.client.get(reverse('booking:edit_my_booking', args=[booking.pk]))
+
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(reverse(settings.LOGIN_URL), response['Location'])
+
+    def test_a_member_edit_without_a_title_changes_nothing(self):
+        booking = self.member_booking()
+        new_start = booking.start + datetime.timedelta(hours=1)
+
+        response = self.client.post(
+            reverse('booking:edit_my_booking', args=[booking.pk]),
+            {
+                'title': '',
+                'start': local_input_time(new_start),
+                'end': local_input_time(new_start + datetime.timedelta(hours=2)),
+                'description': 'Ska inte sparas',
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('title', response.context['edit_form'].errors)
+        booking.refresh_from_db()
+        self.assertEqual(booking.title, 'Gammal titel')
+        self.assertNotEqual(booking.start, new_start)
+        self.assertEqual(booking.description, '')
+
+    def test_a_member_edit_that_overlaps_another_booking_is_refused(self):
+        booking = self.member_booking()
+        other_start = booking.start + datetime.timedelta(hours=3)
+        make_booking(self.room, other_start, other_start + datetime.timedelta(hours=1), booker_name='Någon annan')
+
+        response = self.client.post(
+            reverse('booking:edit_my_booking', args=[booking.pk]),
+            {
+                'title': 'Ny titel',
+                'start': local_input_time(other_start),
+                'end': local_input_time(other_start + datetime.timedelta(hours=1)),
+                'description': '',
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('start', response.context['edit_form'].errors)
+        booking.refresh_from_db()
+        self.assertEqual(booking.title, 'Gammal titel')
+        self.assertNotEqual(booking.start, other_start)
+
 
 class BookingAdminPermissionTests(TestCase):
     """Staff status is group-based; per-model permissions do the gating."""
@@ -1405,6 +1594,7 @@ class BookingAdminPermissionTests(TestCase):
                 'room': self.room.pk,
                 'booker_name': 'Admin bokare',
                 'booker_email': '',
+                'title': 'Skapad i admin',
                 'description': 'Skapad i admin',
                 'start_0': start.strftime('%Y-%m-%d'),
                 'start_1': start.strftime('%H:%M:%S'),
@@ -1423,6 +1613,7 @@ class BookingAdminPermissionTests(TestCase):
                 'room': self.room.pk,
                 'booker_name': 'Admin bokare',
                 'booker_email': '',
+                'title': 'Ändrad i admin',
                 'description': 'Ändrad i admin',
                 'start_0': start.strftime('%Y-%m-%d'),
                 'start_1': start.strftime('%H:%M:%S'),
@@ -1434,12 +1625,43 @@ class BookingAdminPermissionTests(TestCase):
 
         self.assertEqual(response.status_code, 302)
         created.refresh_from_db()
+        self.assertEqual(created.title, 'Ändrad i admin')
         self.assertEqual(created.description, 'Ändrad i admin')
 
         response = self.client.post(reverse('admin:booking_booking_delete', args=[created.pk]), {'post': 'yes'})
 
         self.assertEqual(response.status_code, 302)
         self.assertFalse(Booking.objects.filter(pk=created.pk).exists())
+
+    def test_a_booking_added_in_the_admin_needs_a_title(self):
+        self._login(
+            make_staff_member(
+                'booking-title-editor',
+                settings.STAFF_GROUPS[0],
+                (('booking', 'add_booking'),),
+            )
+        )
+        start = self.start + datetime.timedelta(days=1)
+
+        response = self.client.post(
+            reverse('admin:booking_booking_add'),
+            {
+                'room': self.room.pk,
+                'booker_name': 'Admin bokare',
+                'booker_email': '',
+                'title': '',
+                'description': 'Utan titel',
+                'start_0': start.strftime('%Y-%m-%d'),
+                'start_1': start.strftime('%H:%M:%S'),
+                'end_0': (start + datetime.timedelta(hours=1)).strftime('%Y-%m-%d'),
+                'end_1': (start + datetime.timedelta(hours=1)).strftime('%H:%M:%S'),
+                '_save': 'Spara',
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Ange en kort titel för bokningen.')
+        self.assertEqual(Booking.objects.count(), 1)
 
 
 class BookingAdminSurfaceTests(TestCase):
@@ -1481,6 +1703,17 @@ class BookingAdminSurfaceTests(TestCase):
         body = self.client.get(reverse('admin:booking_booking_changelist')).content.decode()
 
         self.assertLess(body.index(self._time_label(newest)), body.index(self._time_label(oldest)))
+
+    def test_the_title_is_a_column_and_is_searchable(self):
+        booking = self._booking(title='Årsmöte')
+        changelist = reverse('admin:booking_booking_changelist')
+
+        self.assertContains(self.client.get(changelist), 'Årsmöte')
+        self.assertContains(self.client.get(changelist, {'q': 'Årsmöte'}), self._time_label(booking))
+        self.assertNotContains(
+            self.client.get(changelist, {'q': 'Inget annat'}),
+            self._time_label(booking),
+        )
 
     def _origin_filtered(self, query):
         """Apply the origin filter the way the changelist does.
@@ -1557,6 +1790,7 @@ class BookingAdminSurfaceTests(TestCase):
             f'{prefix}-0-start_1': local_start.strftime('%H:%M:%S'),
             f'{prefix}-0-end_0': local_end.strftime('%Y-%m-%d'),
             f'{prefix}-0-end_1': local_end.strftime('%H:%M:%S'),
+            f'{prefix}-0-title': booking.title,
             f'{prefix}-0-booker_name': booking.booker_name,
             f'{prefix}-0-description': booking.description,
             f'{prefix}-0-author': '',
@@ -1873,7 +2107,7 @@ class RoomCodeAdminTests(PinnedNowMixin, TestCase):
         second_start = start + datetime.timedelta(hours=1)
         second_end = start + datetime.timedelta(hours=3)
         first = make_booking(self.office, start, first_end, booker_name='Första')
-        make_booking(self.office, second_start, second_end, booker_name='Andra')
+        second = make_booking(self.office, second_start, second_end, booker_name='Andra')
         url = reverse('admin:booking_room_change', args=[self.office.pk])
         data = {
             'name': self.office.name,
@@ -1890,6 +2124,7 @@ class RoomCodeAdminTests(PinnedNowMixin, TestCase):
             'bookings-0-end_0': first_end.strftime('%Y-%m-%d'),
             'bookings-0-end_1': first_end.strftime('%H:%M:%S'),
             'bookings-0-booker_name': 'Första',
+            'bookings-1-id': str(second.pk),
             'bookings-1-room': str(self.office.pk),
             'bookings-1-start_0': start.strftime('%Y-%m-%d'),
             'bookings-1-start_1': second_start.strftime('%H:%M:%S'),
@@ -1928,6 +2163,7 @@ class RoomCodeAdminTests(PinnedNowMixin, TestCase):
             'bookings-INITIAL_FORMS': '0',
             'bookings-MIN_NUM_FORMS': '0',
             'bookings-MAX_NUM_FORMS': '1000',
+            'bookings-0-title': 'Nattlig',
             'bookings-0-start_0': start.strftime('%Y-%m-%d'),
             'bookings-0-start_1': '21:00:00',
             'bookings-0-end_0': (start + datetime.timedelta(days=1)).strftime('%Y-%m-%d'),
@@ -1959,12 +2195,14 @@ class RoomCodeAdminTests(PinnedNowMixin, TestCase):
             'bookings-INITIAL_FORMS': '0',
             'bookings-MIN_NUM_FORMS': '0',
             'bookings-MAX_NUM_FORMS': '1000',
+            'bookings-0-title': 'Första',
             'bookings-0-room': str(self.office.pk),
             'bookings-0-start_0': start.strftime('%Y-%m-%d'),
             'bookings-0-start_1': '18:00:00',
             'bookings-0-end_0': start.strftime('%Y-%m-%d'),
             'bookings-0-end_1': '20:00:00',
             'bookings-0-booker_name': 'Första',
+            'bookings-1-title': 'Andra',
             'bookings-1-room': str(self.office.pk),
             'bookings-1-start_0': start.strftime('%Y-%m-%d'),
             'bookings-1-start_1': '19:00:00',
@@ -1996,12 +2234,14 @@ class RoomCodeAdminTests(PinnedNowMixin, TestCase):
             'bookings-INITIAL_FORMS': '0',
             'bookings-MIN_NUM_FORMS': '0',
             'bookings-MAX_NUM_FORMS': '1000',
+            'bookings-0-title': 'Första',
             'bookings-0-room': str(self.office.pk),
             'bookings-0-start_0': start.strftime('%Y-%m-%d'),
             'bookings-0-start_1': '18:00:00',
             'bookings-0-end_0': start.strftime('%Y-%m-%d'),
             'bookings-0-end_1': '20:00:00',
             'bookings-0-booker_name': 'Första',
+            'bookings-1-title': 'Andra',
             'bookings-1-room': str(self.office.pk),
             'bookings-1-start_0': start.strftime('%Y-%m-%d'),
             'bookings-1-start_1': '20:00:00',
@@ -2094,6 +2334,7 @@ class BookingEmailTests(PinnedNowMixin, TestCase):
         return {
             'start': local_input_time(start),
             'end': local_input_time(end),
+            'title': 'E-posttest',
             'description': 'E-posttest',
             'booker_name': 'Extern Besökare',
             'booker_email': 'besokare@example.com',
@@ -2140,6 +2381,7 @@ class BookingEmailTests(PinnedNowMixin, TestCase):
         self.client.force_login(member, backend='members.backends.AuthBackend')
         start = self.now + datetime.timedelta(days=1)
         payload = {
+            'title': 'Medlemsbokning',
             'start': local_input_time(start),
             'end': local_input_time(start + datetime.timedelta(hours=2)),
             'description': 'Medlemsbokning',
@@ -2175,6 +2417,7 @@ class BookingEmailTests(PinnedNowMixin, TestCase):
                     {
                         'start': local_input_time(start),
                         'end': local_input_time(start + datetime.timedelta(hours=2)),
+                        'title': 'Ingen adress',
                         'description': 'Ingen adress',
                     },
                 )
@@ -2322,19 +2565,132 @@ class BookingCancellationTests(PinnedNowMixin, TestCase):
         self.assertIsNone(access.booking_with_cancel_code(access.cancel_code(booking)))
 
     def test_the_page_shows_the_booking_and_cancels_only_on_confirmation(self):
-        booking = self.outsider_booking()
+        booking = self.outsider_booking(title='Ska synas')
         code = access.cancel_code(booking)
 
         shown = self.client.get(self.cancel_url, {'code': code})
 
         self.assertEqual(shown.status_code, 200)
         self.assertContains(shown, self.room.name)
+        # The code page has to name the booking the code belongs to, and the
+        # title is what tells two bookings in the same room apart.
+        self.assertContains(shown, 'Ska synas')
         self.assertTrue(Booking.objects.filter(pk=booking.pk).exists())
 
         cancelled = self.client.post(self.cancel_url, {'code': code, 'confirm': '1'})
 
         self.assertRedirects(cancelled, reverse('booking:index'))
         self.assertFalse(Booking.objects.filter(pk=booking.pk).exists())
+
+    def edit_payload(self, booking, **overrides):
+        data = {
+            'code': access.cancel_code(booking),
+            'save': '1',
+            'title': booking.title or 'Ny titel',
+            'start': local_input_time(booking.start),
+            'end': local_input_time(booking.end),
+            'description': booking.description,
+        }
+        data.update(overrides)
+        return data
+
+    def test_the_code_opens_an_edit_form_and_changes_nothing_by_itself(self):
+        # Opening the form is a POST so the code never has to be put in a URL,
+        # and it is still only a read: the save is a second, separate step.
+        booking = self.outsider_booking()
+
+        response = self.client.post(self.cancel_url, {'code': access.cancel_code(booking), 'edit': '1'})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('edit_form', response.context)
+        self.assertContains(response, 'name="title"')
+        booking.refresh_from_db()
+        self.assertEqual(booking.title, '')
+        self.assertEqual(booking.start, self.start)
+
+    def test_the_code_can_change_the_title_and_the_time(self):
+        booking = self.outsider_booking()
+        new_start = self.start + datetime.timedelta(hours=1)
+        new_end = self.end + datetime.timedelta(hours=1)
+
+        response = self.client.post(
+            self.cancel_url,
+            self.edit_payload(
+                booking,
+                title='Rättad titel',
+                start=local_input_time(new_start),
+                end=local_input_time(new_end),
+                description='Rättad beskrivning',
+            ),
+        )
+
+        self.assertRedirects(response, reverse('booking:index'))
+        booking.refresh_from_db()
+        self.assertEqual(booking.title, 'Rättad titel')
+        self.assertEqual(booking.start, new_start)
+        self.assertEqual(booking.end, new_end)
+        self.assertEqual(booking.description, 'Rättad beskrivning')
+
+    def test_an_edit_without_a_title_changes_nothing(self):
+        booking = self.outsider_booking()
+        new_start = self.start + datetime.timedelta(hours=1)
+
+        response = self.client.post(
+            self.cancel_url,
+            self.edit_payload(
+                booking,
+                title='',
+                start=local_input_time(new_start),
+                end=local_input_time(new_start + datetime.timedelta(hours=2)),
+                description='Ska inte sparas',
+            ),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('title', response.context['edit_form'].errors)
+        booking.refresh_from_db()
+        # A rejected submission is not partly applied: the valid fields in it
+        # must not have been saved while the title was refused.
+        self.assertEqual(booking.title, '')
+        self.assertEqual(booking.start, self.start)
+        self.assertEqual(booking.end, self.end)
+        self.assertEqual(booking.description, '')
+
+    def test_an_edit_that_overlaps_another_booking_is_refused(self):
+        booking = self.outsider_booking()
+        make_booking(
+            self.room,
+            self.start + datetime.timedelta(hours=3),
+            self.start + datetime.timedelta(hours=4),
+            booker_name='Någon annan',
+        )
+
+        response = self.client.post(
+            self.cancel_url,
+            self.edit_payload(
+                booking,
+                start=local_input_time(self.start + datetime.timedelta(hours=3)),
+                end=local_input_time(self.start + datetime.timedelta(hours=4)),
+            ),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('start', response.context['edit_form'].errors)
+        booking.refresh_from_db()
+        self.assertEqual(booking.start, self.start)
+
+    def test_a_wrong_code_cannot_edit(self):
+        booking = self.outsider_booking()
+
+        response = self.client.post(
+            self.cancel_url,
+            self.edit_payload(booking, code='deadbeefcafe', title='Kapad titel'),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Hittade ingen kommande bokning med den koden.')
+        booking.refresh_from_db()
+        self.assertEqual(booking.title, '')
 
     def test_a_wrong_code_shows_an_error_and_removes_nothing(self):
         booking = self.outsider_booking()

@@ -58,6 +58,15 @@ class BookingCodeForm(forms.Form):
 class BookingForm(forms.ModelForm):
     start = local_datetime_field(_('Starttid'))
     end = local_datetime_field(_('Sluttid'))
+    # Declared rather than taken from the model: the model keeps ``blank=True``
+    # so a booking made before the field existed still saves, while every new
+    # booking has to say what it is about.
+    title = forms.CharField(
+        label=_('Titel'),
+        max_length=120,
+        error_messages={'required': _('Ange en kort titel för bokningen.')},
+        help_text=_('Visas offentligt på bokningssidorna. Skriv kort vad bokningen gäller.'),
+    )
     description = forms.CharField(
         label=_('Beskrivning'),
         max_length=400,
@@ -68,7 +77,7 @@ class BookingForm(forms.ModelForm):
 
     class Meta:
         model = Booking
-        fields = ('start', 'end', 'description')
+        fields = ('title', 'start', 'end', 'description')
 
     def __init__(self, *args, room=None, author=None, **kwargs):
         super().__init__(*args, **kwargs)
@@ -76,20 +85,24 @@ class BookingForm(forms.ModelForm):
             self.room = room
         if author is not None:
             self.author = author
-        # The model refuses a new booking that starts before its own grace
-        # boundary, so the input offers exactly the same range: deriving the
-        # boundary from the model's constant keeps the picker from refusing a
-        # start the server would have accepted. Truncated to the minute, the
-        # widget's precision, which leaves the picker a fraction more permissive
-        # than the server rather than less; the model check stays the authority.
-        earliest = timezone.localtime(access.now_at() - BOOKING_PAST_GRACE).replace(second=0, microsecond=0)
-        for name in ('start', 'end'):
-            self.fields[name].widget.attrs['min'] = earliest.strftime(BOOKING_DATETIME_FORMAT)
-        # ModelForm._post_clean() runs the model's clean(), and the overlap and
-        # external-name rules only work once the room and author are set on the
-        # instance. Assigning them here (before validation) is what makes those
-        # rules run at all; a new instance never carries them in the form data.
         if self.instance.pk is None:
+            # The model refuses a new booking that starts before its own grace
+            # boundary, so the input offers exactly the same range: deriving the
+            # boundary from the model's constant keeps the picker from refusing a
+            # start the server would have accepted. Truncated to the minute, the
+            # widget's precision, which leaves the picker a fraction more
+            # permissive than the server rather than less; the model check stays
+            # the authority. An edit carries no floor: a booking that has already
+            # started is still the booker's to correct, and a floor of "now"
+            # would refuse the start it already has.
+            earliest = timezone.localtime(access.now_at() - BOOKING_PAST_GRACE).replace(second=0, microsecond=0)
+            for name in ('start', 'end'):
+                self.fields[name].widget.attrs['min'] = earliest.strftime(BOOKING_DATETIME_FORMAT)
+            # ModelForm._post_clean() runs the model's clean(), and the overlap
+            # and external-name rules only work once the room and author are set
+            # on the instance. Assigning them here (before validation) is what
+            # makes those rules run at all; a new instance never carries them in
+            # the form data.
             self.instance.room = room
             self.instance.author = author
 
@@ -117,8 +130,8 @@ class AnonymousBookingForm(BookingForm):
     )
 
     class Meta(BookingForm.Meta):
-        # mypy narrows the inherited Meta.fields to the three base names, so the
-        # two extra fields need an explicit ignore.
+        # mypy narrows the inherited Meta.fields to the base names, so the two
+        # extra fields need an explicit ignore.
         fields = (*BookingForm.Meta.fields, 'booker_name', 'booker_email')  # type: ignore[assignment]
 
 

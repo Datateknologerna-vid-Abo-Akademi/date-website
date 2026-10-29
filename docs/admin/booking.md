@@ -36,12 +36,13 @@ Open **Booking › Bokningar**. The list opens furthest away first, so the rows 
 
 - **Utrymme**: the room that was booked.
 - **Tid**: the start date and time, followed by the end time.
+- **Titel**: what the booking is about, shown to everyone who looks at the booking pages.
 - **Bokare**: the member who booked, or the name recorded for a booking made by someone without an account. A member is shown by their full name, and by the account name only when the profile has no name. The name is written down when the booking is made, so it stays readable here even if that member later deletes the account.
 - **Utan konto**: ticked when there is no website account behind the booking. It is also ticked for a booking made by a member who has since deleted the account, so read it together with **Bokare** rather than on its own.
 
-On the public pages each booking shows as a weekday and a date (`mån 4.10`), with the year added when the booking falls in another year than the current one, so a short badge can never be read as the wrong year.
+On the public pages each booking shows as a weekday and a date (`mån 4.10`), with the year added when the booking falls in another year than the current one, so a short badge can never be read as the wrong year. The row also shows the booking's **Titel**, which is the part of the booking written for those pages.
 
-Filters are available by booking origin, by room and by start date, the date drill-down at the top steps through the calendar, and the search box looks in the booker's name, the booker's email and the booking description. The origin filter has three choices:
+Filters are available by booking origin, by room and by start date, the date drill-down at the top steps through the calendar, and the search box looks in the booking title, the booker's name, the booker's email and the booking description. The origin filter has three choices:
 
 - **Bokning av en medlem**: the booking is attached to a website account.
 - **Bokning utan konto, via webbformuläret**: the booking came from the public form. An address is always recorded there, which is what separates it from the next choice.
@@ -49,25 +50,27 @@ Filters are available by booking origin, by room and by start date, the date dri
 
 The last two choices are read from the account and the address, not from a stored marker, so a booking the board entered by hand with no account and an address lands under **Bokning utan konto, via webbformuläret** even though nobody filled in the public form. Treat the filter as a way to narrow the list, not as proof of where a booking came from.
 
-Open a booking to change it. All fields can be edited: **Utrymme**, **Bokare** (the member account, optional), **Namn**, **E-post**, **Starttid**, **Sluttid** and **Beskrivning**. The creation timestamp (**Skapad**) is read-only.
+Open a booking to change it. All fields can be edited: **Utrymme**, **Bokare** (the member account, optional), **Namn**, **E-post**, **Starttid**, **Sluttid**, **Titel** and **Beskrivning**. The creation timestamp (**Skapad**) is read-only. **Titel** is required for a new booking; a booking made before the field existed may keep it empty, so correcting an old row does not force you to invent one.
 
 - **To move a booking**, change **Starttid** or **Sluttid** and save.
+- **To change what the booking is about**, edit **Titel**. That is the field the public pages show; **Beskrivning** is not shown in those lists.
 - **To cancel a booking**, delete it. Deletion cannot be undone, so check the row before confirming.
-- A booker can also cancel without you. A member does it on their own page, which the booking pages link to when they have something upcoming. Somebody without an account pastes the code from their confirmation email on the cancellation page.
+- A booker can also edit or cancel without you. A member does it on their own page, which the booking pages link to when they have something upcoming: each row there has an **Ändra** link and an **Avboka** button. Somebody without an account pastes the code from their confirmation email on the cancellation page.
+- The same cancellation page also edits the booking: the **Ändra bokningen** button opens a form for the title and the time, and saving with the same code keeps the booking and its code. The booker has to supply a title there even if the row predates the field. Nothing is emailed when a booking is edited or cancelled, so the board only sees it in this admin.
 - That cancellation page is not linked from anywhere on the site, on purpose: it is useless without a code, and the code only ever arrives by email. A booker who has lost the email has to come to you, and you can delete the booking from **Bokningar** instead.
 - The overlap rule is checked here too. Saving a booking that overlaps another booking in the same room is refused with "Utrymmet är redan bokat under denna tid.".
 - The end time must be later than the start time, otherwise the save is refused.
 - A new booking cannot start in the past: it is refused with "Starttiden kan inte vara i det förflutna.". A few minutes are allowed, because a visitor filling in the form by hand can be a moment late. A booking that already exists keeps whatever times it has, so you can still correct the description of one whose time is over.
 
-**Beskrivning** is where a booker says what the room is for. It is shown on the public form with a note that only the board sees it, and it is visible only here.
+**Titel** is what the booking is about, and it is public: the room list, the room page and the front-page block show it. **Beskrivning** is the longer note for the board. It is shown on the public form with a note that only the board sees it, it is not shown in the public lists, and the booker can read it again in the edit form the cancellation code opens.
 
 The room page carries a table of that room's **upcoming** bookings, soonest first, so a booking can be added or adjusted without leaving the room. Past bookings are not listed there, because a room collects them for years; use **Booking › Bokningar** for those, where the room filter and the date drill-down reach them.
 
 What is public and what is not:
 
-- Public: the room's name and description, and the booking's start and end times. The room list, the room page and the front-page block show nothing else.
-- Not public: the booking **description**, the **booker name** and the **booker email**. They are visible only in the admin.
-- The booker email is used for one thing: the confirmation message, which is sent when somebody books through the public form, whether they are a member or not, and which carries a calendar invite. A booking you create or edit here sends nothing, so tell the booker yourself if you make one for them. A booking with no address at all (a member whose profile has no email) also gets no message.
+- Public: the room's name and description, the booking's **Titel**, and the booking's start and end times. The room list, the room page and the front-page block show nothing else.
+- Not public: the booking **Beskrivning**, the **booker name** and the **booker email**. They are not shown on the public booking lists. The admin shows them, and the booker who holds the cancellation code sees the booking's own description in the edit form. Do not put anything confidential in **Titel**, because everyone can read it.
+- The booker email is used for one thing: the confirmation message, which is sent when somebody books through the public form, whether they are a member or not, and which carries a calendar invite. The message shows the title, and the calendar event is named after it when it is set, with the room name as the fallback. A booking you create or edit here sends nothing, so tell the booker yourself if you make one for them. A booking with no address at all (a member whose profile has no email) also gets no message.
 
 If the member account behind a booking is later deleted, the booking itself stays, and it keeps showing the name that was recorded when it was made.
 
