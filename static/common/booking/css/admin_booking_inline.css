@@ -2,75 +2,33 @@
  *
  * Both descriptions are single-line fields on the model, so the inline used to
  * show them as an 80 pixel input clipped to a few words. They now render as a
- * two-row textarea, and the table uses a fixed column layout so the
- * description gets a predictable share instead of whatever the widest widget
- * leaves over.
+ * two-row textarea that fills a description column with a real minimum width.
  *
- * Unfold's datetime widget puts a date and a time input side by side in a flex
- * row, and both default to their own minimum width. Without the min-width
- * reset below, the two datetime columns alone take most of the table and push
- * the description off-screen.
+ * The table deliberately keeps auto layout. Unfold's datetime widget holds a
+ * date input, a time input and icons side by side, and an author picker has its
+ * own minimum width. Forcing a column share squeezed those widgets until the
+ * date, the time and the picker clipped their content, which is worse than the
+ * horizontal scroll this table already had. The wrapper scrolls when the row is
+ * wider than the page, and every field keeps its natural size.
  *
  * Scoped to the inline groups so no other admin page is affected.
  */
-#bookings-group table,
-#closures-group table {
-  table-layout: fixed;
-  width: 100%;
-  min-width: 52rem;
-}
-
-#bookings-group table input,
-#bookings-group table textarea,
-#closures-group table input,
-#closures-group table textarea,
-#bookings-group .datetime div,
-#closures-group .datetime div {
-  min-width: 0;
-}
-
 #bookings-group .field-description textarea,
 #closures-group .field-description textarea {
   width: 100%;
 }
 
-#bookings-group .column-start,
-#closures-group .column-start {
-  width: 22%;
+#bookings-group td.field-description,
+#bookings-group th.column-description {
+  min-width: 20rem;
 }
 
-#bookings-group .column-end,
-#closures-group .column-end {
-  width: 22%;
+#closures-group td.field-description,
+#closures-group th.column-description {
+  min-width: 22rem;
 }
 
-#bookings-group .column-author {
-  width: 12%;
-}
-
-#bookings-group .column-booker_name {
-  width: 8%;
-}
-
-#bookings-group .column-description {
-  width: 31%;
-}
-
-#closures-group .column-description {
-  width: 53%;
-}
-
-#bookings-group th:last-child,
-#closures-group th:last-child {
-  width: 5%;
-}
-
-/* The date widget keeps its calendar icon inside the input, so trim the
-   horizontal padding to leave room for the value itself. */
-#bookings-group .field-start input,
-#bookings-group .field-end input,
-#closures-group .field-start input,
-#closures-group .field-end input {
-  padding-left: 0.5rem;
-  padding-right: 0.5rem;
+#bookings-group td.field-booker_name,
+#bookings-group th.column-booker_name {
+  min-width: 8rem;
 }
