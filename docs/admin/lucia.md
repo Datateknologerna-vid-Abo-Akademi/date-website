@@ -18,6 +18,8 @@ Showcase Lucia candidates, their bios, and the related poll links during the ann
    - **Poll URL** – link to the external poll (usually a Google Form or internal Polls view).
 3. Click **Save**. Published candidates appear automatically on `/lucia/` and `/lucia/<slug>/`.
 
+Only published candidates are listed. A hidden or future-dated entry answers 404 on its detail URL, so a link shared before the publish time stays dead until **Publiceras** passes. Check the spelling of a shared URL: a slug that does not exist also answers 404.
+
 ## Publishing Workflow Tips
 - Draft entries with **Publiceras** left empty until copy and images are approved.
 - Reuse the previous year’s entry by duplicating it (use the **Save as new** button) and then updating text/URLs.
