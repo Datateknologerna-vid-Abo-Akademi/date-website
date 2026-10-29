@@ -81,7 +81,7 @@
             </div>
           {% endfor %}
           <div id="main" class="content ball-content main">
-            <h1 class="header">{{ event.title }}</h1>
+            <h1 class="header{% if event.title_shine %} title-shine{% endif %}">{{ event.title }}</h1>
             <h4>{{ event.event_date_start|date:"l d b Y H:i" }}</h4>
             <p>{{ event.content | safe }}</p>
           </div>

@@ -63,6 +63,14 @@ class BackgroundImageLayout(models.TextChoices):
 
 class Event(models.Model):  # type: ignore[django-manager-missing]
     title = models.CharField(_('Titel'), max_length=255, blank=False)
+    title_shine = models.BooleanField(
+        _('Glanseffekt på titeln'),
+        default=False,
+        # A database default keeps inserts from the previous release working
+        # while blue-green deploys share the database.
+        db_default=False,
+        help_text=_('Visar titeln med glanseffekt på startsidan, i evenemangslistan och på evenemangssidan.'),
+    )
     content = models.TextField(_('Innehåll'), blank=True)
     template = models.CharField(
         _('Mall'),

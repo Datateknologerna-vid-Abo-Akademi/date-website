@@ -17,7 +17,7 @@
         {% for news_item in latest_news_items %}
           <div class="content overflow-auto">
             <a href=" {% if news_item.category %} {% url 'news:detail' news_item.category.slug news_item.slug %} {% else %} {% url 'news:detail' news_item.slug %} {% endif %} ">
-              <h2>{{ news_item.title }}</h2>
+              <h2{% if news_item.title_shine %} class="title-shine"{% endif %}>{{ news_item.title }}</h2>
             </a>
             <h4 class="help-text">{{ news_item.author }}, {{ news_item.published_time }}</h4>
             <div>{{ news_item.content | safe | truncatewords_html:"50" }}</div>

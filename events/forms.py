@@ -97,6 +97,7 @@ class EventCreationForm(UnfoldFormMixin, forms.ModelForm):
         model = Event
         temp_fields = (
             'title',
+            'title_shine',
             'event_date_start',
             'event_date_end',
             'content',
@@ -202,6 +203,7 @@ class EventEditForm(UnfoldFormMixin, forms.ModelForm):
         model = Event
         temp_fields = (
             'title',
+            'title_shine',
             'event_date_start',
             'event_date_end',
             'content',

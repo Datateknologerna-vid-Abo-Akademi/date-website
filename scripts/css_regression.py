@@ -274,6 +274,7 @@ STYLE_PROPERTIES: tuple[str, ...] = (
     "background-position",
     "background-size",
     "background-repeat",
+    "background-clip",
     "mask-image",
     "mask-position",
     "mask-size",

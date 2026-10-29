@@ -152,19 +152,11 @@
 
 
 div.news-content a{
-    color: var(--linkColorDark);
+    color: var(--link-gold-on-light);
 }
 
 div.news-content a:hover{
-    color: var(--linkColorDarkHover);
-}
-
-.more-news{
-    color: var(--linkColorDark);
-}
-
-.more-news:hover{
-    color: var(--linkColorDarkHover);
+    color: var(--link-gold-on-light-hover);
 }
 
 
@@ -226,18 +218,20 @@ div.news-content a:hover{
   }
   
   
+/* The cards are white here, so their text takes the deep gold; the bright gold
+   stays on the border as an accent. */
 .event-card a{
-    color: var(--linkColorDark);
+    color: var(--link-gold-on-light);
     border-top: 2px solid var(--linkColorDark);
   }
   
 .event-card a:active{
-    color: var(--linkColorDark);
+    color: var(--link-gold-on-light);
   }
   
 .event-card a:hover{
     border-top: 2px solid var(--linkColorDarkHover);
-    color: var(--linkColorDarkHover);
+    color: var(--link-gold-on-light-hover);
   }
   
 
@@ -274,13 +268,6 @@ div.news-content a:hover{
 }
 
 
-.more-events-button{
-    color: var(--linkColorDark)
-}
-
-.more-events-button:hover{
-    color: var(--linkColorDarkHover);
-}
 /*Events end*/
 
 /*Calendar*/
@@ -290,7 +277,7 @@ div.news-content a:hover{
 
 
 div.calendar-container a {
-    color: var(--linkColorDark);
+    color: var(--link-gold-on-light);
 }
 
 
@@ -318,21 +305,44 @@ div.calendar-container a {
     color: white !important;
   /* Override vanilla calendar default
    * Dont use this class for anything else*/
-  background-color: var(--linkColorDark) !important;
+  background-color: var(--link-gold-on-light) !important;
 }
 
 .calendar-eventday:hover {
-    background-color: var(--linkColorDarkHover) !important;
+    background-color: var(--link-gold-on-light-hover) !important;
+}
+
+/* A day with a title_shine event: a metallic gold gradient, and hovering or
+   focusing it sweeps the highlight across. The gradient is a background image, so
+   it paints over the background colour above without another !important. It uses
+   the deep --gold-shine rather than the title gradient: the white day number sits
+   on every part of the sweep, and only the deep stops keep it readable. */
+.calendar-eventday--shine {
+    background-image: var(--gold-shine);
+    background-size: 250% 100%;
+    background-position: 100% 0;
+    transition: background-position 0.6s ease;
+}
+
+.calendar-eventday--shine:hover,
+.calendar-eventday--shine:focus-visible {
+    background-position: 0 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .calendar-eventday--shine {
+        transition: none;
+    }
 }
 
 .calendar-eventday-popup {
   /* Override vanilla calendar default
    * Dont use this class for anything else*/
-  color: var(--linkColorDark);
+  color: var(--link-gold-on-light);
 }
 
 .calendar-eventday-popup:hover {
-    color: var(--linkColorDarkHover);
+    color: var(--link-gold-on-light-hover);
 }
 
 /*Calendar end*/
@@ -345,11 +355,11 @@ div.calendar-container a {
 }
 
 .extra-container a {
-    color: var(--linkColorDark);
+    color: var(--link-gold-on-light);
 }
 
 .extra-container a:hover {
-    color: var(--linkColorDarkHover);
+    color: var(--link-gold-on-light-hover);
 }
 
 /*extras end*/
@@ -363,15 +373,13 @@ div.calendar-container a {
     margin-top: 20px;
 }
 
+/* Colour and transition come from the gold shine block at the end of the file. */
 .logo-container a {
-    color: var(--linkColorDark);
     margin-top: 20px;
     display: inline-block;
-    transition: transform 0.2s, opacity 0.2s, color 0.2s;
 }
 
 .logo-container a:hover {
-    color: var(--linkColorDarkHover);
     transform: scale(1.03);
     opacity: 0.75;
 }
@@ -443,4 +451,45 @@ div.calendar-container a {
 
 .heading-link a:hover{
     color: var(--textColorMedium)
+}
+/* Gold shine on the homepage links that sit on the light news-events panel. The
+   news titles stay plain dark text unless the editor ticks title_shine. */
+.more-news,
+.more-events-button,
+.logo-container a {
+    background-image: var(--gold-shine);
+    background-size: 250% 100%;
+    background-position: 100% 0;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    transition: background-position 0.6s ease, transform 0.2s, opacity 0.2s;
+}
+
+.more-news:hover,
+.more-events-button:hover,
+.logo-container a:hover {
+    background-position: 0 0;
+    color: transparent;
+}
+
+/* Titles the editor marked with title_shine. The base .title-shine rule in
+   core/css/base.css uses the on-dark gradient; the news column and the event
+   cards are white here, so their titles take the deep gradient with a bright
+   band that only shows mid-sweep. */
+div.news-content .title-shine,
+.events-container .event-card .title-shine {
+    background-image: var(--gold-shine-title-on-light);
+}
+
+div.news-content:hover .title-shine {
+    background-position: 0 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .more-news,
+    .more-events-button,
+    .logo-container a {
+        transition: none;
+    }
 }

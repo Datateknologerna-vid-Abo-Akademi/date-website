@@ -25,7 +25,7 @@
                         {% block icon_calendar %}<i class="fas fa-calendar-check"></i>{% endblock %} {{ ev.event_date_start|date:"D" }}
                         {% block icon_clock %}<i class="far fa-clock"></i>{% endblock %} {{ ev.event_date_start|date:"H:i" }}
                       </small>
-                      <h6 class="card-title text-uppercase mt-0">
+                      <h6 class="card-title text-uppercase mt-0{% if ev.title_shine %} title-shine{% endif %}">
                         <strong>{{ ev.title }}</strong>
                       </h6>
                     </div>

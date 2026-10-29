@@ -3864,3 +3864,15 @@ msgstr "Välj ett annat namn."
 #: templates/common/date/lunch.html:5 templates/common/date/lunch.html:9
 msgid "Lunch"
 msgstr "Lunch"
+
+#: events/models.py news/models.py
+msgid "Glanseffekt på titeln"
+msgstr "Glanseffekt på titeln"
+
+#: news/models.py
+msgid "Visar titeln med glanseffekt på startsidan, i nyhetslistan och på nyhetssidan."
+msgstr "Visar titeln med glanseffekt på startsidan, i nyhetslistan och på nyhetssidan."
+
+#: events/models.py
+msgid "Visar titeln med glanseffekt på startsidan, i evenemangslistan och på evenemangssidan."
+msgstr "Visar titeln med glanseffekt på startsidan, i evenemangslistan och på evenemangssidan."

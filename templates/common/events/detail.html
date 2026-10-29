@@ -39,7 +39,7 @@
                  aria-hidden="true">
           {% endif %}
           <div class="content">
-            <h2 class="header">{{ event.title }}</h2>
+            <h2 class="header{% if event.title_shine %} title-shine{% endif %}">{{ event.title }}</h2>
             <h4 class="help-text">{{ event.event_date_start|date:"l d b Y H:i" }}</h4>
             <p>{{ event.content | safe }}</p>
           </div>

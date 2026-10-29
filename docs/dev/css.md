@@ -160,6 +160,34 @@ association that does not define it:
 --pub-card-bg: var(--pubCardBg, var(--secondaryColor));
 ```
 
+The same pattern lets one association re-colour a shared sheet without forking
+it: the shared rule reads a token with its old literal as the fallback, and only
+that association defines the token. The members forms keep the shared green
+for every association; `static/common/members/style.css` reads only
+`--form-consent-link` (fallback `blue`), which DaTe defines to make the signup
+terms link gold. The inline alumni links on the signup and update-verify pages
+read `--link-gold-on-light` with `--linkColorDark` as the fallback. DaTe's cookie banner uses `--cookie-accept-bg` and
+`--cookie-accept-fg` from `static/common/core/css/cookie-banner.css`. Other
+associations keep the green/blue fallbacks. DaTe also overrides Bootstrap's blue defaults (focus glow,
+`.btn-primary`, the active language item's background) and sets `accent-color` in
+`static/date/core/css/base.css`; Bootstrap loads after that sheet, so those
+rules carry an `html` prefix to outrank it. The focus glows derive from
+`--linkColorLight` with `color-mix()` instead of repeating its RGB value. The
+active language item's text stays white, because `header.css` pins
+`.dropdown-item` colour with `!important`.
+
+DaTe's gold shine (a gradient clipped to the text with `background-clip: text`)
+is opt-in per item. Editors tick `title_shine` on an event or news post, the
+templates add the `title-shine` class, and `static/date/core/css/base.css`
+styles it with the on-dark gradient. `static/date/date/css/homepage.css` swaps
+in `--gold-shine-title-on-light`, because the homepage news column and event
+cards are white: deep golds at rest, plus a bright middle band that is only on
+screen while the hover sweep runs (with `background-size: 250%`, the resting and
+hovered positions each show only an outer 40% of the gradient). Gold text on white uses the deep tokens (`--gold-shine`,
+`--link-gold-on-light`), whose stops all keep at least 5:1 contrast; the homepage
+keeps the bright `--linkColorDark` only for decorative borders. The homepage calendar marks a day holding a ticked event with `calendar-eventday--shine`: the deep `--gold-shine` gradient (so the white day number stays readable at every point of the sweep) and a sweep on hover or keyboard focus. The arsfest page and the event passcode page also honour `title_shine`; `.ball-content .title-shine` in `base.css` outranks the arsfest sheets' `.ball-content h1` colour. Other associations do not define `.title-shine`, and
+`TITLE_SHINE_ENABLED` keeps the checkbox out of their admin.
+
 A custom property consumed by a shared sheet must be defined either in every
 association that loads that sheet or at the use site in a `var()` fallback. An
 undefined `var()` with no fallback silently drops the declaration, so the rule

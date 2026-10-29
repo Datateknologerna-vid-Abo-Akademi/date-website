@@ -60,8 +60,11 @@
                 return link.outerHTML;
             });
 
+            // A day with an event the editor ticked for the title shine gets an
+            // extra class, so association CSS can mark it in line with that shine.
+            const shine = dayEvents.some((event) => event.titleShine);
             events_json[dateKey] = {
-                modifier: "calendar-eventday",
+                modifier: shine ? "calendar-eventday calendar-eventday--shine" : "calendar-eventday",
                 html: links.join('<br>'),
                 events: dayEvents,
             };

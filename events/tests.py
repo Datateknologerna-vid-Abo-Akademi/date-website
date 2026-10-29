@@ -9,9 +9,11 @@ from unittest import skipUnless
 from unittest.mock import MagicMock, PropertyMock, patch
 
 import pillow_heif
+from django import forms
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth.models import Group, Permission
+from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
@@ -1681,6 +1683,88 @@ class EventRegistrationFormValidationTests(TestCase):
         attendee.avec_for = other_attendee
         with self.assertRaises(ValidationError):
             attendee.full_clean()
+
+
+class EventTitleShineTests(TestCase):
+    """The title_shine checkbox adds the title-shine class on the list and detail page."""
+
+    def setUp(self):
+        cache.clear()  # /events/ caches its list fragment for 60 seconds
+        self.admin_user = Member.objects.create_superuser(
+            username="shine-admin",
+            password="pwd",
+            email="shine@example.com",
+            membership_type=MembershipType.objects.get(pk=ORDINARY_MEMBER),
+        )
+        upcoming = timezone.now() + timezone.timedelta(days=1)
+        common = {
+            "author": self.admin_user,
+            "published_time": timezone.now() - timezone.timedelta(seconds=1),
+            "event_date_start": upcoming,
+            "event_date_end": upcoming,
+        }
+        self.shiny = Event.objects.create(title="Shiny", slug="shiny", title_shine=True, **common)
+        self.plain = Event.objects.create(title="Plain", slug="plain", **common)
+
+    def test_new_events_do_not_shine_by_default(self):
+        self.assertFalse(self.plain.title_shine)
+
+    def test_index_marks_only_ticked_events(self):
+        response = self.client.get(reverse("events:index"))
+
+        # One ticked event of two, so the class appears exactly once.
+        self.assertContains(response, "title-shine", count=1)
+
+    def test_detail_title_shines_when_ticked(self):
+        self.assertContains(self.client.get(self.shiny.get_absolute_url()), '<h2 class="header title-shine">')
+        self.assertContains(self.client.get(self.plain.get_absolute_url()), '<h2 class="header">')
+
+    @override_settings(TITLE_SHINE_ENABLED=True)
+    def test_admin_shows_the_checkbox_when_enabled(self):
+        self.client.force_login(self.admin_user)
+
+        self.assertContains(self.client.get(reverse("admin:events_event_add")), 'name="title_shine"')
+        self.assertContains(
+            self.client.get(reverse("admin:events_event_change", args=[self.plain.pk])), 'name="title_shine"'
+        )
+
+    @override_settings(TITLE_SHINE_ENABLED=False)
+    def test_admin_hides_the_checkbox_when_disabled(self):
+        self.client.force_login(self.admin_user)
+
+        self.assertNotContains(self.client.get(reverse("admin:events_event_add")), 'name="title_shine"')
+        self.assertNotContains(
+            self.client.get(reverse("admin:events_event_change", args=[self.plain.pk])), 'name="title_shine"'
+        )
+
+    @override_settings(TITLE_SHINE_ENABLED=False)
+    def test_disabled_admin_form_leaves_a_ticked_event_alone(self):
+        request = RequestFactory().get("/admin/events/event/change/")
+        request.user = self.admin_user
+        form_class = admin.site._registry[Event].get_form(request, self.shiny, change=True)
+        self.assertNotIn("title_shine", form_class.base_fields)
+
+        # Resubmit the change form exactly as rendered, the way an editor saving
+        # an unrelated edit would.
+        unbound = form_class(instance=self.shiny)
+        data = {}
+        for name, field in unbound.fields.items():
+            value = unbound[name].value()
+            if isinstance(field.widget, forms.CheckboxInput):
+                if value:
+                    data[name] = "on"
+            elif value is not None:
+                formatted = field.widget.format_value(field.prepare_value(value))
+                if isinstance(formatted, list):  # Select widgets format to a list
+                    formatted = formatted[0] if formatted else ""
+                data[name] = formatted or ""
+        form = form_class(data=data, instance=self.shiny)
+        form.user = self.admin_user
+        self.assertTrue(form.is_valid(), form.errors)
+        form.save(commit=False).save()
+
+        self.shiny.refresh_from_db()
+        self.assertTrue(self.shiny.title_shine)
 
 
 class TranslationAdminRegressionTests(TestCase):

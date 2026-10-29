@@ -36,7 +36,7 @@
                       </div>
                       <div class="col-8 col-sm-6">
                         <div class="d-flex flex-column">
-                          <h3 class="card-title text-uppercase mt-0">
+                          <h3 class="card-title text-uppercase mt-0{% if event.title_shine %} title-shine{% endif %}">
                             <strong>{{ event.title }}</strong>
                           </h3>
                           <div class="card-text">{{ event.content|safe|striptags|truncatewords_html:"20" }}</div>

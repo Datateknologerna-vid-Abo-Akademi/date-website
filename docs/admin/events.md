@@ -11,6 +11,7 @@ Create public event pages, manage registration windows, collect attendee data, a
 1. Click **Add event**.
 2. Fill in the form (key sections):
    - **Titel & Innehåll** – what visitors see on the event page (CKEditor field supports images, embeds, etc.).
+   - **Glanseffekt på titeln** – tick to show the title with the gold shine on the home page event cards, in the `/events/` list and on the event page. The event's day in the home page calendar also gets the gold shine. Keep it for the events you want to highlight; the checkbox only appears on sites whose styles support it (currently DaTe).
    - **Date & time fields** – start/end timestamps plus signup open/close windows. Use the datetime picker in `YYYY-MM-DD HH:MM` form; keep members/others windows realistic.
    - **Anmälning** – uncheck if no signup is needed (all signup-related fields will be ignored). On an Årsfest page this also removes the Anmälan tab and the sign-up panel, so the page works as a plain information page.
    - **Maximal antal deltagare** – `0` means unlimited.
