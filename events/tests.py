@@ -3423,17 +3423,18 @@ class EventBackgroundImageResizeTests(TestCase):
         with event.image.open("rb"), Image.open(event.image) as stored:
             return event, stored.size, stored.format
 
-    def test_large_landscape_photo_shrinks_to_fit_full_hd_keeping_its_shape(self):
+    def test_large_landscape_photo_shrinks_to_1920_on_its_long_edge_keeping_its_shape(self):
         _event, size, image_format = self._stored(self._upload((4032, 3024)))
 
-        self.assertEqual(size, (1440, 1080))
+        self.assertEqual(size, (1920, 1440))
         self.assertEqual(image_format, "JPEG")
 
-    def test_wide_and_portrait_pictures_fit_inside_the_box_without_cropping(self):
+    def test_wide_and_portrait_pictures_are_limited_by_their_long_edge_without_cropping(self):
         self.assertEqual(self._stored(self._upload((3840, 1080)), "wide")[1], (1920, 540))
-        self.assertEqual(self._stored(self._upload((1080, 1920)), "portrait")[1], (607, 1080))
+        # An A4 poster keeps enough height for the sides layout and the phone banner.
+        self.assertEqual(self._stored(self._upload((2480, 3508)), "poster")[1], (1357, 1920))
 
-    def test_picture_that_already_fits_is_stored_byte_for_byte(self):
+    def test_picture_without_metadata_that_already_fits_is_stored_byte_for_byte(self):
         upload = self._upload((800, 600))
         original = upload.read()
         upload.seek(0)
@@ -3450,7 +3451,28 @@ class EventBackgroundImageResizeTests(TestCase):
 
         _event, size, _format = self._stored(self._upload((2400, 1600), exif=exif))
 
-        self.assertEqual(size, (720, 1080))
+        self.assertEqual(size, (1280, 1920))
+
+    def test_location_and_other_metadata_are_removed_even_when_the_picture_already_fits(self):
+        # Reported by review: small pictures were stored byte for byte, GPS position included.
+        exif = Image.Exif()
+        exif.get_ifd(ExifTags.IFD.GPSInfo).update({1: "N", 2: (60.0, 27.0, 0.0), 3: "E", 4: (22.0, 16.0, 0.0)})
+        xmp = b'<x:xmpmeta xmlns:x="adobe:ns:meta/"><exif:GPSLatitude>60,27N</exif:GPSLatitude></x:xmpmeta>'
+        uploads = {
+            "small-gps": self._upload((800, 600), exif=exif),
+            "large-gps": self._upload((4000, 3000), exif=exif),
+            "small-xmp": self._raw_upload(Image.new("RGB", (800, 600), "navy"), "JPEG", "poster.jpg", xmp=xmp),
+        }
+
+        for slug, upload in uploads.items():
+            with self.subTest(slug=slug):
+                event, _size, image_format = self._stored(upload, slug)
+                with event.image.open("rb"):
+                    stored_bytes = event.image.read()
+                with Image.open(BytesIO(stored_bytes)) as stored:
+                    self.assertEqual(stored.getexif().get_ifd(ExifTags.IFD.GPSInfo), {})
+                self.assertNotIn(b"GPSLatitude", stored_bytes)
+                self.assertEqual(image_format, "JPEG")
 
     def test_transparent_png_stays_png(self):
         _event, size, image_format = self._stored(self._upload((3000, 1500), "PNG", "logo.png", mode="RGBA"))
@@ -3520,6 +3542,25 @@ class EventBackgroundImageResizeTests(TestCase):
         self.assertEqual(missing.background_image_color, "")
         self.assertIn("Skipped missing", err.getvalue())
 
+    def test_backfill_leaves_a_picture_replaced_while_it_was_read_alone(self):
+        event, _size, _format = self._stored(self._upload((300, 200), "PNG", "navy.png"))
+        Event.objects.filter(pk=event.pk).update(background_image_color="")
+        read_colour = Event.stored_background_picture_color
+
+        def editor_replaces_the_picture_meanwhile(instance, *args):
+            colour = read_colour(instance, *args)
+            Event.objects.filter(pk=instance.pk).update(image="events/new.png", background_image_color="#ff0000")
+            return colour
+
+        out, err = StringIO(), StringIO()
+        with patch.object(Event, "stored_background_picture_color", editor_replaces_the_picture_meanwhile):
+            call_command("backfill_event_background_colors", stdout=out, stderr=err)
+
+        event.refresh_from_db()
+        self.assertEqual(event.background_image_color, "#ff0000")  # the new picture's colour survives
+        self.assertIn("Skipped resize-event: picture changed while it was read", err.getvalue())
+        self.assertIn("Updated 0 event(s)", out.getvalue())
+
     def test_animated_and_unreadable_files_are_left_alone(self):
         frames = [Image.new("RGB", (2500, 2500), colour) for colour in ("red", "blue")]
         buffer = BytesIO()
@@ -3527,6 +3568,17 @@ class EventBackgroundImageResizeTests(TestCase):
 
         self.assertEqual(process_background_image(SimpleUploadedFile("anim.gif", buffer.getvalue())), (None, "#ff0000"))
         self.assertEqual(process_background_image(SimpleUploadedFile("notes.txt", b"not an image")), (None, ""))
+
+    def test_picture_libheif_cannot_decode_is_stored_as_uploaded_instead_of_failing_the_save(self):
+        # pillow_heif raises RuntimeError for decode failures it does not map to
+        # ValueError or EOFError; the admin returned a 500. Simulated, because libheif
+        # turns the corrupt files we could build into ValueError or decodes them anyway.
+        upload = self._upload((4000, 3000))
+        with patch("events.images.ImageOps.exif_transpose", side_effect=RuntimeError("Decoding error")):
+            event, size, _format = self._stored(upload)
+
+        self.assertEqual(size, (4000, 3000))
+        self.assertEqual(event.background_image_color, "")
 
     def _raw_upload(self, image, image_format, name, **options):
         buffer = BytesIO()
@@ -3539,7 +3591,7 @@ class EventBackgroundImageResizeTests(TestCase):
 
         event, size, image_format = self._stored(upload)
 
-        self.assertEqual((size[1], image_format), (1080, "PNG"))
+        self.assertEqual((size, image_format), ((1920, 1120), "PNG"))
         with event.image.open("rb"), Image.open(event.image) as stored:
             self.assertEqual(stored.getpixel((0, 0)), 117)  # 30000 / 256, not clipped to 255
         self.assertEqual(event.background_image_color, "#757575")
@@ -3563,7 +3615,7 @@ class EventBackgroundImageResizeTests(TestCase):
 
         event, size, image_format = self._stored(upload)
 
-        self.assertEqual((size, image_format), ((1800, 1080), "PNG"))
+        self.assertEqual((size, image_format), ((1920, 1152), "PNG"))
         self.assertTrue(event.image.name.endswith(".png"))
         with event.image.open("rb"), Image.open(event.image) as stored:
             self.assertEqual(stored.getpixel((0, 0))[3], 0)  # still transparent, not a black box
@@ -3587,7 +3639,7 @@ class EventBackgroundImageResizeTests(TestCase):
 
         event, size, image_format = self._stored(SimpleUploadedFile("iphone.heic", buffer.getvalue()))
 
-        self.assertEqual((size, image_format), ((1440, 1080), "JPEG"))
+        self.assertEqual((size, image_format), ((1920, 1440), "JPEG"))
         self.assertTrue(event.image.name.endswith(".jpg"))
 
     def test_phone_jpeg_with_an_embedded_second_picture_is_still_resized(self):
@@ -3600,7 +3652,7 @@ class EventBackgroundImageResizeTests(TestCase):
 
         event, size, image_format = self._stored(upload)
 
-        self.assertEqual((size, image_format), ((1440, 1080), "JPEG"))
+        self.assertEqual((size, image_format), ((1920, 1440), "JPEG"))
         self.assertRegex(event.background_image_color, r"^#0[01]0080$")  # navy, give or take JPEG noise
 
     def test_multi_page_tiff_is_stored_from_its_first_page(self):
@@ -3609,7 +3661,7 @@ class EventBackgroundImageResizeTests(TestCase):
 
         event, size, image_format = self._stored(upload)
 
-        self.assertEqual((size, image_format), ((1620, 1080), "JPEG"))
+        self.assertEqual((size, image_format), ((1920, 1280), "JPEG"))
         self.assertEqual(event.background_image_color, "#008080")
 
     def test_thirty_two_bit_greyscale_brighter_than_sixteen_bit_is_scaled_to_its_brightest_pixel(self):
@@ -3650,8 +3702,23 @@ class EventBackgroundImageResizeTests(TestCase):
 
         with patch("events.models.process_background_image") as process:
             event.title = "Renamed"
-            event.save(update_fields=["title"])
+            event.save(update_fields=iter(["title"]))
         process.assert_not_called()
+        event.refresh_from_db()
+        self.assertEqual(event.title, "Renamed")  # a generator is not used up before Django saves
+
+    def test_update_fields_takes_pictures_it_does_not_save_from_the_database(self):
+        # Reported by review: a pending `image` upload left out of update_fields was
+        # processed and decided the colour, although the database never received it.
+        event = Event.objects.create(title="Partial", slug="partial", author=self.author)
+        event.image = SimpleUploadedFile("red.png", self._png_bytes((300, 200), "red"))
+        event.s3_image = SimpleUploadedFile("navy.png", self._png_bytes((300, 200), "navy"))
+
+        event.save(update_fields=["s3_image"])
+
+        event.refresh_from_db()
+        self.assertFalse(event.image)
+        self.assertEqual(event.background_image_color, "#000080")  # the saved s3_image, not the red image
 
 
 class EventRoutingTests(TestCase):

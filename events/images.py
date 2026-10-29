@@ -3,12 +3,14 @@ import os
 from io import BytesIO
 
 from django.core.files.base import ContentFile
-from PIL import ExifTags, Image, ImageOps
+from PIL import Image, ImageOps
 
 logger = logging.getLogger('date')
 
-# Background pictures are stored no larger than a Full HD screen needs.
-BACKGROUND_MAX_SIZE = (1920, 1080)
+# Background pictures are stored no larger than this on their long edge: a Full HD
+# screen's width for landscape pictures, and enough height for portrait posters in
+# the sides layout and the phone banner.
+BACKGROUND_MAX_EDGE = 1920
 # Formats browsers display and that keep their format when resized. Other still
 # images (HEIC, TIFF, BMP and the like) become PNG when they have transparency and
 # JPEG otherwise.
@@ -19,7 +21,8 @@ KEPT_FORMATS = {'JPEG', 'PNG', 'WEBP'}
 # frame is the picture.
 ANIMATED_FORMATS = {'GIF', 'PNG', 'WEBP'}
 # Errors Pillow raises for files it cannot decode or modes it cannot process.
-UNREADABLE = (OSError, SyntaxError, ValueError, Image.DecompressionBombError)
+# pillow_heif raises RuntimeError when libheif fails to decode a picture.
+UNREADABLE = (OSError, SyntaxError, ValueError, RuntimeError, Image.DecompressionBombError)
 
 _SIXTEEN_BIT_MODES = {'I', 'I;16', 'I;16B', 'I;16L', 'I;16N'}
 _GREY_MODES = {'L', 'LA', *_SIXTEEN_BIT_MODES}
@@ -90,11 +93,12 @@ def _dominant_color_of(image):
 def process_background_image(uploaded):
     """Prepare an uploaded background picture for storage, reading the file once.
 
-    Returns ``(fitted, colour)``. ``fitted`` is a copy shrunk to fit within
-    ``BACKGROUND_MAX_SIZE`` (a 4032x3024 photo becomes 1440x1080: the shape is kept,
-    nothing is cropped or enlarged), or ``None`` when the upload should be stored as
-    it is: it already fits, is upright and is in a kept format, it is an animated
-    GIF, PNG or WebP (resizing would drop the animation), or Pillow cannot read it.
+    Returns ``(fitted, colour)``. ``fitted`` is a copy shrunk so its long edge is at
+    most ``BACKGROUND_MAX_EDGE`` (a 4032x3024 photo becomes 1920x1440: the shape is
+    kept, nothing is cropped or enlarged), or ``None`` when the upload should be
+    stored as it is: it already fits, has no EXIF or XMP metadata and is in a kept
+    format, it is an animated GIF, PNG or WebP (resizing would drop the animation),
+    or Pillow cannot read it.
     Other multi-frame files are processed from their first frame. ``colour`` is the
     picture's dominant colour, or ``''`` when the file cannot be read.
     """
@@ -103,17 +107,19 @@ def process_background_image(uploaded):
         uploaded.seek(0)
         with Image.open(uploaded) as image:
             source_format = image.format
-            orientation = image.getexif().get(ExifTags.Base.Orientation, 1)
-            fits = image.width <= BACKGROUND_MAX_SIZE[0] and image.height <= BACKGROUND_MAX_SIZE[1]
+            fits = max(image.size) <= BACKGROUND_MAX_EDGE
             animated = getattr(image, 'is_animated', False) and source_format in ANIMATED_FORMATS
-            if animated or (fits and orientation == 1 and source_format in KEPT_FORMATS):
+            # EXIF (orientation, GPS position, camera serial) and XMP only go away when
+            # the picture is re-encoded, so a picture that carries them is never kept as is.
+            has_metadata = bool(image.getexif()) or 'xmp' in image.info
+            if animated or (fits and not has_metadata and source_format in KEPT_FORMATS):
                 return None, _dominant_color_of(_normalise(image))
 
             # Phones store photos sideways plus an EXIF orientation tag that browsers
             # honour. Re-encoding drops the tag (and the rest of the EXIF data,
             # including any GPS position), so rotate the pixels first.
             fitted = _normalise(ImageOps.exif_transpose(image))
-            fitted.thumbnail(BACKGROUND_MAX_SIZE, Image.LANCZOS)
+            fitted.thumbnail((BACKGROUND_MAX_EDGE, BACKGROUND_MAX_EDGE), Image.LANCZOS)
 
             has_alpha = fitted.mode in {'RGBA', 'LA'}
             if source_format in KEPT_FORMATS:

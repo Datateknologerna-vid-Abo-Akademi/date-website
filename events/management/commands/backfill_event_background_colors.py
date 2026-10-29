@@ -26,10 +26,18 @@ class Command(BaseCommand):
                 failed += 1
                 self.stderr.write(f"Skipped {event.slug}: picture could not be read")
                 continue
-            self.stdout.write(f"{event.slug}: {color}")
             if not dry_run:
                 # update() rather than save(): no modified_time bump, no upload processing.
-                Event.objects.filter(pk=event.pk).update(background_image_color=color)
+                # Only while the row still holds this picture and no colour: an editor
+                # may have replaced it while it was being read, and save() then wrote
+                # the new picture's colour.
+                still_missing = Event.objects.filter(
+                    pk=event.pk, background_image_color='', **{field_name: getattr(event, field_name).name}
+                )
+                if not still_missing.update(background_image_color=color):
+                    self.stderr.write(f"Skipped {event.slug}: picture changed while it was read")
+                    continue
+            self.stdout.write(f"{event.slug}: {color}")
             updated += 1
 
         verb = "Would update" if dry_run else "Updated"

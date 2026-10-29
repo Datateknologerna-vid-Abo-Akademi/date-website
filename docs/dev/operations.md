@@ -266,7 +266,7 @@ python manage.py backfill_event_background_colors --dry-run
 python manage.py backfill_event_background_colors
 ```
 
-It reads each picture from storage (local or S3), skips events that already have a colour, and reports pictures it could not read, such as files that are missing from storage. It writes with `QuerySet.update()`, so it does not change `modified_time` and does not resize the stored picture. It is safe to run repeatedly.
+It reads each picture from storage (local or S3), skips events that already have a colour, and reports pictures it could not read, such as files that are missing from storage. It writes with `QuerySet.update()`, so it does not change `modified_time` and does not resize the stored picture. The update only applies while the event still has no colour and still holds the picture that was read, so an editor replacing the picture while the command runs keeps the new picture's colour; such events are reported as skipped. It is safe to run repeatedly.
 
 ## Data Import / Export Helpers
 

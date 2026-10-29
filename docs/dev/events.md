@@ -234,8 +234,10 @@
 - Background picture uploads: `Event.save()` passes a newly assigned `image` or
   `s3_image` (an uncommitted `FieldFile`) to
   `events.images.process_background_image`. That reads the file once and returns a
-  copy shrunk to fit within 1920x1080, keeping its shape, together with its
-  dominant colour. It never crops or enlarges. Every picture is first normalised
+  copy shrunk to at most 1920 pixels on its long edge, keeping its shape, together
+  with its dominant colour. The limit is the long edge rather than a 1920x1080
+  box so portrait posters keep enough height for the sides layout and the phone
+  banner (an A4 poster is stored at 1357x1920). It never crops or enlarges. Every picture is first normalised
   to RGB, RGBA, L or LA. Wide greyscale is scaled rather than converted, because
   Pillow's `convert()` clips values above 255 to white. 16-bit pictures are scaled
   from 0-65535, and 32-bit pictures that go beyond that are scaled by their
@@ -248,9 +250,12 @@
   colour profile (iPhone photos are Display P3) is kept unless the colour space
   changed, for example CMYK to RGB. HEIC/HEIF is readable because
   `EventsConfig.ready()` registers `pillow_heif`; `gallery` does the same, but not
-  every association installs it. A picture that already fits and is upright is
-  stored byte for byte. Animated GIF, PNG and WebP files, and unreadable files,
-  are stored as uploaded. Pillow's `is_animated` only means "more than one frame",
+  every association installs it. A JPEG, PNG or WebP that already fits and has no
+  EXIF or XMP metadata is stored byte for byte; one that carries metadata is
+  re-encoded even when it fits, because that is what removes a GPS position.
+  Animated GIF, PNG and WebP files, and unreadable files (including libheif
+  decode failures, which `pillow_heif` raises as `RuntimeError`), are stored as
+  uploaded, so an animated WebP or PNG keeps any metadata it has. Pillow's `is_animated` only means "more than one frame",
   so other multi-frame files (phone JPEGs with an embedded second picture, which
   open as MPO, multi-page TIFFs, multi-image HEIFs) are processed from their first
   frame. Pictures that are already stored are never reprocessed.
@@ -261,7 +266,10 @@
   `s3_image` takes over), `save()` compares against the stored row and reads the
   colour from storage. Clearing both pictures clears the colour. A
   `save(update_fields=[...])` that includes a picture field also saves
-  `background_image_color`. A call without picture fields skips the processing.
+  `background_image_color`, and only the picture fields it lists are processed;
+  for the colour, a picture field it leaves out counts with the value the
+  database holds, so a pending upload that is not saved cannot decide the tint.
+  A call without picture fields skips the processing.
   Assign the file to the field (as forms do) rather than calling
   `event.image.save(name, content)`. That writes the file to storage immediately,
   so `save()` sees an already-stored file and neither resizes it nor reads its
