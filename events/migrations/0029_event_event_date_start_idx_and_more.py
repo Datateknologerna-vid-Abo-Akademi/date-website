@@ -11,13 +11,17 @@ class Migration(migrations.Migration):
     atomic = False
 
     dependencies = [
-        ('news', '0009_post_post_cat_pub_idx_post_post_pub_idx'),
+        ('events', '0028_event_background_image_layout'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         AddIndexConcurrently(
-            model_name='post',
-            index=models.Index(fields=['created_time'], name='post_created_idx'),
+            model_name='event',
+            index=models.Index(fields=['event_date_start'], name='event_date_start_idx'),
+        ),
+        AddIndexConcurrently(
+            model_name='eventattendees',
+            index=models.Index(fields=['time_registered'], name='attendee_time_registered_idx'),
         ),
     ]
