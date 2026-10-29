@@ -120,9 +120,9 @@ class EventCreationForm(UnfoldFormMixin, forms.ModelForm):
             'parent',
         )
         if settings.USE_S3:  # type: ignore[misc]
-            fields = temp_fields + ('s3_image',)
+            fields = temp_fields + ('s3_image', 'background_image_layout')
         else:
-            fields = temp_fields + ('image',)
+            fields = temp_fields + ('image', 'background_image_layout')
 
     def clean_slug(self):
         return unique_event_slug(
@@ -226,9 +226,9 @@ class EventEditForm(UnfoldFormMixin, forms.ModelForm):
             'parent',
         )
         if settings.USE_S3:  # type: ignore[misc]
-            fields = temp_fields + ('s3_image',)
+            fields = temp_fields + ('s3_image', 'background_image_layout')
         else:
-            fields = temp_fields + ('image',)
+            fields = temp_fields + ('image', 'background_image_layout')
 
     def clean_slug(self):
         slug = (self.cleaned_data.get('slug') or "").strip()

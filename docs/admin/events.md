@@ -18,7 +18,12 @@ Create public event pages, manage registration windows, collect attendee data, a
    - **Avec** – allow partners; extra fields will display when the signup form contains `avec_…` inputs.
    - **Kräv inloggning för innehåll** – gate the event page behind member login.
    - **Passcode** – optional simple password visitors must enter before the signup form appears.
-   - **Background image** – upload a background image. The form shows the field that matches this deployment's storage (local or public S3).
+   - **Background image** – upload a background image. The form shows the field that matches this deployment's storage (local or public S3). Large pictures are shrunk on save so their longest side is at most 1920 pixels, and keep their shape, so nothing is cut off. Portrait posters keep their full height of 1920 pixels. Location data (GPS) and other photo metadata are removed. Uploading a bigger original gains nothing. iPhone photos (HEIC) are accepted and stored as JPEG, and transparent logos keep their transparency.
+   - **Bakgrundsbildens layout** – how the background image is shown on a normal event page:
+     - **Fyll hela bakgrunden** (default) fills the whole screen behind the text. The picture keeps its proportions, so when its shape differs from the screen's, the edges are cropped. Keep important details near the middle.
+     - **Visa bilden på sidorna** shows the whole picture, scaled down, to the left and right of the text on wide screens, and as a banner above the title on phones and narrow windows. The side pictures are always a little smaller than the event text box, so they stay small on events with very little text. Use it for posters where nothing may be cut off.
+     - In both layouts, the page background takes on a darkened version of the picture's main colour instead of plain black. This happens automatically, with nothing to set.
+     - The setting has no effect on the special Baal, Wappmiddag, KK100 and Årsfest templates, which have their own backgrounds.
    - **Redirect Link** – skip the internal page entirely and send visitors to another URL like another student association's event page.
 3. Publishing:
    - Set **Publiceras** to the date and time when the event should become visible.

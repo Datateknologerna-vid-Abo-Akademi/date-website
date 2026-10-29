@@ -18,10 +18,12 @@ from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 
 from core.fields import PublicFileField
+from events.images import dominant_color, process_background_image
 
 logger = logging.getLogger('date')
 
 POST_SLUG_MAX_LENGTH = 50
+BACKGROUND_PICTURE_FIELDS = ('image', 's3_image')
 LANGUAGE_CODE_PATTERN = re.compile(r"^[a-z]{2}")
 EVENT_TEMPLATE_CHOICES_COMMON = (
     ("", _("Normal evenemangssida")),
@@ -52,6 +54,11 @@ def upload_to(instance, filename):
 
     file_location = f"events/{slugify(filename_base)}{filename_ext.lower()}"
     return file_location
+
+
+class BackgroundImageLayout(models.TextChoices):
+    FULL = 'full', _('Fyll hela bakgrunden')
+    SIDES = 'sides', _('Visa bilden på sidorna')
 
 
 class Event(models.Model):  # type: ignore[django-manager-missing]
@@ -98,6 +105,29 @@ class Event(models.Model):  # type: ignore[django-manager-missing]
     passcode = models.CharField(_('Passcode'), max_length=255, blank=True)
     image = models.ImageField(_('Bakgrundsbild'), null=True, blank=True, upload_to=upload_to)
     s3_image = PublicFileField(verbose_name=_('Bakgrundsbild'), null=True, blank=True, upload_to=upload_to)
+    background_image_layout = models.CharField(
+        _('Bakgrundsbildens layout'),
+        max_length=10,
+        choices=BackgroundImageLayout.choices,
+        default=BackgroundImageLayout.FULL,
+        # Also a database default: during a blue-green deploy the previous release
+        # still inserts events into the shared database without this column.
+        db_default=BackgroundImageLayout.FULL,
+        help_text=_(
+            'Hur bakgrundsbilden visas på evenemangssidan. "Visa bilden på sidorna" visar bilden förminskad '
+            'till vänster och höger om texten, och som en banderoll ovanför texten på smala skärmar.'
+        ),
+    )
+    # Filled in from the picture on upload; the event page uses it as the page
+    # background instead of plain black.
+    background_image_color = models.CharField(
+        _('Bakgrundsbildens huvudfärg'),
+        max_length=7,
+        blank=True,
+        editable=False,
+        default='',
+        db_default='',
+    )
     captcha = models.BooleanField(_('Captcha'), default=False)
     redirect_link = models.URLField(_('Redirect Link'), blank=True)
     parent = models.ForeignKey(
@@ -118,8 +148,85 @@ class Event(models.Model):  # type: ignore[django-manager-missing]
     def __str__(self):
         return self.title
 
+    def save(self, *args, **kwargs):
+        update_fields = kwargs.get('update_fields')
+        if update_fields is None:
+            self._prepare_background_picture(BACKGROUND_PICTURE_FIELDS)
+        else:
+            # Materialised: a generator would be used up by the check below and then
+            # reach Django empty, which saves nothing.
+            update_fields = kwargs['update_fields'] = {*update_fields}
+            saved_pictures = [name for name in BACKGROUND_PICTURE_FIELDS if name in update_fields]
+            if saved_pictures:
+                self._prepare_background_picture(saved_pictures)
+                update_fields.add('background_image_color')
+        super().save(*args, **kwargs)
+
     def get_absolute_url(self):
         return reverse('events:detail', args=[self.slug])
+
+    def _prepare_background_picture(self, saved_fields):
+        """Shrink newly uploaded pictures and keep the tint matching the shown picture.
+
+        An uncommitted FieldFile is one assigned since the last save, so pictures that
+        are already stored are never reprocessed. The colour must belong to the picture
+        the page shows after this save, which is `image` before `s3_image` (see
+        background_image_url). A picture field left out of `saved_fields` keeps what
+        the database holds, whatever the instance holds.
+        """
+        colours = {}
+        for field_name in saved_fields:
+            field_file = getattr(self, field_name)
+            if field_file and not field_file._committed:
+                fitted, colours[field_name] = process_background_image(field_file.file)
+                if fitted is not None:
+                    setattr(self, field_name, fitted)
+
+        stored = self._stored_background_picture_names()
+        after_save = {
+            name: (getattr(self, name).name or '') if name in saved_fields else stored.get(name, '')
+            for name in BACKGROUND_PICTURE_FIELDS
+        }
+        shown = next((name for name, file_name in after_save.items() if file_name), None)
+        if shown is None:
+            self.background_image_color = ''
+        elif shown in colours:
+            self.background_image_color = colours[shown]
+        elif not self._state.adding and after_save[shown] != next((name for name in stored.values() if name), ''):
+            # For example `image` was cleared and an older `s3_image` now shows.
+            self.background_image_color = self.stored_background_picture_color(
+                shown, None if shown in saved_fields else after_save[shown]
+            )
+
+    def _stored_background_picture_names(self):
+        """Picture field names to stored file names, as the database holds them."""
+        if self._state.adding:
+            return {}
+        row = type(self)._default_manager.filter(pk=self.pk).values_list(*BACKGROUND_PICTURE_FIELDS).first()
+        if row is None:
+            return {}
+        return dict(zip(BACKGROUND_PICTURE_FIELDS, (name or '' for name in row), strict=True))
+
+    @property
+    def shown_background_picture_field(self):
+        """Name of the picture field the page shows, or None: `image` before `s3_image`."""
+        return next((name for name in BACKGROUND_PICTURE_FIELDS if getattr(self, name)), None)
+
+    def stored_background_picture_color(self, field_name, file_name=None):
+        """Read the dominant colour of an already stored picture, or '' if unreadable.
+
+        `file_name` reads that stored file instead of the one the instance holds.
+        """
+        picture = getattr(self, field_name)
+        if file_name is not None:
+            field = self._meta.get_field(field_name)
+            picture = field.attr_class(self, field, file_name)
+        try:
+            with picture.open('rb'):
+                return dominant_color(picture)
+        except Exception as exc:  # missing local file, S3 error, ...
+            logger.warning("Could not open background image of event %s: %s", self.pk, exc)
+            return ''
 
     @property
     def published(self):

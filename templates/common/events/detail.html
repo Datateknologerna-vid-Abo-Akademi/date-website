@@ -12,75 +12,82 @@
           integrity="sha384-FtJyC+/3fgtPbqlacLHdGwBrmPjKoYBsiqNF5/BEprsnIXB4xtXLCJRx7Xx+TWKP"
           crossorigin="anonymous"></script>
   <script src="{% static 'core/js/live-attendee-list.js' %}"></script>
-  <style>
-            {% if event.background_image_url %}.background-img{
-                background: url("{{ event.background_image_url }}") no-repeat center center;
-                background-attachment: fixed;
-                -webkit-background-size: cover;
-                -moz-background-size: cover;
-                -o-background-size: cover;
-                background-size: cover;
-            }
-            @media (max-width: 768px) {
-                .background-img {
-                    background-attachment: scroll;
-                }
-            }{% endif %}
-  </style>
+  {% if event.background_image_url %}
+    <link rel="stylesheet" href="{% static 'events/css/background.css' %}">
+  {% endif %}
 {% endblock %}
 {% block content %}
-  <div class="background-img">
-    <div class="container-md min-vh-100 p-1">
-      <div class="container-size" style="margin-top: 13vh">
-        <div class="content">
-          <h2 class="header{% if event.title_shine %} title-shine{% endif %}">{{ event.title }}</h2>
-          <h4 class="help-text">{{ event.event_date_start|date:"l d b Y H:i" }}</h4>
-          <p>{{ event.content | safe }}</p>
+  {% with background_image_url=event.background_image_url layout=event.background_image_layout %}
+    <div class="background-img{% if background_image_url %} event-bg event-bg--{{ layout }}{% if event.background_image_color %} event-bg--tinted{% endif %}{% endif %}" {% if background_image_url and event.background_image_color %}style="--event-bg-color: {{ event.background_image_color }}"{% endif %}>
+      {% if background_image_url and layout == 'full' %}
+        <div class="event-bg__layer" aria-hidden="true">
+          <img class="event-bg__full" src="{{ background_image_url }}" alt="">
         </div>
-        {% if event.sign_up %}
+      {% endif %}
+      <div class="container-md min-vh-100 p-1">
+        <div class="container-size" style="margin-top: 13vh">
+          {% if background_image_url and layout == 'sides' %}
+            <div class="event-bg__side event-bg__side--left" aria-hidden="true">
+              <img src="{{ background_image_url }}" alt="">
+            </div>
+            <div class="event-bg__side event-bg__side--right" aria-hidden="true">
+              <img src="{{ background_image_url }}" alt="">
+            </div>
+            <img class="event-bg__banner"
+                 src="{{ background_image_url }}"
+                 alt=""
+                 aria-hidden="true">
+          {% endif %}
           <div class="content">
-            <h2 id="sign-up">{% trans "Anmälning" %}</h2>
-            {% include 'events/registration_state.html' %}
+            <h2 class="header{% if event.title_shine %} title-shine{% endif %}">{{ event.title }}</h2>
+            <h4 class="help-text">{{ event.event_date_start|date:"l d b Y H:i" }}</h4>
+            <p>{{ event.content | safe }}</p>
           </div>
-          <div id="attendee-list"
-               class="content overflow-auto"
-               data-parent-slug="{{ event.parent.slug|default:'' }}">
-            {% if event|show_attendee_list %}
-              {% if event.sign_up_max_participants != 0 %}<p>{{ event.remaining_places|localized_remaining_places }}</p>{% endif %}
-              <h2>{% trans "Anmälda" %}</h2>
-              <table class="" id="attendees">
-                <tr id="attendees-header"
-                    {% if not event.get_registrations %}style="display: none;"{% endif %}>
-                  <th>#</th>
-                  <th>{% trans "Namn" %}</th>
-                  {% for preference in event.get_registration_form_public_info reversed %}<th>{{ preference }}</th>{% endfor %}
-                </tr>
-                {% for attendee in event.get_registrations %}
-                  <tr {% if forloop.counter > event.sign_up_max_participants and event.sign_up_max_participants != 0 and not event.parent %} class="event-full" {% endif %}>
-                    <td>{{ forloop.counter }}</td>
-                    <td>
-                      {% if not attendee.anonymous %}
-                        {{ attendee.user }}
-                      {% else %}
-                        <i>{% trans "Anonymt" %}</i>
-                      {% endif %}
-                    </td>
-                    {% for preference in event.get_registration_form_public_info reversed %}
-                      <td>{{ attendee | get_preference:preference }}</td>
-                    {% endfor %}
+          {% if event.sign_up %}
+            <div class="content">
+              <h2 id="sign-up">{% trans "Anmälning" %}</h2>
+              {% include 'events/registration_state.html' %}
+            </div>
+            <div id="attendee-list"
+                 class="content overflow-auto"
+                 data-parent-slug="{{ event.parent.slug|default:'' }}">
+              {% if event|show_attendee_list %}
+                {% if event.sign_up_max_participants != 0 %}<p>{{ event.remaining_places|localized_remaining_places }}</p>{% endif %}
+                <h2>{% trans "Anmälda" %}</h2>
+                <table class="" id="attendees">
+                  <tr id="attendees-header"
+                      {% if not event.get_registrations %}style="display: none;"{% endif %}>
+                    <th>#</th>
+                    <th>{% trans "Namn" %}</th>
+                    {% for preference in event.get_registration_form_public_info reversed %}<th>{{ preference }}</th>{% endfor %}
                   </tr>
-                {% empty %}
-                  <p id="no-attendee">{% trans "Inga anmälda ännu, var den första!" %}</p>
-                {% endfor %}
-              </table>
-            {% else %}
-              <h4 id="no-attendee">
-                {% trans 'Deltagarlistan har gömts eftersom det här är ett gammalt evenemang, kontakta styrelsen vid behov.' %}
-              </h4>
-            {% endif %}
-          </div>
-        {% endif %}
+                  {% for attendee in event.get_registrations %}
+                    <tr {% if forloop.counter > event.sign_up_max_participants and event.sign_up_max_participants != 0 and not event.parent %} class="event-full" {% endif %}>
+                      <td>{{ forloop.counter }}</td>
+                      <td>
+                        {% if not attendee.anonymous %}
+                          {{ attendee.user }}
+                        {% else %}
+                          <i>{% trans "Anonymt" %}</i>
+                        {% endif %}
+                      </td>
+                      {% for preference in event.get_registration_form_public_info reversed %}
+                        <td>{{ attendee | get_preference:preference }}</td>
+                      {% endfor %}
+                    </tr>
+                  {% empty %}
+                    <p id="no-attendee">{% trans "Inga anmälda ännu, var den första!" %}</p>
+                  {% endfor %}
+                </table>
+              {% else %}
+                <h4 id="no-attendee">
+                  {% trans 'Deltagarlistan har gömts eftersom det här är ett gammalt evenemang, kontakta styrelsen vid behov.' %}
+                </h4>
+              {% endif %}
+            </div>
+          {% endif %}
+        </div>
       </div>
     </div>
-  </div>
+  {% endwith %}
 {% endblock %}
