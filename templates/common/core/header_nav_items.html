@@ -17,47 +17,24 @@
          aria-expanded="false">{{ category.category_name }}</a>
       <ul class="dropdown-menu dropdown-menu-dark"
           aria-labelledby="navbarDropdownMenuLink{{ forloop.counter0 }}">
-        {% url 'members:login' as login_url %}
         {% for page in urls %}
           {% if page.category_id == category.id %}
-            {% if user.is_authenticated and page.url|localized_url == login_url %}
-              <li>
-                <form action="{% url 'members:logout' %}" method="post">
-                  {% csrf_token %}
-                  <button class="dropdown-item">{% translate "Logga ut" %}</button>
-                </form>
-              </li>
-            {% else %}
-              {% with children=page.children.all %}
-                {% if children %}
-                  <li class="dropdown-submenu">
-                    {% if page.url %}
-                      <a class="dropdown-item dropdown-toggle"
-                         href="{{ page.url|localized_url }}">{{ page.title }}</a>
-                    {% else %}
-                      <button class="dropdown-item dropdown-toggle dropdown-submenu-toggle"
-                              type="button">{{ page.title }}</button>
-                    {% endif %}
-                    {# Not a .dropdown-menu: Bootstrap's arrow-key handler binds to the closest .dropdown-menu and crashes on a nested one. #}
-                    <ul class="dropdown-submenu-list">
-                      {% for child in children %}
-                        {% if child.url %}
-                          <li>
-                            <a class="dropdown-item" href="{{ child.url|localized_url }}">{{ child.title }}</a>
-                          </li>
-                        {% endif %}
-                      {% endfor %}
-                    </ul>
-                  </li>
-                {% else %}
-                  {% if page.url %}
-                    <li>
-                      <a class="dropdown-item" href="{{ page.url|localized_url }}">{{ page.title }}</a>
-                    </li>
-                  {% endif %}
-                {% endif %}
-              {% endwith %}
-            {% endif %}
+            {# The navigation context processor only prefetches children that have a url. #}
+            {% with children=page.children.all %}
+              {% if children %}
+                <li class="dropdown-submenu" data-nav-submenu>
+                  {% include "core/header_nav_link.html" with submenu=True %}
+                  {# Not a .dropdown-menu: Bootstrap's arrow-key handler binds to the closest .dropdown-menu and crashes on a nested one. #}
+                  <ul class="dropdown-submenu-list" id="nav-submenu-{{ page.pk }}">
+                    {% for child in children %}
+                      <li>{% include "core/header_nav_link.html" with page=child submenu=False %}</li>
+                    {% endfor %}
+                  </ul>
+                </li>
+              {% elif page.url %}
+                <li>{% include "core/header_nav_link.html" with submenu=False %}</li>
+              {% endif %}
+            {% endwith %}
           {% endif %}
         {% endfor %}
       </ul>

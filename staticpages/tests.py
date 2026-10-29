@@ -1,10 +1,13 @@
 import importlib
+import re
+from types import SimpleNamespace
 from unittest.mock import MagicMock, PropertyMock, patch
 
 from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
+from django.template.loader import render_to_string
 from django.test import RequestFactory, TestCase, override_settings
 from django.urls import reverse
 from django.utils import translation
@@ -309,6 +312,64 @@ class StaticUrlTests(TestCase):
         children = list(urls[0].children.all())
 
         self.assertEqual([child.title for child in children], ["Visible child"])
+
+    def test_context_processor_skips_children_without_a_url(self):
+        request = RequestFactory().get("/")
+        request.user = AnonymousUser()
+        parent = StaticUrl.objects.create(title="Parent", category=self.category, url="")
+        StaticUrl.objects.create(title="Draft child", category=self.category, parent=parent, url="")
+        StaticUrl.objects.create(title="Visible child", category=self.category, parent=parent, url="/current/")
+        only_drafts = StaticUrl.objects.create(title="Drafts only", category=self.category, url="")
+        StaticUrl.objects.create(title="Other draft", category=self.category, parent=only_drafts, url="")
+
+        urls = {url.title: url for url in get_urls(request)["urls"]}
+
+        self.assertEqual([child.title for child in urls["Parent"].children.all()], ["Visible child"])
+        self.assertEqual(list(urls["Drafts only"].children.all()), [])
+
+    def test_category_hidden_when_its_only_parent_has_nothing_to_show(self):
+        # Anonymous visitors must not get an empty "Members" dropdown whose only
+        # entry is a url-less parent with logged-in-only children.
+        request = RequestFactory().get("/")
+        request.user = AnonymousUser()
+        members = StaticPageNav.objects.create(category_name="Members")
+        parent = StaticUrl.objects.create(title="Account", category=members, url="")
+        StaticUrl.objects.create(title="Profile", category=members, parent=parent, url="/p/", logged_in_only=True)
+        StaticUrl.objects.create(title="Visible", category=self.category, url="/current/")
+
+        categories = get_categories(request)["categories"]
+
+        self.assertEqual([category.category_name for category in categories], ["Menu"])
+
+    def test_header_swaps_every_login_link_for_logout_and_wires_submenus(self):
+        login_url = reverse("members:login")
+        members = StaticUrl.objects.create(title="Members", category=self.category, url="/members/")
+        StaticUrl.objects.create(title="Sign in", category=self.category, parent=members, url=login_url)
+        StaticUrl.objects.create(title="Profile", category=self.category, parent=members, url="/profile/")
+        account = StaticUrl.objects.create(title="Account", category=self.category, url=login_url)
+        StaticUrl.objects.create(title="Join", category=self.category, parent=account, url="/join/")
+        empty = StaticUrl.objects.create(title="Empty parent", category=self.category, url="")
+        StaticUrl.objects.create(title="Draft", category=self.category, parent=empty, url="")
+        request = RequestFactory().get("/")
+        request.user = SimpleNamespace(is_authenticated=True)
+
+        rendered = render_to_string(
+            "core/header_nav_items.html", {**navigation(request), "user": request.user, "csrf_token": "token"}
+        )
+
+        # Neither the child login link nor the login-url parent stays a login link,
+        # and the parent keeps its children under the logout toggle.
+        self.assertNotIn(f'href="{login_url}"', rendered)
+        self.assertEqual(rendered.count(f'action="{reverse("members:logout")}"'), 2)
+        self.assertIn('href="/profile/"', rendered)
+        self.assertIn('href="/join/"', rendered)
+        # A parent whose only child has no url draws no empty toggle.
+        self.assertNotIn("Empty parent", rendered)
+        # Every toggle points at a rendered child list.
+        controls = re.findall(r'aria-controls="([^"]+)"', rendered)
+        list_ids = re.findall(r'<ul class="dropdown-submenu-list" id="([^"]+)"', rendered)
+        self.assertEqual(sorted(controls), sorted(list_ids))
+        self.assertEqual(len(list_ids), 2)
 
 
 class StaticPageAdminTests(TestCase):

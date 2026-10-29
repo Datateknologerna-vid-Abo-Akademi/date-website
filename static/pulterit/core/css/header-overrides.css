@@ -71,17 +71,6 @@ li .dropdown-menu {
     color: var(--accentColorBright) !important;
 }
 
-/* Child link colours; the layout is in the shared core/css/header-submenu.css. */
-.navbar-nav .dropdown-submenu-list .dropdown-item {
-    color: rgba(255, 255, 255, 0.85);
-}
-
-.navbar-nav .dropdown-submenu-list .dropdown-item:hover,
-.navbar-nav .dropdown-submenu-list .dropdown-item:focus {
-    color: #fff;
-    background-color: rgba(255, 255, 255, 0.15);
-}
-
 .navbar-nav li a:active, .dropdown-item:active {
     color: var(--textColorLightish) !important;
     border-radius: var(--defaultRadius);

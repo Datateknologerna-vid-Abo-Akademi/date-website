@@ -144,7 +144,8 @@ class SiteShellTemplateTests(TestCase):
                 with override_settings(PROJECT_NAME=association, TEMPLATES=module.TEMPLATES):
                     rendered = render_to_string("core/base.html", context)
                 self.assertIn("core/css/header-submenu.css", rendered)
-                submenu = re.search(r'<li class="dropdown-submenu">.*?</ul>', rendered, re.S)
+                self.assertIn("core/js/nav-submenus.js", rendered)
+                submenu = re.search(r'<li class="dropdown-submenu" data-nav-submenu>.*?</ul>', rendered, re.S)
                 self.assertIsNotNone(submenu)
                 self.assertIn('href="/child/"', submenu.group())
                 self.assertNotRegex(submenu.group(), r'class="[^"]*\bdropdown-menu\b')

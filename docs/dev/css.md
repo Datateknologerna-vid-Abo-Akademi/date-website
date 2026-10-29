@@ -270,7 +270,7 @@ existing uses have no such comment, so treating that as the standard is
 aspirational: the comment is the rule for new work, and the uncommented
 existing uses are debt.
 
-The tree has 360 `!important` declarations across 40 hand-written stylesheets
+The tree has 338 `!important` declarations across 37 hand-written stylesheets
 (comment text excluded); the largest concentrations are 41 in each of
 `static/biocum/events/css/arsfest.css`, `static/date/events/css/arsfest.css` and
 `static/pulterit/events/css/arsfest.css`.
