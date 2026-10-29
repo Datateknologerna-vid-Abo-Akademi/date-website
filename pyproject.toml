@@ -40,6 +40,9 @@ dependencies = [
     "uvicorn-worker>=0.4.0",
     "django-stubs-ext>=6.0.4",
     "django-otp-webauthn==0.10.3",
+    "reportlab>=5.1.0",
+    "pypdf>=6.21.4",
+    "schwifty>=2026.10.1",
 ]
 
 [project.optional-dependencies]

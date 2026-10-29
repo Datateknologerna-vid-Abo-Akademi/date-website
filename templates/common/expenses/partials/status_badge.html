@@ -1,0 +1,8 @@
+{% load i18n %}
+{% if claim.status == 'pending' %}
+  <span class="badge bg-warning text-dark">{% translate "Väntar" %}</span>
+{% elif claim.status == 'approved' %}
+  <span class="badge bg-success">{% translate "Godkänd" %}</span>
+{% else %}
+  <span class="badge bg-danger">{% translate "Nekad" %}</span>
+{% endif %}

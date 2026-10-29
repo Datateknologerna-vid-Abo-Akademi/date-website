@@ -3904,3 +3904,220 @@ msgstr "Shows the title with a shine effect on the homepage, in the news list an
 #: events/models.py
 msgid "Visar titeln med glanseffekt på startsidan, i evenemangslistan och på evenemangssidan."
 msgstr "Shows the title with a shine effect on the homepage, in the event list and on the event page."
+
+# Expenses app
+msgid "Varje kvitto får vara högst %(megabytes)d MB."
+msgstr "Each receipt may be at most %(megabytes)d MB."
+
+msgid "Kontant"
+msgstr "Cash"
+
+msgid "Banköverföring"
+msgstr "Bank transfer"
+
+msgid "Väntar"
+msgstr "Pending"
+
+msgid "Godkänd"
+msgstr "Approved"
+
+msgid "Nekad"
+msgstr "Rejected"
+
+msgid "Mottagare"
+msgstr "Recipient"
+
+msgid "Belopp (EUR)"
+msgstr "Amount (EUR)"
+
+msgid "Beloppet i euro, till exempel 25.50."
+msgstr "The amount in euros, for example 25.50."
+
+msgid "Betalningsmetod"
+msgstr "Payment method"
+
+msgid "Bankkonto (IBAN)"
+msgstr "Bank account (IBAN)"
+
+msgid "Krävs endast för banköverföring, till exempel FI21 1234 5600 0007 85."
+msgstr "Required only for a bank transfer, for example FI21 1234 5600 0007 85."
+
+msgid "Inskickad av"
+msgstr "Submitted by"
+
+msgid "Inskickad"
+msgstr "Submitted"
+
+msgid "Behandlad av"
+msgstr "Reviewed by"
+
+msgid "Behandlad"
+msgstr "Reviewed"
+
+msgid "Kassörens signeringsdatum"
+msgstr "Treasurer's signing date"
+
+msgid "PDF"
+msgstr "PDF"
+
+msgid "PDF genererad"
+msgstr "PDF generated"
+
+msgid "kostnadsersättning"
+msgstr "expense claim"
+
+msgid "kostnadsersättningar"
+msgstr "expense claims"
+
+msgid "Bankkonto (IBAN) krävs för banköverföring."
+msgstr "A bank account (IBAN) is required for a bank transfer."
+
+msgid "Ogiltigt IBAN-nummer."
+msgstr "Invalid IBAN."
+
+msgid "Kostnadsersättning"
+msgstr "Expense claim"
+
+msgid "Fil"
+msgstr "File"
+
+msgid "Endast bilder (JPEG, PNG, GIF, WebP) och PDF-filer är tillåtna."
+msgstr "Only images (JPEG, PNG, GIF, WebP) and PDF files are allowed."
+
+msgid "Uppladdad"
+msgstr "Uploaded"
+
+msgid "kvitto"
+msgstr "receipt"
+
+msgid "kvitton"
+msgstr "receipts"
+
+msgid "JPEG-, PNG-, GIF- eller WebP-bilder och PDF-filer"
+msgstr "JPEG, PNG, GIF or WebP images and PDF files"
+
+msgid "Du kan skicka med högst %(count)d kvitton per utlägg."
+msgstr "You can attach at most %(count)d receipts per claim."
+
+msgid "Kvittona får tillsammans vara högst %(megabytes)d MB."
+msgstr "The receipts may be at most %(megabytes)d MB in total."
+
+msgid "Endast %(types)s är tillåtna."
+msgstr "Only %(types)s are allowed."
+
+msgid "Filen är inte en giltig bild eller PDF."
+msgstr "The file is not a valid image or PDF."
+
+msgid "Kvitton"
+msgstr "Receipts"
+
+msgid "Du kan välja flera filer samtidigt. Varje fil får vara högst 10 MB."
+msgstr "You can select several files at once. Each file may be at most 10 MB."
+
+msgid "Kostnadsersättningen har skickats in."
+msgstr "The expense claim has been submitted."
+
+msgid "Kvittot finns inte."
+msgstr "The receipt does not exist."
+
+msgid "PDF:en har inte genererats än."
+msgstr "The PDF has not been generated yet."
+
+msgid "Kvitto"
+msgstr "Receipt"
+
+msgid "Öppna kvitto"
+msgstr "Open receipt"
+
+msgid "Inte genererad"
+msgstr "Not generated"
+
+msgid "Ladda ned PDF"
+msgstr "Download PDF"
+
+msgid "Generera PDF på nytt"
+msgstr "Regenerate PDF"
+
+msgid "PDF-generering startad för {count} utlägg."
+msgstr "PDF generation started for {count} claims."
+
+msgid "Godkänn valda utlägg"
+msgstr "Approve selected claims"
+
+
+msgid "Neka valda utlägg"
+msgstr "Reject selected claims"
+
+
+msgid "Kostnadsersättningar"
+msgstr "Expense claims"
+
+msgid "Skicka in ny kostnadsersättning"
+msgstr "Submit a new expense claim"
+
+msgid "Här ser du dina inskickade utlägg och deras status. Kvittona är bara synliga för dig och för styrelsen."
+msgstr "Here you see your submitted claims and their status. The receipts are visible only to you and to the board."
+
+msgid "Belopp"
+msgstr "Amount"
+
+msgid "Åtgärder"
+msgstr "Actions"
+
+msgid "Visa"
+msgstr "View"
+
+msgid "Inga kostnadsersättningar hittades."
+msgstr "No expense claims found."
+
+msgid "Bankkonto"
+msgstr "Bank account"
+
+msgid "PDF:en genereras. Ladda om sidan om en stund."
+msgstr "The PDF is being generated. Reload the page in a moment."
+
+msgid "Skicka in kostnadsersättning"
+msgstr "Submit an expense claim"
+
+msgid "Fyll i vad utlägget gäller och bifoga kvittona. Styrelsen behandlar ansökan och betalar ut beloppet enligt den valda betalningsmetoden."
+msgstr "Describe what the expense is for and attach the receipts. The board processes the claim and pays the amount using the selected payment method."
+
+msgid "Skicka in"
+msgstr "Submit"
+
+# Admin sidebar section for the expenses app
+msgid "Expenses"
+msgstr "Expenses"
+
+msgid "Expense claims"
+msgstr "Expense claims"
+
+
+# Expenses app follow-up strings
+msgid "godkända"
+msgstr "approved"
+
+msgid "nekade"
+msgstr "rejected"
+
+msgid "{count} utlägg markerade som {label}."
+msgstr "{count} claims marked as {label}."
+
+msgid "{count} utlägg hoppades över eftersom de redan hade behandlats."
+msgstr "{count} claims were skipped because they had already been reviewed."
+
+msgid "PDF-generering kunde inte startas för {count} utlägg."
+msgstr "PDF generation could not be started for {count} claims."
+
+msgid "Sidnavigering"
+msgstr "Pagination"
+
+msgid "Bilden har för många pixlar. Förminska den och försök igen."
+msgstr "The image has too many pixels. Resize it and try again."
+
+msgid "PDF:en har för många sidor."
+msgstr "The PDF has too many pages."
+
+msgid "Kvitto #%(pk)s"
+msgstr "Receipt #%(pk)s"
+

@@ -1,5 +1,5 @@
 version = 1
-revision = 5
+revision = 3
 requires-python = ">=3.14"
 resolution-markers = [
     "python_full_version >= '3.15' and platform_python_implementation == 'PyPy' and sys_platform == 'win32'",
@@ -553,8 +553,11 @@ dependencies = [
     { name = "pillow" },
     { name = "pillow-heif" },
     { name = "psycopg2-binary" },
+    { name = "pypdf" },
     { name = "python-dateutil" },
+    { name = "reportlab" },
     { name = "requests" },
+    { name = "schwifty" },
     { name = "six" },
     { name = "twisted", extra = ["tls"] },
     { name = "uvicorn", extra = ["standard"] },
@@ -611,9 +614,12 @@ requires-dist = [
     { name = "pillow" },
     { name = "pillow-heif", specifier = ">=1.5.0" },
     { name = "psycopg2-binary" },
+    { name = "pypdf", specifier = ">=6.21.4" },
     { name = "python-dateutil" },
+    { name = "reportlab", specifier = ">=5.1.0" },
     { name = "requests" },
     { name = "schedule", marker = "extra == 'instagram'" },
+    { name = "schwifty", specifier = ">=2026.10.1" },
     { name = "six" },
     { name = "twisted", extras = ["tls"], specifier = ">=26.4.0" },
     { name = "uvicorn", extras = ["standard"] },
@@ -1485,6 +1491,15 @@ wheels = [
 ]
 
 [[package]]
+name = "pycountry"
+version = "26.2.16"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/de/1d/061b9e7a48b85cfd69f33c33d2ef784a531c359399ad764243399673c8f5/pycountry-26.2.16.tar.gz", hash = "sha256:5b6027d453fcd6060112b951dd010f01f168b51b4bf8a1f1fc8c95c8d94a0801", size = 7711342, upload-time = "2026-02-17T03:42:52.367Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/9c/42/7703bd45b62fecd44cd7d3495423097e2f7d28bc2e99e7c1af68892ab157/pycountry-26.2.16-py3-none-any.whl", hash = "sha256:115c4baf7cceaa30f59a4694d79483c9167dbce7a9de4d3d571c5f3ea77c305a", size = 8044600, upload-time = "2026-02-17T03:42:49.777Z" },
+]
+
+[[package]]
 name = "pycparser"
 version = "3.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1503,6 +1518,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/3f/e8/7325d258199b159eb2c03fe32107533e2832e70e63f4fb88a6aa00023201/pyopenssl-26.4.0.tar.gz", hash = "sha256:28dfcce0162b9211413e26dfbfdf1d24317fbeba18fc93c12400a1856b2a0bc7", size = 182046, upload-time = "2026-08-01T19:50:50.512Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/51/ad/2cf6d3fa2fae5c79e1ed9960c0d42badd0f94d81dd12b50604cdc839e648/pyopenssl-26.4.0-py3-none-any.whl", hash = "sha256:f0eb0cb2d581d3ad2b9c489468485e7f2ab6727d08401bcf9d824c3caddf3c1c", size = 56026, upload-time = "2026-08-01T19:50:48.94Z" },
+]
+
+[[package]]
+name = "pypdf"
+version = "6.21.4"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/1e/e1/ec8f4d155c997c45917153a5521e60d6ee6389d68abdcbc8e44e564caffc/pypdf-6.21.4.tar.gz", hash = "sha256:c8817e3f888d47a087872ded69812c1ef30cacb871d6e053e0c00bbaf0bc2163", size = 7109255, upload-time = "2026-10-28T17:00:54.81Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/3f/4b/77e8ad4ac42c9d93600f40541a50e9feb3a61d2bbee2d76f659346072051/pypdf-6.21.4-py3-none-any.whl", hash = "sha256:33e4fb41ca352810eb4e9838aa0d82d6888a5f8bf682f43e99cce5faa666255c", size = 410430, upload-time = "2026-10-28T17:00:53.146Z" },
 ]
 
 [[package]]
@@ -1626,6 +1650,19 @@ wheels = [
 ]
 
 [[package]]
+name = "reportlab"
+version = "5.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "charset-normalizer" },
+    { name = "pillow" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/89/22/c18474be40b9bbb52fdb7051177d4d25f1ea59fada17eb181026411e93b1/reportlab-5.1.0.tar.gz", hash = "sha256:6878200464527e87672d19e9f7cfc6bb890e3a6931e74ac6a1a8d1754aa55671", size = 4109612, upload-time = "2026-10-22T07:26:43.307Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/4a/3c/bf68d44f160b44685fc714f746a954c71d0091b3dc4fd3c8670154b44841/reportlab-5.1.0-py3-none-any.whl", hash = "sha256:59fdbaec5efe437095ad1d7292ec9a271c8ca2d3ec75e889c6e61400929b90df", size = 2018647, upload-time = "2026-10-22T07:26:40.754Z" },
+]
+
+[[package]]
 name = "requests"
 version = "2.34.2"
 source = { registry = "https://pypi.org/simple" }
@@ -1651,6 +1688,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/42/f2/05f29bc3913aea15eb670be136045bf5c5bbf4b99ecb839da9b422bb2c85/requests-oauthlib-2.0.0.tar.gz", hash = "sha256:b3dffaebd884d8cd778494369603a9e7b58d29111bf6b41bdc2dcd87203af4e9", size = 55650, upload-time = "2024-03-22T20:32:29.939Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/3b/5d/63d4ae3b9daea098d5d6f5da83984853c1bbacd5dc826764b249fe119d24/requests_oauthlib-2.0.0-py2.py3-none-any.whl", hash = "sha256:7dd8a5c40426b779b0868c404bdef9768deccf22749cde15852df527e6269b36", size = 24179, upload-time = "2024-03-22T20:32:28.055Z" },
+]
+
+[[package]]
+name = "rstr"
+version = "3.2.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/9f/80/d7449656d45a776b7a443ce3af4eb97c4debe416a1a80f60311c7cfd02ff/rstr-3.2.2.tar.gz", hash = "sha256:c4a564d4dfb4472d931d145c43d1cf1ad78c24592142e7755b8866179eeac012", size = 13560, upload-time = "2023-10-11T20:07:57.422Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c8/8c/a0f14f2fcdd846839c478048032b2fc93293deaa936ff6751f27dcf50995/rstr-3.2.2-py3-none-any.whl", hash = "sha256:f39195d38da1748331eeec52f1276e71eb6295e7949beea91a5e9af2340d7b3b", size = 10030, upload-time = "2023-10-11T20:07:55.873Z" },
 ]
 
 [[package]]
@@ -1697,6 +1743,19 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/0c/91/b525790063015759f34447d4cf9d2ccb52cdee0f1dd6ff8764e863bcb74c/schedule-1.2.2.tar.gz", hash = "sha256:15fe9c75fe5fd9b9627f3f19cc0ef1420508f9f9a46f45cd0769ef75ede5f0b7", size = 26452, upload-time = "2024-06-18T20:03:14.633Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/20/a7/84c96b61fd13205f2cafbe263cdb2745965974bdf3e0078f121dfeca5f02/schedule-1.2.2-py3-none-any.whl", hash = "sha256:5bef4a2a0183abf44046ae0d164cadcac21b1db011bdd8102e4a0c1e91e06a7d", size = 12220, upload-time = "2024-05-25T18:41:59.121Z" },
+]
+
+[[package]]
+name = "schwifty"
+version = "2026.10.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pycountry" },
+    { name = "rstr" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/b8/d4/32bd3e8853a1fa801262ed959e4ceb4578bda131d8d92efaa1175c5383ca/schwifty-2026.10.1.tar.gz", hash = "sha256:280558cb661fdbcf5099f7c99eae47ed37a4f656b5b3dd6ea4efcf865a09f372", size = 930969, upload-time = "2026-10-25T08:36:27.106Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/31/ea/5525d3b2d6cda961d5e110ba31a19386771ee39476a55a44b9b16ed3e926/schwifty-2026.10.1-py3-none-any.whl", hash = "sha256:96e2396fbd1dcbd42f27243b4383c93fca3f96f35bddf3cf7ab573457ae5ead0", size = 408009, upload-time = "2026-10-25T08:36:25.564Z" },
 ]
 
 [[package]]

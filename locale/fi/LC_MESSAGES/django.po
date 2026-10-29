@@ -3944,3 +3944,220 @@ msgstr "Näyttää otsikon kiiltoefektillä etusivulla, uutislistassa ja uutissi
 #: events/models.py
 msgid "Visar titeln med glanseffekt på startsidan, i evenemangslistan och på evenemangssidan."
 msgstr "Näyttää otsikon kiiltoefektillä etusivulla, tapahtumalistassa ja tapahtumasivulla."
+
+# Expenses app
+msgid "Varje kvitto får vara högst %(megabytes)d MB."
+msgstr "Jokainen kuitti saa olla enintään %(megabytes)d MB."
+
+msgid "Kontant"
+msgstr "Käteinen"
+
+msgid "Banköverföring"
+msgstr "Tilisiirto"
+
+msgid "Väntar"
+msgstr "Odottaa"
+
+msgid "Godkänd"
+msgstr "Hyväksytty"
+
+msgid "Nekad"
+msgstr "Hylätty"
+
+msgid "Mottagare"
+msgstr "Vastaanottaja"
+
+msgid "Belopp (EUR)"
+msgstr "Summa (EUR)"
+
+msgid "Beloppet i euro, till exempel 25.50."
+msgstr "Summa euroina, esimerkiksi 25.50."
+
+msgid "Betalningsmetod"
+msgstr "Maksutapa"
+
+msgid "Bankkonto (IBAN)"
+msgstr "Pankkitili (IBAN)"
+
+msgid "Krävs endast för banköverföring, till exempel FI21 1234 5600 0007 85."
+msgstr "Vaaditaan vain tilisiirtoa varten, esimerkiksi FI21 1234 5600 0007 85."
+
+msgid "Inskickad av"
+msgstr "Lähettäjä"
+
+msgid "Inskickad"
+msgstr "Lähetetty"
+
+msgid "Behandlad av"
+msgstr "Käsittelijä"
+
+msgid "Behandlad"
+msgstr "Käsitelty"
+
+msgid "Kassörens signeringsdatum"
+msgstr "Rahastonhoitajan allekirjoituspäivä"
+
+msgid "PDF"
+msgstr "PDF"
+
+msgid "PDF genererad"
+msgstr "PDF luotu"
+
+msgid "kostnadsersättning"
+msgstr "kulukorvaus"
+
+msgid "kostnadsersättningar"
+msgstr "kulukorvaukset"
+
+msgid "Bankkonto (IBAN) krävs för banköverföring."
+msgstr "Tilisiirtoa varten tarvitaan pankkitili (IBAN)."
+
+msgid "Ogiltigt IBAN-nummer."
+msgstr "Virheellinen IBAN."
+
+msgid "Kostnadsersättning"
+msgstr "Kulukorvaus"
+
+msgid "Fil"
+msgstr "Tiedosto"
+
+msgid "Endast bilder (JPEG, PNG, GIF, WebP) och PDF-filer är tillåtna."
+msgstr "Vain kuvat (JPEG, PNG, GIF, WebP) ja PDF-tiedostot ovat sallittuja."
+
+msgid "Uppladdad"
+msgstr "Ladattu"
+
+msgid "kvitto"
+msgstr "kuitti"
+
+msgid "kvitton"
+msgstr "kuitit"
+
+msgid "JPEG-, PNG-, GIF- eller WebP-bilder och PDF-filer"
+msgstr "JPEG-, PNG-, GIF- tai WebP-kuvat ja PDF-tiedostot"
+
+msgid "Du kan skicka med högst %(count)d kvitton per utlägg."
+msgstr "Voit liittää enintään %(count)d kuittia kulukorvausta kohden."
+
+msgid "Kvittona får tillsammans vara högst %(megabytes)d MB."
+msgstr "Kuitit saavat olla yhteensä enintään %(megabytes)d MB."
+
+msgid "Endast %(types)s är tillåtna."
+msgstr "Vain %(types)s ovat sallittuja."
+
+msgid "Filen är inte en giltig bild eller PDF."
+msgstr "Tiedosto ei ole kelvollinen kuva tai PDF."
+
+msgid "Kvitton"
+msgstr "Kuitit"
+
+msgid "Du kan välja flera filer samtidigt. Varje fil får vara högst 10 MB."
+msgstr "Voit valita useita tiedostoja kerrallaan. Jokainen tiedosto saa olla enintään 10 MB."
+
+msgid "Kostnadsersättningen har skickats in."
+msgstr "Kulukorvaus on lähetetty."
+
+msgid "Kvittot finns inte."
+msgstr "Kuittia ei ole olemassa."
+
+msgid "PDF:en har inte genererats än."
+msgstr "PDF:ää ei ole vielä luotu."
+
+msgid "Kvitto"
+msgstr "Kuitti"
+
+msgid "Öppna kvitto"
+msgstr "Avaa kuitti"
+
+msgid "Inte genererad"
+msgstr "Ei luotu"
+
+msgid "Ladda ned PDF"
+msgstr "Lataa PDF"
+
+msgid "Generera PDF på nytt"
+msgstr "Luo PDF uudelleen"
+
+msgid "PDF-generering startad för {count} utlägg."
+msgstr "PDF:n luonti aloitettu {count} kulukorvaukselle."
+
+msgid "Godkänn valda utlägg"
+msgstr "Hyväksy valitut kulukorvaukset"
+
+
+msgid "Neka valda utlägg"
+msgstr "Hylkää valitut kulukorvaukset"
+
+
+msgid "Kostnadsersättningar"
+msgstr "Kulukorvaukset"
+
+msgid "Skicka in ny kostnadsersättning"
+msgstr "Lähetä uusi kulukorvaus"
+
+msgid "Här ser du dina inskickade utlägg och deras status. Kvittona är bara synliga för dig och för styrelsen."
+msgstr "Tässä näet lähettämäsi kulukorvaukset ja niiden tilan. Kuitit näkyvät vain sinulle ja hallitukselle."
+
+msgid "Belopp"
+msgstr "Summa"
+
+msgid "Åtgärder"
+msgstr "Toiminnot"
+
+msgid "Visa"
+msgstr "Näytä"
+
+msgid "Inga kostnadsersättningar hittades."
+msgstr "Kulukorvauksia ei löytynyt."
+
+msgid "Bankkonto"
+msgstr "Pankkitili"
+
+msgid "PDF:en genereras. Ladda om sidan om en stund."
+msgstr "PDF:ää luodaan. Lataa sivu uudelleen hetken kuluttua."
+
+msgid "Skicka in kostnadsersättning"
+msgstr "Lähetä kulukorvaus"
+
+msgid "Fyll i vad utlägget gäller och bifoga kvittona. Styrelsen behandlar ansökan och betalar ut beloppet enligt den valda betalningsmetoden."
+msgstr "Kuvaile, mitä kulua korvaus koskee, ja liitä kuitit. Hallitus käsittelee hakemuksen ja maksaa summan valitulla maksutavalla."
+
+msgid "Skicka in"
+msgstr "Lähetä"
+
+# Admin sidebar section for the expenses app
+msgid "Expenses"
+msgstr "Kulut"
+
+msgid "Expense claims"
+msgstr "Kulukorvaukset"
+
+
+# Expenses app follow-up strings
+msgid "godkända"
+msgstr "hyväksytyiksi"
+
+msgid "nekade"
+msgstr "hylätyiksi"
+
+msgid "{count} utlägg markerade som {label}."
+msgstr "{count} kulukorvausta merkitty tilaan {label}."
+
+msgid "{count} utlägg hoppades över eftersom de redan hade behandlats."
+msgstr "{count} kulukorvausta ohitettiin, koska ne oli jo käsitelty."
+
+msgid "PDF-generering kunde inte startas för {count} utlägg."
+msgstr "PDF:n luontia ei voitu aloittaa {count} kulukorvaukselle."
+
+msgid "Sidnavigering"
+msgstr "Sivunavigointi"
+
+msgid "Bilden har för många pixlar. Förminska den och försök igen."
+msgstr "Kuvassa on liikaa pikseleitä. Pienennä sitä ja yritä uudelleen."
+
+msgid "PDF:en har för många sidor."
+msgstr "PDF:ssä on liikaa sivuja."
+
+msgid "Kvitto #%(pk)s"
+msgstr "Kuitti #%(pk)s"
+
