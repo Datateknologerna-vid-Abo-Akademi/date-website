@@ -114,7 +114,7 @@ The page is not placed in a code-managed menu. Like `/attendance/`, the link bel
 ## Known limits
 
 - A member can submit any number of claims and there is no rate limit. The form caps files and bytes, not submissions.
-- Both lists are paginated at `CLAIMS_PER_PAGE` (50).
+- The claim list is paginated at `CLAIMS_PER_PAGE` (50).
 - There is no notification email to the treasurer and no reminder; the admin is the place to watch.
 - A claim's `submitted_by` cascades, so deleting a member deletes their claims and receipt files. Export the signed PDFs first if a deletion request has to keep the financial record.
 - The PDF is generated once and not regenerated when a receipt is added through the admin. Receipts cannot be added or removed in the admin, so the only path to a new receipt is a new claim; the action exists for a manual regeneration after a storage or rendering problem.
