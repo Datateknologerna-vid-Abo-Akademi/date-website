@@ -17,10 +17,25 @@
     --textColorMedium: #606060;
     --helpText: #888;
     --helpTextLighter: rgb(199, 199, 199);
-    --linkColorDark: #3a80c3;
-    --linkColorDarkHover: #26547f;
-    --linkColorLight: rgb(208, 255, 0);
-    --linkColorLightHover: rgb(146, 179, 0);
+    --linkColorDark: #d4af37;
+    --linkColorDarkHover: #b8860b;
+    /* Deep golds for text on white: every stop keeps at least 5:1 contrast. */
+    --link-gold-on-light: #7a6012;
+    --link-gold-on-light-hover: #5c460c;
+    --gold-shine: linear-gradient(110deg, #5c460c 0%, #735a10 30%, #8c6a0c 50%, #735a10 70%, #5c460c 100%);
+    /* Ticked titles on white. At background-size 250% only the outer 40% of each
+       end shows at rest or hovered, so the bright middle band is on screen only
+       while the sweep runs and the resting text keeps the deep golds. */
+    --gold-shine-title-on-light: linear-gradient(110deg, #5c460c 0%, #7a6012 38%, #d4af37 50%, #7a6012 62%, #5c460c 100%);
+    --linkColorLight: #e6b445;
+    --linkColorLightHover: #c9982e;
+    --gold-shine-on-dark: linear-gradient(110deg, #c9982e 0%, #e6b445 30%, #f7dc8a 50%, #e6b445 70%, #c9982e 100%);
+    /* The members forms keep the shared green; only the terms link on the
+       signup form is gold. */
+    --form-consent-link: var(--link-gold-on-light);
+    --cookie-accept-bg: var(--linkColorLight);
+    --cookie-accept-bg-hover: var(--linkColorLightHover);
+    --cookie-accept-fg: var(--textColorDark);
     --warning: rgb(216, 153, 146);
     --warning-darker: rgb(213, 91, 78);
     --navClickHighlight: rgba(255, 255, 255, 0.25);

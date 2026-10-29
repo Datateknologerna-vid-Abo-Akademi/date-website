@@ -40,6 +40,7 @@ from date.views import (
 from events.models import Event
 from instagram.models import IgUrl
 from news.models import Category, Post
+from staticpages.models import StaticPageNav, StaticUrl
 
 ASSOCIATION_SETTINGS_MODULES = {
     "date": "core.settings.date",
@@ -123,6 +124,31 @@ class SiteShellTemplateTests(TestCase):
                 with override_settings(PROJECT_NAME=association, TEMPLATES=module.TEMPLATES):
                     rendered = render_to_string("core/base.html", self._content_context())
                 self.assertIn("core/css/pagination.css", rendered)
+
+    def test_every_association_header_renders_nav_submenus(self):
+        # Child menu links used to render only where the association header opted
+        # in. Every shell now renders them and links the shared submenu sheet. The
+        # child list must not be a .dropdown-menu: Bootstrap's arrow-key handler
+        # binds to the closest one and throws on a nested menu.
+        category = StaticPageNav.objects.create(category_name="Menu")
+        parent = StaticUrl.objects.create(title="Parent", category=category, url="")
+        StaticUrl.objects.create(title="Child", parent=parent, url="/child/")
+        context = {
+            **self._content_context(),
+            "categories": [category],
+            "urls": list(StaticUrl.objects.filter(parent=None)),
+        }
+        for association, settings_module in ASSOCIATION_SETTINGS_MODULES.items():
+            with self.subTest(association=association):
+                module = importlib.import_module(settings_module)
+                with override_settings(PROJECT_NAME=association, TEMPLATES=module.TEMPLATES):
+                    rendered = render_to_string("core/base.html", context)
+                self.assertIn("core/css/header-submenu.css", rendered)
+                self.assertIn("core/js/nav-submenus.js", rendered)
+                submenu = re.search(r'<li class="dropdown-submenu" data-nav-submenu>.*?</ul>', rendered, re.S)
+                self.assertIsNotNone(submenu)
+                self.assertIn('href="/child/"', submenu.group())
+                self.assertNotRegex(submenu.group(), r'class="[^"]*\bdropdown-menu\b')
 
     def test_header_uses_unique_dropdown_ids_for_categories(self):
         categories = [
@@ -523,6 +549,22 @@ class HomepageContextHelperTests(TestCase):
         )
         self.assertEqual(day_events[0]["eventTitle"], event.title)
         self.assertEqual(day_events[0]["eventFullDate"], event.event_date_start)
+        self.assertIs(day_events[0]["titleShine"], False)
+
+    def test_format_calendar_events_passes_the_title_shine_flag(self):
+        event_start = timezone.now() + timedelta(days=1)
+        event = Event.objects.create(
+            title="Shiny Calendar Event",
+            slug="shiny-calendar-event",
+            author=self.author,
+            event_date_start=event_start,
+            event_date_end=event_start + timedelta(hours=2),
+            title_shine=True,
+        )
+
+        payload = format_calendar_events([event])
+
+        self.assertIs(payload[event_start.strftime("%Y-%m-%d")][0]["titleShine"], True)
 
     def test_format_calendar_events_keeps_all_events_on_the_same_day(self):
         event_start = timezone.localtime(timezone.now()).replace(
@@ -1581,6 +1623,47 @@ class HomepageBookingTests(TestCase):
         self.assertContains(response, reverse("booking:room_detail", args=[other_room.pk]))
 
 
+class HomepageTitleShineTests(TestCase):
+    """Only the events and news posts an editor ticked get the title shine."""
+
+    def setUp(self):
+        cache.clear()
+        author = get_user_model().objects.create(username="shine-author", password="test")
+        published = timezone.now() - timedelta(seconds=1)
+        upcoming = timezone.now() + timedelta(days=1)
+        Event.objects.create(
+            title="Shiny event",
+            slug="shiny-event",
+            author=author,
+            published_time=published,
+            event_date_start=upcoming,
+            event_date_end=upcoming,
+            title_shine=True,
+        )
+        Event.objects.create(
+            title="Plain event",
+            slug="plain-event",
+            author=author,
+            published_time=published,
+            event_date_start=upcoming,
+            event_date_end=upcoming,
+        )
+        Post.objects.create(
+            title="Shiny post", slug="shiny-post", author=author, published_time=published, title_shine=True
+        )
+        Post.objects.create(title="Plain post", slug="plain-post", author=author, published_time=published)
+
+    def test_only_ticked_titles_shine(self):
+        response = self.client.get("/")
+
+        self.assertEqual(response.status_code, 200)
+        html = response.content.decode()
+        self.assertRegex(html, r'class="news-title title-shine">Shiny post<')
+        self.assertRegex(html, r'class="news-title">Plain post<')
+        self.assertRegex(html, r'card-title text-uppercase mt-0 title-shine">\s*<strong>Shiny event<')
+        self.assertRegex(html, r'card-title text-uppercase mt-0">\s*<strong>Plain event<')
+
+
 class LunchWidgetTests(TestCase):
     """The lunchmenu.fi student lunch widget on the homepage and /lunch/."""
 
@@ -1603,7 +1686,7 @@ class LunchWidgetTests(TestCase):
         self.assertContains(response, 'data-lang="sv"')
         self.assertContains(response, 'data-count="3"')
         self.assertContains(response, 'data-heading="3"')
-        self.assertContains(response, 'data-accent="#3a80c3"')
+        self.assertContains(response, 'data-accent="#7a6012"')
         self.assertContains(response, "https://lunchmenu.fi/static/widget/student.js")
 
     def test_homepage_html_links_to_lunchmenu_without_javascript(self):

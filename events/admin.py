@@ -570,6 +570,11 @@ class EventAdmin(PublicUrlAdminMixin, TranslationCompletionAdminMixin, EventTran
         fields = list(super().get_fields(request, obj))
         if not registration_terms_feature_enabled() and "require_registration_terms" in fields:
             fields.remove("require_registration_terms")
+        if not settings.TITLE_SHINE_ENABLED and "title_shine" in fields:
+            # The checkbox does nothing without the association's .title-shine
+            # styles. The admin builds its form from these fields, so the event
+            # forms need no gate of their own.
+            fields.remove("title_shine")
         return fields
 
     def get_urls(self):

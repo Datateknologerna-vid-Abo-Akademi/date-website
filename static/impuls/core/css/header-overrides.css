@@ -1,0 +1,23 @@
+/* Impuls's differences from the shared core/css/header.css, linked after it
+   from impuls/core/base.html: a taller bar and a round, fixed-size logo. */
+nav.navbar {
+    min-height: 58px;
+}
+
+#logo {
+    align-items: center;
+    display: flex;
+    flex: 0 0 auto;
+    height: 45px;
+    width: 45px;
+}
+
+.header-logo {
+    border-radius: 50%;
+    display: block;
+    height: 45px;
+    max-width: 45px;
+    object-fit: contain;
+    overflow: hidden;
+    width: 45px;
+}

@@ -91,9 +91,10 @@ class AdminMemberUpdateForm(UnfoldFormMixin, forms.ModelForm):
         ),
     )
 
+    # Validated in clean_username so legacy usernames that predate
+    # USERNAME_VALIDATOR (e.g. containing "é") can still be saved unchanged.
     username = forms.CharField(
         max_length=20,
-        validators=[USERNAME_VALIDATOR],
         label=_('Användarnamn'),
     )
 
@@ -123,6 +124,12 @@ class AdminMemberUpdateForm(UnfoldFormMixin, forms.ModelForm):
             self.fields['membership_type'].queryset = MembershipType.objects.filter(name__in=membership_names)
         if not getattr(settings, 'ARCHIVE_ACCESS_REQUIRES_ELIGIBILITY', False):
             self.fields.pop('archive_access_eligible', None)
+
+    def clean_username(self):
+        username = self.cleaned_data['username']
+        if not self.instance.pk or username != self.instance.username:
+            USERNAME_VALIDATOR(username)
+        return username
 
     def save(self, commit=True):
         member = super().save(commit=False)

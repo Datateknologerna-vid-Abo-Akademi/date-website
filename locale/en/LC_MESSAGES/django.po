@@ -701,6 +701,26 @@ msgstr "Passcode"
 msgid "Bakgrundsbild"
 msgstr "Background image"
 
+#: events/models.py
+msgid "Bakgrundsbildens layout"
+msgstr "Background image layout"
+
+#: events/models.py
+msgid "Bakgrundsbildens huvudfärg"
+msgstr "Background image main colour"
+
+#: events/models.py
+msgid "Fyll hela bakgrunden"
+msgstr "Fill the whole background"
+
+#: events/models.py
+msgid "Visa bilden på sidorna"
+msgstr "Show the picture at the sides"
+
+#: events/models.py
+msgid "Hur bakgrundsbilden visas på evenemangssidan. \"Visa bilden på sidorna\" visar bilden förminskad till vänster och höger om texten, och som en banderoll ovanför texten på smala skärmar."
+msgstr "How the background image is shown on the event page. \"Show the picture at the sides\" shows a smaller copy of the picture to the left and right of the text, and as a banner above the text on narrow screens."
+
 #: events/models.py:105
 msgid "Captcha"
 msgstr "Captcha"
@@ -3872,3 +3892,15 @@ msgstr "Choose a different name."
 #: templates/common/date/lunch.html:5 templates/common/date/lunch.html:9
 msgid "Lunch"
 msgstr "Lunch"
+
+#: events/models.py news/models.py
+msgid "Glanseffekt på titeln"
+msgstr "Shine effect on the title"
+
+#: news/models.py
+msgid "Visar titeln med glanseffekt på startsidan, i nyhetslistan och på nyhetssidan."
+msgstr "Shows the title with a shine effect on the homepage, in the news list and on the news page."
+
+#: events/models.py
+msgid "Visar titeln med glanseffekt på startsidan, i evenemangslistan och på evenemangssidan."
+msgstr "Shows the title with a shine effect on the homepage, in the event list and on the event page."

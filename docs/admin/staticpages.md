@@ -38,7 +38,17 @@ Manage the informational pages and navigation links that live under the "About",
    - **Url** – destination. Start typing and pick one of the site's own pages from the suggestions, or type `/members/...` or an external `https://` address by hand.
    - **Visa endast åt inloggade användare** – hide the link from anonymous visitors.
    - **#** – ordering token; increments of 10 keep the list tidy.
+   - **Parent** – leave empty for a normal dropdown entry. Pick another entry to nest this link under it as a submenu item (see below); the link moves to that entry's category when saved.
 2. Save the category to persist link changes.
+
+### Submenus (nested links)
+A link with a **Parent** appears under that parent instead of in the dropdown itself, on every association's site:
+- On a computer, the submenu opens when the visitor hovers over the parent or reaches it with the keyboard. A parent without a **Url** also opens on click or tap, so give it no Url if the parent is only a heading for its children.
+- A parent that has a **Url** still goes to that address when clicked, so tablet visitors who cannot hover reach its children only through the parent's own page. Prefer a parent without a Url when its children matter.
+- In the narrow mobile menu every submenu is always shown, indented under its parent.
+- Only one level is allowed: a link that is itself a child cannot be picked as a parent.
+- A child without a **Url** is not shown, and a parent whose children are all hidden (no Url, or **Visa endast åt inloggade användare** for an anonymous visitor) shows as a normal link, or not at all if it has no Url either.
+- A login link (`/members/login/`) turns into **Logga ut** for signed-in members, also when it is a child or a parent.
 
 Urls must be a full address (`https://...`, `mailto:` or `tel:`) or an internal path starting with `/`. A bare relative path such as `pages/om-oss/` is rejected, because it would render as a broken link.
 

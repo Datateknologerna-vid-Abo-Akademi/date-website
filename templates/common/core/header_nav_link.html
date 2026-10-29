@@ -1,0 +1,33 @@
+{% load i18n %}
+{% load localized_urls %}
+{# One header link's own control: its link, or a logout form in place of the login link once signed in. #}
+{# With submenu set it also toggles that submenu, which nav-submenus.js keeps aria-expanded in step with; a parent without a url is only a toggle button. #}
+{% url 'members:login' as login_url %}
+{% if user.is_authenticated and page.url|localized_url == login_url %}
+  <form action="{% url 'members:logout' %}" method="post">
+    {% csrf_token %}
+    {% if submenu %}
+      <button class="dropdown-item dropdown-toggle"
+              aria-controls="nav-submenu-{{ page.pk }}"
+              aria-expanded="false"
+              data-nav-submenu-toggle>{% translate "Logga ut" %}</button>
+    {% else %}
+      <button class="dropdown-item">{% translate "Logga ut" %}</button>
+    {% endif %}
+  </form>
+{% elif submenu and not page.url %}
+  <button class="dropdown-item dropdown-toggle dropdown-submenu-toggle"
+          type="button"
+          aria-controls="nav-submenu-{{ page.pk }}"
+          aria-expanded="false"
+          data-nav-submenu-toggle
+          data-nav-submenu-button>{{ page.title }}</button>
+{% elif submenu %}
+  <a class="dropdown-item dropdown-toggle"
+     href="{{ page.url|localized_url }}"
+     aria-controls="nav-submenu-{{ page.pk }}"
+     aria-expanded="false"
+     data-nav-submenu-toggle>{{ page.title }}</a>
+{% else %}
+  <a class="dropdown-item" href="{{ page.url|localized_url }}">{{ page.title }}</a>
+{% endif %}

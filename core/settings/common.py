@@ -412,6 +412,9 @@ REGISTRATION_TERMS_ENABLED = False
 EQUALITY_PLAN_ENABLED = False
 KK_EVENT_TEMPLATES_ENABLED = False
 BOOKING_ENABLED = False
+# Shows the title_shine checkbox on events and news posts in the admin. Only
+# associations whose stylesheets define .title-shine should turn it on.
+TITLE_SHINE_ENABLED = False
 INSTAGRAM_USERNAME = ''
 
 # lunchmenu.fi student lunch widget. Off by default; DaTe turns it on in

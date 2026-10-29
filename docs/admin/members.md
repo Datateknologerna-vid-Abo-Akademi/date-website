@@ -8,7 +8,7 @@ Most people register themselves at `/members/signup/`. Those signups land in the
 
 1. Go to **Members › Members** (`/admin/members/member/`).
 2. **Add member**:
-   - Fill in username (letters/underscore/hyphen only), contact details, membership type, and optional groups.
+   - Fill in username (ASCII letters, numbers, dots, underscores and hyphens only; older members whose usernames contain other characters can still be edited as long as the username is left unchanged), contact details, membership type, and optional groups.
    - Set a temporary password. Tick **Send email** if you plan to notify the member manually (system does not send the password automatically).
 3. **Edit member**:
     - Update contact info, membership type, or group assignments as needed.

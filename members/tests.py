@@ -110,6 +110,58 @@ class UsernameValidatorTest(TestCase):
         self.assertFalse(form.is_valid())
         self.assertIn('username', form.errors)
 
+    def test_signup_form_rejects_accented_username(self):
+        form = SignUpForm(
+            data={
+                'username': 'legacyé',
+                'email': 'legacy@example.com',
+                'first_name': 'Legacy',
+                'last_name': 'User',
+                'membership_type': self.membership_type.id,
+                'password': 'secret123',
+            }
+        )
+        self.assertFalse(form.is_valid())
+        self.assertIn('username', form.errors)
+
+    def _admin_update_data(self, member, **overrides):
+        data = {
+            'username': member.username,
+            'email': member.email,
+            'first_name': member.first_name,
+            'last_name': member.last_name,
+            'membership_type': self.membership_type.id,
+        }
+        data.update(overrides)
+        return data
+
+    def test_admin_update_form_keeps_legacy_username(self):
+        member = Member.objects.create_user(
+            username='legacyé',
+            email='legacy@example.com',
+            password='secret12345',
+            membership_type=self.membership_type,
+        )
+        form = AdminMemberUpdateForm(
+            data=self._admin_update_data(member, first_name='Legacy'),
+            instance=member,
+        )
+        self.assertTrue(form.is_valid(), form.errors)
+
+    def test_admin_update_form_rejects_renaming_to_invalid_username(self):
+        member = Member.objects.create_user(
+            username='legacy',
+            email='legacy@example.com',
+            password='secret12345',
+            membership_type=self.membership_type,
+        )
+        form = AdminMemberUpdateForm(
+            data=self._admin_update_data(member, username='legacyé'),
+            instance=member,
+        )
+        self.assertFalse(form.is_valid())
+        self.assertIn('username', form.errors)
+
     def test_gulispass_checkbox_is_hidden_for_non_sf_associations(self):
         self.assertNotIn('archive_access_eligible', MemberCreationForm().fields)
         self.assertNotIn('archive_access_eligible', AdminMemberUpdateForm().fields)

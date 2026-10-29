@@ -66,8 +66,19 @@ class PostAdmin(PublicUrlAdminMixin, TranslationCompletionAdminMixin, NewsTransl
     }
 
     fieldsets = [
-        (None, {'fields': ['title', 'category', 'content', 'published_time', 'slug']}),
+        (None, {'fields': ['title', 'title_shine', 'category', 'content', 'published_time', 'slug']}),
     ]
+
+    def get_fieldsets(self, request, obj=None):
+        # The checkbox does nothing without the association's .title-shine styles.
+        fieldsets = super().get_fieldsets(request, obj)
+        if settings.TITLE_SHINE_ENABLED:
+            return fieldsets
+        return [
+            (name, {**options, 'fields': [f for f in options['fields'] if f != 'title_shine']})
+            for name, options in fieldsets
+        ]
+
     prepopulated_fields = {'slug': ('title',)}
 
     def get_prepopulated_fields(self, request, obj=None):

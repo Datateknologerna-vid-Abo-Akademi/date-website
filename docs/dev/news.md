@@ -3,13 +3,14 @@
 ## Models
 - `Category`: name + slug with default alphabetical ordering.
 - `Post`: title, optional category, CKEditor content, FK to `members.Member` as author, timestamps (`created_time`, `published_time`, `modified_time`), and slug (max 50 chars). Methods `publish()`, `unpublish()`, `update()` manage timestamps.
+- `Post.title_shine` (default `False`, with a `db_default` so the previous release can still insert rows during a blue-green deploy) adds the `title-shine` class to the title on the homepage news column, the `/news/` list and the article page. The class only has styles in DaTe's `static/date/core/css/base.css` and `homepage.css`, so the admin hides the checkbox unless `TITLE_SHINE_ENABLED` is on (DaTe only).
 - Publication is controlled by `published_time`: `NULL` means hidden, a future timestamp means scheduled, and a past timestamp means public. Use `Post.objects.published()` for public-facing post lists and detail lookups. The `Post.published` property reflects the same time-based check.
 
 ## Forms
 - `PostCreationForm` and `PostEditForm` both attach `request.user` to set the `author` (creation) or just update metadata (edit). Creation form slugifies with `slugify_max`; `published_time` is editable in the form (defaults to "now" so saving immediately makes the post public).
 
 ## Admin
-- `PostAdmin` swaps between the two forms in `add_view` vs `change_view`. Columns show author, category, created/modified times, computed publication status, and the raw `published_time`. The `publication` list filter splits posts into published / scheduled / hidden buckets. Categories get their own simple `ModelAdmin`.
+- `PostAdmin` swaps between the two forms in `add_view` vs `change_view`. Columns show author, category, created/modified times, computed publication status, and the raw `published_time`. The `publication` list filter splits posts into published / scheduled / hidden buckets. Categories get their own simple `ModelAdmin`. `get_fieldsets` drops `title_shine` when `TITLE_SHINE_ENABLED` is off.
 
 ## Views
 - `index`: paginates 10 latest un-categorized, published posts, ordered by publication time and then primary key in descending order so posts with identical timestamps remain stable across pages. Pagination shows a five-page window around the current page, with first/last-page links and ellipses when needed.
