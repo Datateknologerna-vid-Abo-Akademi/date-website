@@ -198,11 +198,11 @@ div.news-content a:hover{
 
 
 .more-events-button{
-    color: var(--linkColor);
+    color: var(--accentColor);
 }
 
 .more-events-button:hover{
-    color: var(--linkSecondaryHover);
+    color: var(--accentColorHover);
 }
 /*Events end*/
 
