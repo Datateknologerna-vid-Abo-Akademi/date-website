@@ -21,11 +21,12 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.http import Http404
 from django.test import RequestFactory, SimpleTestCase, TestCase, TransactionTestCase
 from django.urls import reverse
 from django.utils import formats, timezone
 
-from booking import access, emails
+from booking import access, emails, views
 from booking.admin import BookingAdmin, BookingInline, BookingOriginFilter, RoomAdmin
 from booking.forms import AnonymousBookingForm, BookingForm
 from booking.models import BOOKING_MAX_DURATION, BOOKING_PAST_GRACE, Booking, BookingSettings, Closure, Room
@@ -441,6 +442,15 @@ class BookingModelTests(TestCase):
             booking.full_clean()
 
         self.assertIn('booker_name', raised.exception.message_dict)
+
+    def test_the_title_has_a_database_default_for_old_writers(self):
+        # During a blue-green deploy an old instance inserts a booking without
+        # this column, so the database itself has to supply the empty string.
+        # The Python default is separate: it keeps an unsaved instance readable
+        # as '' rather than Django's DatabaseDefault sentinel.
+        field = Booking._meta.get_field('title')
+        self.assertEqual(field.db_default, '')
+        self.assertEqual(Booking().title, '')
 
     def test_a_new_booking_without_a_title_is_rejected(self):
         booking = Booking(room=self.room, start=self.start, end=self.end, booker_name='Någon')
@@ -1428,6 +1438,7 @@ class BookingMemberFlowTests(TestCase):
         response = self.client.get(reverse('booking:my_bookings'))
 
         self.assertContains(response, reverse('booking:edit_my_booking', args=[booking.pk]))
+        self.assertContains(response, 'Gammal titel')
 
     def test_a_member_edits_their_own_booking(self):
         booking = self.member_booking()
@@ -1439,6 +1450,10 @@ class BookingMemberFlowTests(TestCase):
         self.assertEqual(shown.status_code, 200)
         self.assertContains(shown, 'name="title"')
         self.assertContains(shown, 'Gammal titel')
+        # This page is authenticated by the account, so there is no code to
+        # carry and no sentence about one.
+        self.assertNotContains(shown, 'name="code"')
+        self.assertNotContains(shown, 'Samma avbokningskod gäller fortfarande.')
 
         response = self.client.post(
             edit_url,
@@ -2598,12 +2613,17 @@ class BookingCancellationTests(PinnedNowMixin, TestCase):
         # Opening the form is a POST so the code never has to be put in a URL,
         # and it is still only a read: the save is a second, separate step.
         booking = self.outsider_booking()
+        code = access.cancel_code(booking)
 
-        response = self.client.post(self.cancel_url, {'code': access.cancel_code(booking), 'edit': '1'})
+        response = self.client.post(self.cancel_url, {'code': code, 'edit': '1'})
 
         self.assertEqual(response.status_code, 200)
         self.assertIn('edit_form', response.context)
         self.assertContains(response, 'name="title"')
+        # The code rides along in the form, so the save does not need the
+        # visitor to paste it a second time.
+        self.assertContains(response, f'name="code" value="{code}"')
+        self.assertContains(response, 'Samma avbokningskod gäller fortfarande.')
         booking.refresh_from_db()
         self.assertEqual(booking.title, '')
         self.assertEqual(booking.start, self.start)
@@ -2834,6 +2854,76 @@ class BookingCancellationTests(PinnedNowMixin, TestCase):
         with_one = self.client.get(index)
 
         self.assertContains(with_one, reverse('booking:my_bookings'))
+
+
+class BookingEditRaceTests(TestCase):
+    """The save helper when the booking changes underneath the open form."""
+
+    def setUp(self):
+        self.member = make_member('edit-race-member')
+        self.room = make_room(name='Bastun')
+        self.other_room = make_room(name='Kansliet')
+        self.start = timezone.localtime(timezone.now()).replace(second=0, microsecond=0) + datetime.timedelta(days=1)
+        self.end = self.start + datetime.timedelta(hours=1)
+        self.booking = make_booking(self.room, self.start, self.end, title='Före', author=self.member)
+
+    def payload(self, **overrides):
+        data = {
+            'title': 'Efter',
+            'start': local_input_time(self.start),
+            'end': local_input_time(self.end),
+            'description': '',
+        }
+        data.update(overrides)
+        return RequestFactory().post('/booking/mine/edit/', data)
+
+    def test_a_booking_that_was_deleted_is_not_found(self):
+        stale = Booking.objects.get(pk=self.booking.pk)
+        self.booking.delete()
+
+        with self.assertRaises(Http404):
+            views._save_edited_booking(self.payload(), stale)
+
+    def test_the_member_owner_is_rechecked_after_the_lock(self):
+        # The page looked the booking up while it belonged to this member; an
+        # admin reassigned it before the form was saved. The member must not get
+        # to edit it just because their page was opened first.
+        stale = Booking.objects.get(pk=self.booking.pk)
+        Booking.objects.filter(pk=self.booking.pk).update(author=make_member('edit-race-other'))
+
+        with self.assertRaises(Http404):
+            views._save_edited_booking(self.payload(), stale, owner=self.member)
+
+    def test_a_booking_that_moved_rooms_is_validated_in_the_new_room(self):
+        # The form was opened while the row was in Bastun; an admin moved it to
+        # Kansliet before the save. A booking there covers the submitted time,
+        # so the save has to be refused against that room, not the old one.
+        stale = Booking.objects.get(pk=self.booking.pk)
+        Booking.objects.filter(pk=self.booking.pk).update(room=self.other_room)
+        make_booking(self.other_room, self.start, self.end, booker_name='Någon annan')
+        stale.room = self.room
+
+        form, saved = views._save_edited_booking(self.payload(), stale)
+
+        self.assertFalse(saved)
+        self.assertIn('start', form.errors)
+        self.booking.refresh_from_db()
+        self.assertEqual(self.booking.room, self.other_room)
+        self.assertEqual(self.booking.title, 'Före')
+
+    def test_a_booking_that_moved_rooms_can_still_be_saved(self):
+        # The positive control: a move to a free room is not itself a reason to
+        # refuse, and the edit lands against the room the row is in now.
+        stale = Booking.objects.get(pk=self.booking.pk)
+        Booking.objects.filter(pk=self.booking.pk).update(room=self.other_room)
+        stale.room = self.room
+
+        form, saved = views._save_edited_booking(self.payload(), stale)
+
+        self.assertTrue(saved, form.errors)
+        saved_booking = Booking.objects.get(pk=self.booking.pk)
+        self.assertEqual(saved_booking.room, self.other_room)
+        self.assertEqual(saved_booking.title, 'Efter')
 
 
 class BookingGateRegressionTests(PinnedNowMixin, TestCase):

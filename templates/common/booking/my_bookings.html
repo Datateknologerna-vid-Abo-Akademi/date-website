@@ -29,7 +29,7 @@
                     <span class="booking-room-name">{{ booking.room.name }}</span>
                   </span>
                 </span>
-                <span class="booking-actions">
+                <div class="booking-actions">
                   <a class="theme-button booking-action-button"
                      href="{% url 'booking:edit_my_booking' booking.pk %}">{% trans "Ändra" %}</a>
                   <form method="post" class="booking-cancel-form">
@@ -37,7 +37,7 @@
                     <input type="hidden" name="booking" value="{{ booking.pk }}">
                     <button class="theme-button booking-action-button" type="submit">{% trans "Avboka" %}</button>
                   </form>
-                </span>
+                </div>
               </li>
             {% endfor %}
           </ul>

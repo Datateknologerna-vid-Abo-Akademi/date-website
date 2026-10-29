@@ -193,6 +193,13 @@ class Booking(models.Model):
         _('Titel'),
         max_length=120,
         blank=True,
+        # The Python default keeps an unsaved instance readable as '' instead of
+        # Django's DatabaseDefault sentinel. The database default is what lets an
+        # old instance, still running during a blue-green deploy, insert a booking
+        # before it knows about this column: without it the column is NOT NULL and
+        # that insert fails.
+        default='',
+        db_default='',
         help_text=_('Visas offentligt för alla som tittar på bokningarna.'),
     )
     description = models.CharField(_('Beskrivning'), max_length=400, blank=True)

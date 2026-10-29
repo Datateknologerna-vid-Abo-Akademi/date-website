@@ -129,6 +129,13 @@ class BookingInviteTests(SimpleTestCase):
 
         self.assertEqual(property_value(content, 'SUMMARY'), 'Årsmöte')
 
+    def test_a_title_is_escaped_in_the_summary(self):
+        # A title is free text, and a calendar client parses the same delimiters
+        # in SUMMARY as in DESCRIPTION.
+        _booking, content = self.build(title='Möte; med, styrelsen')
+
+        self.assertEqual(property_value(content, 'SUMMARY'), 'Möte\\; med\\, styrelsen')
+
     def test_every_line_ends_with_crlf(self):
         _booking, content = self.build()
 

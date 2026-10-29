@@ -1,7 +1,7 @@
 {% load i18n %}
 <p class="booking-help">
   {% trans "Ändra titeln eller tiden och spara." %}
-  {% if form %}
+  {% if edit_code %}
     {% trans "Samma avbokningskod gäller fortfarande." %}
   {% endif %}
 </p>
@@ -14,7 +14,7 @@
 {% endif %}
 <form method="post" class="booking-form">
   {% csrf_token %}
-  {% if form %}<input type="hidden" name="code" value="{{ form.code.value|default:'' }}">{% endif %}
+  {% if edit_code %}<input type="hidden" name="code" value="{{ edit_code }}">{% endif %}
   {% for field in edit_form %}
     <p>
       {{ field.label_tag }}

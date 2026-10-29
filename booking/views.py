@@ -250,7 +250,15 @@ def cancel_booking(request):
     return render(
         request,
         'booking/cancel_booking.html',
-        {'form': form, 'booking': booking, 'edit_form': edit_form},
+        {
+            'form': form,
+            'booking': booking,
+            'edit_form': edit_form,
+            # The form partial puts it back in the hidden field. Taking it from
+            # the bound form keeps the value the visitor submitted, so a
+            # rejected edit does not make them type the code again.
+            'edit_code': form['code'].value() if edit_form is not None else None,
+        },
     )
 
 
@@ -269,33 +277,38 @@ def _save_edited_booking(request, booking, owner=None):
     from a fresh read rather than from the instance the code was resolved
     against: an admin can move a booking between rooms, and the lock has to
     cover the room the booking is validated in.
+
+    If the room changed between the read and the booking lock, the whole attempt
+    is abandoned and retried with the new room. Locking the second room after
+    the booking is already held would reverse the lock order another edit uses,
+    and two such edits could deadlock instead of one simply retrying.
     """
-    with transaction.atomic():
-        room_id = Booking.objects.filter(pk=booking.pk).values_list('room_id', flat=True).first()
-        if room_id is None:
-            # The booking was cancelled, or its room was deleted and took it
-            # with it, after the code was checked.
-            raise Http404
-        try:
-            Room.objects.select_for_update().get(pk=room_id)
-        except Room.DoesNotExist as raised:
-            raise Http404 from raised
-        try:
-            booking = Booking.objects.select_for_update().get(pk=booking.pk)
-        except Booking.DoesNotExist as raised:
-            raise Http404 from raised
-        if owner is not None and booking.author_id != owner.pk:
-            raise Http404
-        if booking.room_id != room_id:
-            # A move landed between the read and the booking lock. The row is
-            # locked now, so this is the last room it can be in; lock that too
-            # before the overlap check looks at its other bookings.
+    for _attempt in range(2):
+        with transaction.atomic():
+            room_id = Booking.objects.filter(pk=booking.pk).values_list('room_id', flat=True).first()
+            if room_id is None:
+                # The booking was cancelled, or its room was deleted and took it
+                # with it, after the code was checked.
+                raise Http404
             try:
-                Room.objects.select_for_update().get(pk=booking.room_id)
+                Room.objects.select_for_update().get(pk=room_id)
             except Room.DoesNotExist as raised:
                 raise Http404 from raised
-        edit_form = BookingForm(request.POST, instance=booking)
-        if not edit_form.is_valid():
-            return edit_form, False
-        edit_form.save()
-        return edit_form, True
+            try:
+                booking = Booking.objects.select_for_update().get(pk=booking.pk)
+            except Booking.DoesNotExist as raised:
+                raise Http404 from raised
+            if booking.room_id != room_id:
+                # The move landed after the read. Release both locks and look
+                # again instead of taking a second room in the wrong order.
+                continue
+            if owner is not None and booking.author_id != owner.pk:
+                raise Http404
+            edit_form = BookingForm(request.POST, instance=booking)
+            if not edit_form.is_valid():
+                return edit_form, False
+            edit_form.save()
+            return edit_form, True
+    # The booking moved twice while the code was being checked. Refusing is
+    # better than validating it against a room it is no longer in.
+    raise Http404
