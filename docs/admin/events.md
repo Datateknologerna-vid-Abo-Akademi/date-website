@@ -49,7 +49,7 @@ Each event can have dynamic questions managed inline:
 7. Question names must be unique within an event. Names used by standard signup fields, such as `email`, `user`, and avec fields, are rejected to prevent invalid registrations.
 8. On an Årsfest page the **Anmälda** tab follows the list itself: it appears while the event is recent enough to show the list and the event either takes sign-ups or already holds registrations. Registrations you enter by hand therefore keep the tab, even on an event whose sign-up is turned off.
 
-**Large events:** the Deltagare table shows 50 attendees per page in the Unfold admin. Use the page links below the table to move between pages; saving only changes the rows on the current page. **Avec till** and answers remain editable per row. Drag reordering applies within the current page; use the attendee list for a cross-page reorder.
+**Large events:** the Deltagare table shows 50 attendees per page in the Unfold admin. Use the page links below the table to move between pages; saving only changes the rows on the current page. **Avec till** and answers remain editable per row. Drag reordering only exchanges the existing order numbers on the current page, leaving attendees on other pages unchanged. Save newly added attendees before dragging rows. Save before changing pages; unsaved edits on the previous page are not retained.
 
 ## Handling Waiting Lists / Child Events
 - The **Parent** dropdown lets you chain events together. Registrations for child events roll up to the parent so attendee numbers stay consistent.

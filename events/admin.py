@@ -161,6 +161,49 @@ class EventAttendeesForm(ModelForm):
 
 
 class EventAttendeesInlineFormSet(EventAttendeesInlineFormSetBase):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # ModelForm cleaning mutates these instances. Keep the page's original
+        # slots before constructing forms so Unfold's local ranks can be mapped
+        # back to global numbers, including gaps and legacy non-step-10 values.
+        self._page_attendee_nrs = (
+            {row.pk: row.attendee_nr for row in self.get_queryset()} if getattr(self, 'per_page', None) else {}
+        )
+
+    def clean(self):
+        super().clean()
+        if not self._page_attendee_nrs or any(self.errors):
+            return
+        initial_forms = self.initial_forms
+        ranks = [form.cleaned_data.get('attendee_nr') for form in initial_forms]
+        if self.extra_forms and any('attendee_nr' in form.changed_data for form in initial_forms):
+            all_ranks = [form.cleaned_data.get('attendee_nr') for form in self.forms]
+            if set(all_ranks) == set(range(len(self.forms))):
+                # A new row has no existing global slot. Do not let its native
+                # rank turn into a low attendee number or displace another page.
+                raise ValidationError(_('Spara nya deltagare innan du ändrar ordningen.'))
+        if len(initial_forms) != len(self._page_attendee_nrs) or set(ranks) != set(range(len(initial_forms))):
+            return
+        if any(form.instance.pk not in self._page_attendee_nrs for form in initial_forms):
+            return
+        # Unfold's native sortRecords sends zero-based ranks for this page,
+        # not global attendee numbers. Only permute this page's existing slots;
+        # otherwise a later page would claim numbers belonging to earlier rows.
+        slots = sorted(self._page_attendee_nrs.values())
+        for form, rank in zip(initial_forms, ranks, strict=True):
+            nr = slots[rank]
+            form.cleaned_data['attendee_nr'] = nr
+            form.instance.attendee_nr = nr
+            # changed_data may already be cached against the submitted rank.
+            # Django must save according to the mapped number instead, even if
+            # a legacy number happened to equal that row's temporary rank.
+            changed = form.changed_data
+            if nr == self._page_attendee_nrs[form.instance.pk]:
+                if 'attendee_nr' in changed:
+                    changed.remove('attendee_nr')
+            elif 'attendee_nr' not in changed:
+                changed.append('attendee_nr')
+
     def save(self, commit=True):
         # The admin_ordering drag reorder writes the final attendee_nr values
         # (10, 20, ...) into the forms in original row order, so a drag can
@@ -327,6 +370,8 @@ class EventAttendeesFormInline(AvecAwareMixin, OrderableAdmin, EventTranslationI
     # is a PaginationInlineFormSet only when USE_UNFOLD is on. Stock Django admin
     # ignores this attribute, so the classic admin still lists every attendee.
     per_page = 50
+    if settings.USE_UNFOLD:  # type: ignore[misc]
+        template = 'admin/events/attendees_tabular.html'
     show_change_link = True
     formfield_overrides = {
         **UNFOLD_FORMFIELD_OVERRIDES,

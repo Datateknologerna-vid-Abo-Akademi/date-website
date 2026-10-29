@@ -8,7 +8,7 @@ from django.contrib.auth import admin as auth_admin
 from django.contrib.auth.models import Group, Permission
 from django.db.models import CharField, Exists, F, OuterRef, Q, Value
 from django.db.models.functions import Lower, Replace
-from django.utils.text import smart_split
+from django.utils.text import smart_split, unescape_string_literal
 from django.utils.translation import gettext_lazy as _
 from django_otp.plugins.otp_static.models import StaticDevice
 from django_otp.plugins.otp_totp.models import TOTPDevice
@@ -285,6 +285,8 @@ class UserAdmin(_UserAdminBase):
         # term has to match one field (AND across terms, OR within a term).
         text_query = Q()
         for term in smart_split(search_term):
+            if term.startswith(('"', "'")) and term[0] == term[-1]:
+                term = unescape_string_literal(term)
             term_query = Q()
             for field_name in self.get_search_fields(request):
                 term_query |= Q(**{f'{field_name}__icontains': term})

@@ -7,7 +7,9 @@ indexes the event admin changelists rely on. The full reorder semantics stay in
 
 import importlib
 import uuid
+from html.parser import HTMLParser
 from unittest import skipIf, skipUnless
+from urllib.parse import parse_qs, urlsplit
 
 from django.conf import settings
 from django.contrib import admin
@@ -29,6 +31,44 @@ UNFOLD_ENABLED = getattr(settings, 'USE_UNFOLD', False)
 
 def index_names(model):
     return {index.name for index in model._meta.indexes}
+
+
+class _AttendeePaginationFragment(HTMLParser):
+    """Collect only controls and links inside the actual HTMX swap target."""
+
+    def __init__(self, content, selector='#eventattendees_set-data'):
+        super().__init__()
+        self.target_id = selector.removeprefix('#')
+        self.depth = 0
+        self.found = False
+        self.data = {}
+        self.links = []
+        self.feed(content)
+
+    def handle_starttag(self, tag, attrs):
+        attrs = dict(attrs)
+        if tag == 'div':
+            if self.depth:
+                self.depth += 1
+            elif attrs.get('id') == self.target_id:
+                self.depth = 1
+                self.found = True
+        if not self.depth:
+            return
+        if tag == 'a' and 'hx-get' in attrs:
+            self.links.append(attrs)
+        if tag != 'input':
+            return
+        name = attrs.get('name', '')
+        if not name.startswith('eventattendees_set-') or '__prefix__' in name:
+            return
+        if attrs.get('type') in ('checkbox', 'radio') and 'checked' not in attrs:
+            return
+        self.data[name] = attrs.get('value', '')
+
+    def handle_endtag(self, tag):
+        if tag == 'div' and self.depth:
+            self.depth -= 1
 
 
 class EventIndexTests(SimpleTestCase):
@@ -206,6 +246,163 @@ class AttendeeInlinePaginationTests(_AttendeeAdminFixture):
             instance=self.event,
             queryset=EventAttendees.objects.filter(event=self.event),
             prefix='eventattendees_set',
+        )
+
+    def _fragment(self, response, selector='#eventattendees_set-data'):
+        fragment = _AttendeePaginationFragment(response.content.decode(), selector)
+        self.assertTrue(fragment.found, 'the HTMX target must be a div containing the management form and rows')
+        return fragment
+
+    def _follow_page(self, fragment, page):
+        link = next(
+            link
+            for link in fragment.links
+            if parse_qs(urlsplit(link['hx-get']).query).get('eventattendees_set-page') == [str(page)]
+        )
+        self.assertEqual(link['hx-select'], '#eventattendees_set-data')
+        self.assertEqual(link['hx-target'], link['hx-select'])
+        response = self.client.get(self.change_url + link['hx-get'], headers={'HX-Request': 'true'})
+        self.assertEqual(response.status_code, 200)
+        return self._fragment(response, link['hx-select'])
+
+    def _bound_fragment(self, fragment):
+        request = RequestFactory().post(self.change_url, fragment.data)
+        request.user = self.admin_user
+        inline = EventAttendeesFormInline(Event, admin.site)
+        formset_class = inline.get_formset(request, obj=self.event)
+        return formset_class(
+            data=fragment.data,
+            request=request,
+            per_page=inline.per_page,
+            instance=self.event,
+            queryset=EventAttendees.objects.filter(event=self.event),
+            prefix='eventattendees_set',
+        )
+
+    def test_htmx_last_page_and_return_replace_management_counts_and_save(self):
+        fragment = self._fragment(self.client.get(self.change_url))
+        self.assertEqual(fragment.data['eventattendees_set-TOTAL_FORMS'], '50')
+        for page, count in ((2, 10), (1, 50)):
+            with self.subTest(page=page):
+                fragment = self._follow_page(fragment, page)
+                self.assertEqual(fragment.data['eventattendees_set-TOTAL_FORMS'], str(count))
+                self.assertEqual(fragment.data['eventattendees_set-INITIAL_FORMS'], str(count))
+                self.assertEqual(fragment.data['eventattendees_set-page'], str(page))
+                self.assertEqual(sum(name.endswith('-id') for name in fragment.data), count)
+                pk = fragment.data['eventattendees_set-0-id']
+                fragment.data['eventattendees_set-0-user'] = f'Edited page {page}'
+                formset = self._bound_fragment(fragment)
+                self.assertTrue(formset.is_valid(), formset.errors)
+                formset.save()
+                self.assertEqual(EventAttendees.objects.get(pk=pk).user, f'Edited page {page}')
+        self.assertEqual(EventAttendees.objects.filter(event=self.event).count(), 60)
+
+    def test_native_unfold_ranks_only_permute_the_current_pages_gapped_slots(self):
+        EventAttendees.objects.filter(event=self.event).delete()
+        numbers = [0, 2, 3, *(103 + index * 17 for index in range(117))]
+        EventAttendees.objects.bulk_create(
+            [
+                EventAttendees(
+                    event=self.event,
+                    attendee_nr=nr,
+                    user=f'Gapped attendee {index}',
+                    email=f'gapped-{index}@example.com',
+                    time_registered=timezone.now(),
+                    preferences={},
+                )
+                for index, nr in enumerate(numbers)
+            ]
+        )
+        for page in (1, 2, 3):
+            with self.subTest(page=page):
+                rows = list(EventAttendees.objects.filter(event=self.event).order_by('attendee_nr'))
+                before = {row.pk: row.attendee_nr for row in rows}
+                page_rows = rows[(page - 1) * 50 : page * 50]
+                slots = [row.attendee_nr for row in page_rows]
+                response = self.client.get(self.change_url, {'eventattendees_set-page': str(page)})
+                fragment = self._fragment(response)
+                # Native Unfold sortRecords uses zero-based ranks after dragging
+                # the last visible row first, including on later pages.
+                for index in range(len(page_rows)):
+                    fragment.data[f'eventattendees_set-{index}-attendee_nr'] = str((index + 1) % len(page_rows))
+                formset = self._bound_fragment(fragment)
+                self.assertTrue(formset.is_valid(), formset.errors)
+                if page == 1:
+                    # Original nr=2 and submitted rank=2 compare equal before
+                    # normalization, but the mapped slot is 3 and must save.
+                    self.assertIn('attendee_nr', formset.initial_forms[1].changed_data)
+                formset.save()
+                expected = before.copy()
+                for index, row in enumerate(page_rows):
+                    expected[row.pk] = slots[(index + 1) % len(page_rows)]
+                after = dict(EventAttendees.objects.filter(event=self.event).values_list('pk', 'attendee_nr'))
+                self.assertEqual(after, expected)
+
+    def test_edit_without_drag_preserves_the_current_pages_number_slots(self):
+        rows = list(EventAttendees.objects.filter(event=self.event).order_by('attendee_nr')[50:])
+        for index, row in enumerate(rows):
+            row.attendee_nr = 1003 + index * 17
+        EventAttendees.objects.bulk_update(rows, ['attendee_nr'])
+        fragment = self._fragment(self.client.get(self.change_url, {'eventattendees_set-page': '2'}))
+        before = dict(EventAttendees.objects.filter(event=self.event).values_list('pk', 'attendee_nr'))
+        fragment.data['eventattendees_set-0-user'] = 'Edited without dragging'
+        formset = self._bound_fragment(fragment)
+        self.assertTrue(formset.is_valid(), formset.errors)
+        formset.save()
+        self.assertEqual(dict(EventAttendees.objects.filter(event=self.event).values_list('pk', 'attendee_nr')), before)
+
+    def test_native_reorder_with_a_new_row_is_rejected_without_writing(self):
+        fragment = self._fragment(self.client.get(self.change_url, {'eventattendees_set-page': '2'}))
+        before = dict(EventAttendees.objects.filter(event=self.event).values_list('pk', 'attendee_nr'))
+        fragment.data['eventattendees_set-TOTAL_FORMS'] = '11'
+        for index in range(10):
+            fragment.data[f'eventattendees_set-{index}-attendee_nr'] = str(index + 1)
+        fragment.data.update(
+            {
+                'eventattendees_set-10-attendee_nr': '0',
+                'eventattendees_set-10-user': 'New attendee dragged first',
+                'eventattendees_set-10-email': 'new-dragged@example.com',
+            }
+        )
+        formset = self._bound_fragment(fragment)
+        self.assertFalse(formset.is_valid())
+        self.assertEqual(formset.non_form_errors(), ['Spara nya deltagare innan du ändrar ordningen.'])
+        self.assertEqual(dict(EventAttendees.objects.filter(event=self.event).values_list('pk', 'attendee_nr')), before)
+
+    def test_adding_without_drag_does_not_reject_or_renumber_existing_rows(self):
+        fragment = self._fragment(self.client.get(self.change_url, {'eventattendees_set-page': '2'}))
+        before = dict(EventAttendees.objects.filter(event=self.event).values_list('pk', 'attendee_nr'))
+        fragment.data['eventattendees_set-TOTAL_FORMS'] = '11'
+        fragment.data.update(
+            {
+                'eventattendees_set-10-attendee_nr': '610',
+                'eventattendees_set-10-user': 'New attendee',
+                'eventattendees_set-10-email': 'new@example.com',
+            }
+        )
+        formset = self._bound_fragment(fragment)
+        self.assertTrue(formset.is_valid(), formset.errors)
+        formset.save()
+        self.assertEqual(dict(EventAttendees.objects.filter(pk__in=before).values_list('pk', 'attendee_nr')), before)
+        self.assertTrue(EventAttendees.objects.filter(event=self.event, email='new@example.com').exists())
+
+    def test_native_reorder_with_a_deleted_row_leaves_off_page_numbers_unchanged(self):
+        fragment = self._fragment(self.client.get(self.change_url, {'eventattendees_set-page': '2'}))
+        rows = list(EventAttendees.objects.filter(event=self.event).order_by('attendee_nr'))
+        expected = {row.pk: row.attendee_nr for row in rows[:50]}
+        page_rows = rows[50:]
+        slots = [row.attendee_nr for row in page_rows]
+        for index, row in enumerate(page_rows):
+            rank = (index + 1) % len(page_rows)
+            fragment.data[f'eventattendees_set-{index}-attendee_nr'] = str(rank)
+            if index != 3:
+                expected[row.pk] = slots[rank]
+        fragment.data['eventattendees_set-3-DELETE'] = 'on'
+        formset = self._bound_fragment(fragment)
+        self.assertTrue(formset.is_valid(), formset.errors)
+        formset.save()
+        self.assertEqual(
+            dict(EventAttendees.objects.filter(event=self.event).values_list('pk', 'attendee_nr')), expected
         )
 
     def test_inline_paginates_fifty_attendees_per_page(self):
