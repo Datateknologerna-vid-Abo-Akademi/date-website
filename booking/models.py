@@ -174,6 +174,13 @@ class Closure(models.Model):
         if self.start and self.end and self.end <= self.start:
             raise ValidationError({'end': _('Sluttiden måste vara efter starttiden.')})
 
+    def get_inline_title(self):
+        # The room page already names the room, so a collapsed block only needs
+        # the period it covers.
+        start = timezone.localtime(self.start).strftime('%Y-%m-%d %H:%M') if self.start else '-'
+        end = timezone.localtime(self.end).strftime('%Y-%m-%d %H:%M') if self.end else '-'
+        return f'{start} - {end}'
+
 
 class Booking(models.Model):
     room = models.ForeignKey(
@@ -243,6 +250,13 @@ class Booking(models.Model):
             if update_fields is not None:
                 kwargs['update_fields'] = update_fields | {'booker_name'}
         super().save(*args, **kwargs)
+
+    def get_inline_title(self):
+        # The room page already names the room, so a collapsed block only needs
+        # the period it covers.
+        start = timezone.localtime(self.start).strftime('%Y-%m-%d %H:%M') if self.start else '-'
+        end = timezone.localtime(self.end).strftime('%Y-%m-%d %H:%M') if self.end else '-'
+        return f'{start} - {end}'
 
     @property
     def is_external(self):

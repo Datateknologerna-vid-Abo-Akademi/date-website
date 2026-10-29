@@ -136,6 +136,9 @@ class BookingInline(DescriptionTextareaMixin, StackedInline):
     fields = ('start', 'end', 'author', 'booker_name', 'description')
     autocomplete_fields = ('author',)
     show_change_link = True
+    # Each booking block is tall when open; collapsed they read as the
+    # booking list for the room.
+    collapsible = True
 
     def get_queryset(self, request):
         # A room collects bookings for years, and Django does not paginate
@@ -216,6 +219,7 @@ class ClosureInline(DescriptionTextareaMixin, StackedInline):
     extra = 0
     fields = ('start', 'end', 'description')
     ordering = ('-start',)
+    collapsible = True
 
     def get_queryset(self, request):
         # Same reasoning as the bookings inline: a room collects closures for

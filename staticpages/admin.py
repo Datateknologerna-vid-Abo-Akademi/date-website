@@ -60,6 +60,10 @@ class UrlInline(OrderableAdmin, StaticPageTranslationInlineBase):
     fk_name = 'category'
     can_delete = True
     extra = 0
+    # A dropdown category can hold many links, each with a title, URL, parent
+    # and visibility flag. Collapsed blocks list the link titles; expanding one
+    # shows its fields.
+    collapsible = True
     line_numbering = 0
     ordering_field = 'dropdown_element'
     ordering = ['dropdown_element']

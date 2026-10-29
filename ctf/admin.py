@@ -32,6 +32,8 @@ class FlagInline(StackedInline):
     extra = 0
     exclude = ('solved_date',)
     autocomplete_fields = ('solver',)
+    # A CTF collects several flags; collapsed blocks show each flag title.
+    collapsible = True
 
 
 class CtfPublicationFilter(admin.SimpleListFilter):

@@ -56,3 +56,32 @@ class BookingDescriptionWidgetTests(TestCase):
 
                 self.assertIsInstance(formfield.widget, forms.Textarea)
                 self.assertEqual(formfield.widget.attrs.get('rows'), 3)
+
+
+class CollapsibleInlineTests(TestCase):
+    """Inline blocks that hold several fields stay as collapsed summaries."""
+
+    def test_blocks_that_need_space_are_collapsible(self):
+        from booking.admin import BookingInline, ClosureInline
+        from ctf.admin import FlagInline
+        from staticpages.admin import UrlInline
+
+        for inline_class in (BookingInline, ClosureInline, UrlInline, FlagInline):
+            with self.subTest(inline=inline_class.__name__):
+                self.assertTrue(getattr(inline_class, 'collapsible', False))
+
+    def test_collapsed_booking_titles_do_not_repeat_the_room(self):
+        from datetime import datetime, timedelta
+
+        from django.utils import timezone
+
+        from booking.models import Booking, Room
+
+        room = Room(name='Audit room')
+        start = timezone.make_aware(datetime(2026, 5, 1, 18, 0))
+        booking = Booking(room=room, start=start, end=start + timedelta(hours=3))
+
+        title = booking.get_inline_title()
+
+        self.assertNotIn(room.name, title)
+        self.assertIn('18:00', title)
