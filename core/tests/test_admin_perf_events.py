@@ -95,7 +95,7 @@ class EventIndexTests(SimpleTestCase):
         self.assertIn('event_pub_end_idx', index_names(Event))
 
     def test_migration_creates_the_indexes_concurrently(self):
-        migration = importlib.import_module('events.migrations.0027_event_event_date_start_idx_and_more')
+        migration = importlib.import_module('events.migrations.0029_event_event_date_start_idx_and_more')
 
         self.assertFalse(migration.Migration.atomic)
         self.assertEqual(len(migration.Migration.operations), 2)

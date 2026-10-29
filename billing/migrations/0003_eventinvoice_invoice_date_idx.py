@@ -11,7 +11,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('billing', '0002_alter_eventbillingconfiguration_price_selector'),
-        ('events', '0027_event_event_date_start_idx_and_more'),
+        ('events', '0029_event_event_date_start_idx_and_more'),
     ]
 
     operations = [
