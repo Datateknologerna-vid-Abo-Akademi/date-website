@@ -40,6 +40,7 @@ from date.views import (
 from events.models import Event
 from instagram.models import IgUrl
 from news.models import Category, Post
+from staticpages.models import StaticPageNav, StaticUrl
 
 ASSOCIATION_SETTINGS_MODULES = {
     "date": "core.settings.date",
@@ -123,6 +124,31 @@ class SiteShellTemplateTests(TestCase):
                 with override_settings(PROJECT_NAME=association, TEMPLATES=module.TEMPLATES):
                     rendered = render_to_string("core/base.html", self._content_context())
                 self.assertIn("core/css/pagination.css", rendered)
+
+    def test_every_association_header_renders_nav_submenus(self):
+        # Child menu links used to render only where the association header opted
+        # in. Every shell now renders them and links the shared submenu sheet. The
+        # child list must not be a .dropdown-menu: Bootstrap's arrow-key handler
+        # binds to the closest one and throws on a nested menu.
+        category = StaticPageNav.objects.create(category_name="Menu")
+        parent = StaticUrl.objects.create(title="Parent", category=category, url="")
+        StaticUrl.objects.create(title="Child", parent=parent, url="/child/")
+        context = {
+            **self._content_context(),
+            "categories": [category],
+            "urls": list(StaticUrl.objects.filter(parent=None)),
+        }
+        for association, settings_module in ASSOCIATION_SETTINGS_MODULES.items():
+            with self.subTest(association=association):
+                module = importlib.import_module(settings_module)
+                with override_settings(PROJECT_NAME=association, TEMPLATES=module.TEMPLATES):
+                    rendered = render_to_string("core/base.html", context)
+                self.assertIn("core/css/header-submenu.css", rendered)
+                self.assertIn("core/js/nav-submenus.js", rendered)
+                submenu = re.search(r'<li class="dropdown-submenu" data-nav-submenu>.*?</ul>', rendered, re.S)
+                self.assertIsNotNone(submenu)
+                self.assertIn('href="/child/"', submenu.group())
+                self.assertNotRegex(submenu.group(), r'class="[^"]*\bdropdown-menu\b')
 
     def test_header_uses_unique_dropdown_ids_for_categories(self):
         categories = [

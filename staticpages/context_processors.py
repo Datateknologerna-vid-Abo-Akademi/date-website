@@ -51,7 +51,11 @@ def _visible_urls_queryset(user=None):
 
 def _filtered_urls_queryset(request=None):
     user = getattr(request, 'user', None)
-    children_queryset = _visible_urls_queryset(user).select_related('category').order_by('dropdown_element')
+    # A child without a url has nothing to render, and the header template treats
+    # any remaining child as a reason to draw a submenu toggle.
+    children_queryset = (
+        _visible_urls_queryset(user).exclude(url='').select_related('category').order_by('dropdown_element')
+    )
     return (
         _visible_urls_queryset(user)
         .filter(parent=None)
@@ -62,7 +66,9 @@ def _filtered_urls_queryset(request=None):
 
 
 def _categories_for(urls_list):
-    visible_category_ids = {url.category_id for url in urls_list}
+    # A top-level entry with no url and no visible children renders nothing, so it
+    # must not keep its category's dropdown on screen. children uses the prefetch.
+    visible_category_ids = {url.category_id for url in urls_list if url.url or url.children.all()}
     categories = StaticPageNav.objects.all().order_by('nav_element')
     if not getattr(settings, 'ARCHIVE_ENABLED', True):
         if 'exambank' in settings.INSTALLED_APPS:
@@ -87,8 +93,11 @@ def navigation(request):
     user = getattr(request, 'user', None)
     cache_key = None
     if user is None or not user.is_authenticated:
+        # Bump the schema segment whenever the cached payload's shape changes, so a
+        # deploy never serves entries written by the previous code. v2: children
+        # without a url are no longer prefetched, and the header relies on that.
         cache_key = (
-            f"staticpages:navigation:{settings.PROJECT_NAME}:{get_language()}:"
+            f"staticpages:navigation:v2:{settings.PROJECT_NAME}:{get_language()}:"
             f"{getattr(settings, 'ARCHIVE_ENABLED', True)}:{_nav_version()}"
         )
         cached = cache.get(cache_key)
