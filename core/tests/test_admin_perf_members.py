@@ -119,6 +119,94 @@ class MemberToManySearchTests(MemberAdminTestCase):
         self.assertContains(response, member.username)
 
 
+class MemberQuotedSearchTests(MemberAdminTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.member = Member.objects.create_user(
+            username=f"phrase-{RUN_ID}",
+            password="pass",
+            email=f"phrase-{RUN_ID}@example.com",
+            first_name="Ada Maria",
+            last_name="Lovelace",
+            city='Club "Founders"',
+            address="Founders' Hall",
+            membership_type=cls.membership_type,
+        )
+        Member.objects.create_user(
+            username=f"split-{RUN_ID}",
+            password="pass",
+            email=f"split-{RUN_ID}@example.com",
+            first_name="Ada",
+            last_name="Maria",
+            membership_type=cls.membership_type,
+        )
+        cls.member.groups.add(
+            Group.objects.create(name=f"Board alumni {RUN_ID}"),
+            Group.objects.create(name=f"Board alumni supporters {RUN_ID}"),
+        )
+        for name in (f"Lifetime membership {RUN_ID}", f"Lifetime membership supporter {RUN_ID}"):
+            subscription = Subscription.objects.create(name=name, does_expire=False, price=0)
+            SubscriptionPayment.objects.create(member=cls.member, subscription=subscription)
+
+    def test_single_and_double_quoted_phrases_match_a_whole_text_field(self):
+        for query in ('"Ada Maria"', "'Ada Maria'"):
+            with self.subTest(query=query):
+                _, results = self.member_search(query)
+
+                self.assertEqual([member.pk for member in results], [self.member.pk])
+
+    def test_escaped_quotes_match_literal_quotes_in_text_fields(self):
+        for query in (r'"Club \"Founders\""', r"'Founders\' Hall'"):
+            with self.subTest(query=query):
+                _, results = self.member_search(query)
+
+                self.assertEqual([member.pk for member in results], [self.member.pk])
+
+    def test_quoted_group_and_subscription_phrases_do_not_duplicate_members(self):
+        for phrase in ("Board alumni", "Lifetime membership"):
+            for quote in ('"', "'"):
+                query = f"{quote}{phrase}{quote}"
+                with self.subTest(query=query):
+                    response, results = self.member_search(query)
+
+                    self.assertEqual([member.pk for member in results], [self.member.pk])
+                    self.assertFalse(response.context["cl"].queryset.query.distinct)
+
+    def test_quoted_phrases_combine_with_other_search_terms(self):
+        _, results = self.member_search('"Ada Maria" Lovelace')
+        self.assertEqual([member.pk for member in results], [self.member.pk])
+
+        _, results = self.member_search('"Ada Maria" Missing')
+        self.assertEqual(results, [])
+
+    def test_member_autocomplete_handles_quoted_and_escaped_phrases(self):
+        for query in (
+            '"Ada Maria"',
+            "'Ada Maria'",
+            r'"Club \"Founders\""',
+            r"'Founders\' Hall'",
+            '"Board alumni"',
+            "'Lifetime membership'",
+        ):
+            with self.subTest(query=query):
+                response = self.client.get(
+                    reverse("admin:autocomplete"),
+                    {
+                        "app_label": "members",
+                        "model_name": "subscriptionpayment",
+                        "field_name": "member",
+                        "term": query,
+                    },
+                )
+
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(
+                    response.json()["results"],
+                    [{"id": str(self.member.pk), "text": "Ada Maria Lovelace"}],
+                )
+
+
 class MemberStringTests(TestCase):
     def test_full_name_when_both_names_are_set(self):
         member = Member(username="ada", first_name="Ada", last_name="Lovelace")
