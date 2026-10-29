@@ -123,7 +123,11 @@
   template keeps the management form inside the pagination response target, so
   navigating to a partial last page replaces both rows and form counts. Native
   Unfold drag ranks are mapped back to that page's original attendee-number
-  slots, preserving gaps, legacy numbers, and every off-page attendee. The formset's
+  slots, preserving gaps, legacy numbers, and every off-page attendee. When the
+  page changed in the database between the load and the save (a signup arrived,
+  a row was removed), the ranks no longer describe those slots, so a drag is
+  rejected with a reload prompt instead of being applied; an edit without a
+  drag still saves. The formset's
   band shift and restore writes use `bulk_update`, so a reorder is a bounded
   number of UPDATE statements instead of one per row. `EventAttendees.time_registered`
   and `Event.event_date_start` have concurrent index migrations for the

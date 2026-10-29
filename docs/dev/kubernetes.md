@@ -236,9 +236,11 @@ suite keeps working. These migrations set `atomic = False` because
 
 After a rollout, check `pg_index.indisvalid` for the new indexes. An
 interrupted concurrent build leaves an invalid index that must be dropped and
-recreated. The `LogEntry.action_time` migration uses `IF NOT EXISTS`; the
-model index migrations do not, so a failed retry may need a manual
-`DROP INDEX CONCURRENTLY`.
+recreated. The `LogEntry.action_time` migration uses `IF NOT EXISTS`, so it
+checks `pg_index.indisvalid` after creating the index and fails rather than
+letting a retry record an invalid index as done. The model index migrations do
+not use `IF NOT EXISTS`, so a failed retry stops on the duplicate index name
+and needs a manual `DROP INDEX CONCURRENTLY` before the job succeeds.
 
 ## Redis ownership
 

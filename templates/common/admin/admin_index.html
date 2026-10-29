@@ -1,0 +1,8 @@
+{# Extends the stock dashboard so the site can add the x-cloak fallback: the #}
+{# dashboard template extends admin/base.html directly and would otherwise #}
+{# skip base_site.html. #}
+{% extends "admin/index.html" %}
+{% block extrahead %}
+  {{ block.super }}
+  {% include "admin/x_cloak_fallback.html" %}
+{% endblock %}

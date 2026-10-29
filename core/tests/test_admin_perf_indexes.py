@@ -55,4 +55,9 @@ class AdminPerformanceIndexTests(SimpleTestCase):
         self.assertTrue((migrations_dir / '__init__.py').is_file())
         migration = migrations_dir / '0001_admin_log_action_time_idx.py'
         self.assertTrue(migration.is_file())
-        self.assertIn('django_admin_log_action_time_idx', migration.read_text(encoding='utf-8'))
+        source = migration.read_text(encoding='utf-8')
+        self.assertIn('django_admin_log_action_time_idx', source)
+        # IF NOT EXISTS would otherwise accept an index left invalid by an
+        # interrupted concurrent build, and the migration job retries on
+        # failure, so the migration verifies validity before succeeding.
+        self.assertIn('indisvalid', source)
