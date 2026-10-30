@@ -1,0 +1,5 @@
+/* The order number is edited by dragging, not by typing: keep its input in the
+   form so the formset still posts it, but drop the empty row from the block. */
+#eventregistrationform_set-group[data-inline-type='stacked'] .field-choice_number {
+    display: none;
+}

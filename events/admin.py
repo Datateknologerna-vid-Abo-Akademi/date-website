@@ -92,6 +92,9 @@ class EventRegistrationFormInlineMixin(AvecAwareMixin):
     """Behaviour shared by the registration-field inline in both themes."""
 
     line_numbering = 0
+    class Media:
+        css = {'all': ('events/css/admin_registration_inline.css',)}
+
     model = EventRegistrationForm
     formset = EventRegistrationFormSet
     fk_name = 'event'
