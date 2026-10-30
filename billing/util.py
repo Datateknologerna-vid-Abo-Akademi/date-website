@@ -37,7 +37,7 @@ def get_selection_price(event, pricing, price_selector, preferences):
         except ValueError:
             return
     try:
-        options = EventRegistrationForm.objects.get(event=event, name=price_selector).choice_list.split(",")
+        options = EventRegistrationForm.objects.get(event=event, name=price_selector).get_choices()
     except EventRegistrationForm.DoesNotExist:
         try:
             return float(pricing)

@@ -16,8 +16,10 @@
   those fields, so the event forms carry no gate of their own and saving with
   the flag off leaves a ticked event's value alone.
 - `EventRegistrationForm` defines dynamic signup fields. `choice_number`
-  controls ordering (auto-incremented by tens). `choice_list` stores
-  comma-separated options for select/checkbox questions.
+  controls ordering (auto-incremented by tens). `choice_list` stores the
+  options for a multiple-choice question as a list of strings; the admin edits
+  it as one input per option, and `get_choices()` is the read path for the
+  public form and billing.
 - `EventAttendees` persists registrations, including arbitrary `preferences`
   stored as `JSONField`. `attendee_nr` increments by 10 to keep admin-ordering
   drag handles stable. `Event.attendee_nr_counter` atomically reserves those
@@ -153,9 +155,8 @@
 - Extra admin URL `/list/` renders `events/list.html` for an event, showing
   the registration answers.
 - `static/common/core/js/eventform.js` (loaded via `EventAdmin.Media`)
-  enables/disables the `choice_list` ("Alternativ") input based on the row's
-  `type` select, and toggles the whole registration-fields section based on
-  `sign_up`. The `type` → `choice_list` handler is delegated
+  enables/disables the choices inputs based on the row's `type` select, and
+  toggles the whole registration-fields section based on `sign_up`. The `type` → `choice_list` handler is delegated
   (`$(document).on('change', 'select[id$="type"]', ...)`), not bound directly,
   and there's also a `formset:added` listener that re-applies the
   enabled/disabled state to a freshly inserted row. Both are required: rows
@@ -165,8 +166,8 @@
   `clone(true)`, so it does not carry over directly-bound jQuery handlers. A
   non-delegated handler works for pre-existing rows and for classic-admin "Add
   another" (which clones with jQuery and does carry handlers over), but silently
-  leaves new rows' `choice_list` stuck disabled under Unfold. If you touch this
-  file, keep the delegation and the `formset:added` handler.
+  leaves new rows stuck under Unfold. If you touch this file, keep the
+  delegation and the `formset:added` handler.
 - New or modified registration question names must be non-empty, unique per
   event, and must not collide with built-in signup or avec fields.
   Multiple-choice options are trimmed and must contain at least one unique
@@ -344,7 +345,8 @@
   `sign_up` set and its registration window is open, whether or not a tab points at
   the form, and hiding a tab never disables registration.
 - Any changes to registration fields must keep `Event.make_registration_form()`
-  in sync; inconsistent `choice_list` formatting breaks multiple-choice inputs.
+  in sync; `choice_list` is a list, and inconsistent formatting breaks
+  multiple-choice inputs.
 - When altering attendee serialization, update both the model and the JS that
   renders real-time updates.
 - Parent/child events rely on consistent `parent` assignments; deleting a parent

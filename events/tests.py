@@ -1,4 +1,5 @@
 import importlib
+import json
 import logging
 import tempfile
 import threading
@@ -398,7 +399,7 @@ class EventTestCase(TestCase):
             type='select',
             required=False,
             public_info=True,
-            choice_list='choice 1,choice 2,choice 3',
+            choice_list=['choice 1', 'choice 2', 'choice 3'],
         ).save()
         EventRegistrationForm(
             event=self.event, choice_number=3, name='field3', type='checkbox', required=False, public_info=True
@@ -1344,7 +1345,7 @@ class EventAdminTests(TestCase):
             event=self.event,
             name="Meal",
             type="select",
-            choice_list="fish,vegetarian",
+            choice_list=['fish', 'vegetarian'],
         )
         EventAttendees.objects.create(
             event=self.event,
@@ -1382,7 +1383,7 @@ class EventAdminTests(TestCase):
         self.assertNotContains(response, "Det finns inga anmälningsfält")
 
     def test_answers_widget_uses_the_active_admin_themes_input_classes(self):
-        question = EventRegistrationForm(name="Meal", type="select", choice_list="fish,vegetarian")
+        question = EventRegistrationForm(name="Meal", type="select", choice_list=["fish", "vegetarian"])
 
         html = EventAnswersWidget(questions=[question]).render("preferences", {"Meal": "fish"})
 
@@ -1393,7 +1394,7 @@ class EventAdminTests(TestCase):
             self.assertNotIn("border-base-200", html)
 
     def test_choice_list_widget_renders_an_input_per_option(self):
-        html = ChoiceListWidget().render("choice_list", "fish,vegetarian", {"id": "id_choice_list"})
+        html = ChoiceListWidget().render("choice_list", ["fish", "vegetarian"], {"id": "id_choice_list"})
 
         self.assertIn('name="choice_list__choice__0"', html)
         self.assertIn('value="fish"', html)
@@ -1411,14 +1412,14 @@ class EventAdminTests(TestCase):
             "choice_list",
         )
 
-        self.assertEqual(value, "fish,water")
+        self.assertEqual(json.loads(value), ["fish", "water"])
 
     def test_choice_list_widget_accepts_a_single_posted_value(self):
         widget = ChoiceListWidget()
 
         self.assertEqual(
-            widget.value_from_datadict({"choice_list": "fish\n vegetarian,water"}, {}, "choice_list"),
-            "fish,vegetarian,water",
+            json.loads(widget.value_from_datadict({"choice_list": "fish\n vegetarian,water"}, {}, "choice_list")),
+            ["fish", "vegetarian", "water"],
         )
         self.assertIsNone(widget.value_from_datadict({}, {}, "choice_list"))
 
@@ -1427,7 +1428,7 @@ class EventAdminTests(TestCase):
             event=self.event,
             name="Meal",
             type="select",
-            choice_list="fish,vegetarian",
+            choice_list=['fish', 'vegetarian'],
         )
         attendee = EventAttendees.objects.create(
             event=self.event,
@@ -1457,7 +1458,7 @@ class EventAdminTests(TestCase):
             event=self.event,
             name="Meal",
             type="select",
-            choice_list="fish,vegetarian",
+            choice_list=['fish', 'vegetarian'],
         )
         attendee = EventAttendees.objects.create(
             event=self.event,
@@ -1602,20 +1603,20 @@ class EventRegistrationFormValidationTests(TestCase):
             event=self.event,
             name='Meal',
             type='select',
-            choice_list=' fish, vegetarian ',
+            choice_list=[' fish', ' vegetarian '],
         )
 
         question.full_clean()
         question.save()
 
-        self.assertEqual(question.choice_list, 'fish,vegetarian')
+        self.assertEqual(question.choice_list, ['fish', 'vegetarian'])
         self.assertEqual(
             list(self.event.make_registration_form().base_fields['Meal'].choices),
             [('fish', 'fish'), ('vegetarian', 'vegetarian')],
         )
 
     def test_multiple_choice_requires_unique_nonempty_options(self):
-        for choices in ('', 'fish,fish'):
+        for choices in ([], ['fish', 'fish']):
             with self.subTest(choices=choices):
                 question = EventRegistrationForm(
                     event=self.event,
@@ -1643,10 +1644,10 @@ class EventRegistrationFormValidationTests(TestCase):
                 'eventregistrationform_set-MAX_NUM_FORMS': '1000',
                 'eventregistrationform_set-0-name': 'Meal',
                 'eventregistrationform_set-0-type': 'text',
-                'eventregistrationform_set-0-choice_list': '',
+                'eventregistrationform_set-0-choice_list': '[]',
                 'eventregistrationform_set-1-name': 'Meal',
                 'eventregistrationform_set-1-type': 'text',
-                'eventregistrationform_set-1-choice_list': '',
+                'eventregistrationform_set-1-choice_list': '[]',
             },
         )
 
@@ -1658,7 +1659,7 @@ class EventRegistrationFormValidationTests(TestCase):
             event=self.event,
             name='',
             type='select',
-            choice_list='',
+            choice_list=[],
         )
         question.required = True
 
@@ -1686,12 +1687,12 @@ class EventRegistrationFormValidationTests(TestCase):
                 'eventregistrationform_set-0-id': str(first.pk),
                 'eventregistrationform_set-0-name': 'Legacy',
                 'eventregistrationform_set-0-type': 'text',
-                'eventregistrationform_set-0-choice_list': '',
+                'eventregistrationform_set-0-choice_list': '[]',
                 'eventregistrationform_set-0-required': 'on',
                 'eventregistrationform_set-1-id': str(second.pk),
                 'eventregistrationform_set-1-name': 'Legacy',
                 'eventregistrationform_set-1-type': 'text',
-                'eventregistrationform_set-1-choice_list': '',
+                'eventregistrationform_set-1-choice_list': '[]',
             },
         )
 
@@ -2765,7 +2766,7 @@ class EventFormBuilderTests(TestCase):
             event=self.event,
             name="meal",
             type="select",
-            choice_list="fish,veg",
+            choice_list=['fish', 'veg'],
             required=True,
             choice_number=10,
         )

@@ -167,7 +167,7 @@ class GetSelectionPriceTests(BillingBaseTestCase):
             event=self.event,
             name="ticket_type",
             type="select",
-            choice_list="standard,student",
+            choice_list=['standard', 'student'],
         )
         price = get_selection_price(
             self.event,
@@ -191,7 +191,7 @@ class GetSelectionPriceTests(BillingBaseTestCase):
             event=self.event,
             name="meal",
             type="select",
-            choice_list="veg,meat",
+            choice_list=['veg', 'meat'],
         )
         with self.assertRaises(ValueError):
             get_selection_price(self.event, "10,15", "meal", {"meal": "fish"})
