@@ -194,6 +194,19 @@ class Booking(models.Model):
     booker_email = models.EmailField(_('E-post'), blank=True)
     start = models.DateTimeField(_('Starttid'))
     end = models.DateTimeField(_('Sluttid'))
+    title = models.CharField(
+        _('Titel'),
+        max_length=120,
+        blank=True,
+        # The Python default keeps an unsaved instance readable as '' instead of
+        # Django's DatabaseDefault sentinel. The database default is what lets an
+        # old instance, still running during a blue-green deploy, insert a booking
+        # before it knows about this column: without it the column is NOT NULL and
+        # that insert fails.
+        default='',
+        db_default='',
+        help_text=_('Visas offentligt för alla som tittar på bokningarna.'),
+    )
     description = models.CharField(_('Beskrivning'), max_length=400, blank=True)
     created = models.DateTimeField(_('Skapad'), default=timezone.now, editable=False)
 
@@ -278,6 +291,14 @@ class Booking(models.Model):
 
         if self.author_id is None and not (self.booker_name or '').strip():
             errors['booker_name'] = _('Ange namnet på den som bokar.')
+
+        # A title is part of making a booking now, so a new row without one is
+        # refused here as well as in the forms. A booking that already exists
+        # may keep a blank title: the field arrived after those rows did, and
+        # the board should still be able to correct their times and descriptions
+        # without having to invent a title for them.
+        if self._state.adding and not (self.title or '').strip():
+            errors['title'] = _('Ange en kort titel för bokningen.')
 
         # The hours rule is checked on the attached room rather than on a saved
         # one: an admin can create a room and its bookings in a single submission,

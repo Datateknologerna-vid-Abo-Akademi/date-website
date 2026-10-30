@@ -1,0 +1,11 @@
+{% load booking_dates %}
+{# One booking's badge and text, without the surrounding list item. Callers add #}
+{# the item and any actions, and set show_room when the page is not the room's. #}
+<span class="booking-badge">{{ booking.start|short_date }}</span>
+<span class="booking-details">
+  {% if booking.title %}<span class="booking-title">{{ booking.title }}</span>{% endif %}
+  <span class="booking-meta">
+    <span class="booking-time">{{ booking.start|date:"H:i" }} - {% if booking.start|date:"Ymd" != booking.end|date:"Ymd" %}{{ booking.end|short_date }} {% endif %}{{ booking.end|date:"H:i" }}</span>
+    {% if show_room %}<span class="booking-room-name">{{ booking.room.name }}</span>{% endif %}
+  </span>
+</span>

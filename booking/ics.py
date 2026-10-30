@@ -59,7 +59,7 @@ def booking_invite(
         f'DTSTAMP:{_utc_stamp(timezone.now())}',
         f'DTSTART:{_utc_stamp(start)}',
         f'DTEND:{_utc_stamp(end)}',
-        f'SUMMARY:{_escape_text(room.name)}',
+        f'SUMMARY:{_escape_text(_summary(booking, room))}',
         f'DESCRIPTION:{_escape_text(_description(booking, cancel_url))}',
         'STATUS:CONFIRMED',
     ]
@@ -89,6 +89,16 @@ def _uid(booking: Booking, host: str = '') -> str:
 def _utc_stamp(moment: datetime.datetime) -> str:
     """A DTSTART/DTEND/DTSTAMP value: UTC, in the form clients expect."""
     return moment.astimezone(datetime.UTC).strftime('%Y%m%dT%H%M%SZ')
+
+
+def _summary(booking: Booking, room: Room) -> str:
+    """What the calendar event is called.
+
+    The title when the booking has one, because that is what the event is about,
+    and the room name otherwise: a booking made before titles existed still
+    deserves an event that says where it is.
+    """
+    return (booking.title or '').strip() or room.name
 
 
 def _description(booking: Booking, cancel_url: str) -> str:
