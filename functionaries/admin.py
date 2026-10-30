@@ -12,7 +12,7 @@ from core.admin import (
     LanguageTabbedTranslationAdmin,
     TranslationCompletionAdminMixin,
 )
-from core.admin_base import ExtraChangeListLinksMixin, ModelAdmin, TabularInline
+from core.admin_base import CompactTabularInline, ExtraChangeListLinksMixin, ModelAdmin
 from core.admin_ui import AdminLink
 
 from .models import Functionary, FunctionaryRole
@@ -57,7 +57,7 @@ else:
     FunctionaryRoleTranslationAdminBase = ModelAdmin  # type: ignore[misc, assignment]
 
 
-class FunctionaryInline(LegacyFunctionaryPermissionMixin, TabularInline):
+class FunctionaryInline(LegacyFunctionaryPermissionMixin, CompactTabularInline):
     legacy_model_name = 'functionary'
     model = Functionary
     fk_name = 'functionary_role'

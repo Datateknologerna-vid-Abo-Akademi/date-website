@@ -546,7 +546,7 @@ class EventRegistrationForm(models.Model):  # type: ignore[django-manager-missin
     )
     required = models.BooleanField(_('Krävd'), default=False)
     public_info = models.BooleanField(_('Öppen info'), default=False)
-    choice_list = models.CharField(_('Alternativ'), max_length=255, blank=True)
+    choice_list = models.JSONField(_('Alternativ'), default=list, blank=True)
     hide_for_avec = models.BooleanField(_('Göm för avec'), default=False)
 
     class Meta:
@@ -557,8 +557,16 @@ class EventRegistrationForm(models.Model):  # type: ignore[django-manager-missin
     def __str__(self):
         return str(self.name)
 
+    def get_inline_title(self):
+        # The collapsed block on the event page is the field name.
+        return str(self.name) or f'#{self.choice_number}'
+
     def get_choices(self):
-        return [choice.strip() for choice in str(self.choice_list).split(',') if choice.strip()]
+        value = self.choice_list
+        if isinstance(value, str):
+            # Rows written before the list migration still hold the comma string.
+            value = value.split(',')
+        return [str(choice).strip() for choice in (value or []) if str(choice).strip()]
 
     def clean(self):
         super().clean()
@@ -579,9 +587,9 @@ class EventRegistrationForm(models.Model):  # type: ignore[django-manager-missin
                 raise ValidationError({'choice_list': _('Ange minst ett alternativ.')})
             if len(set(choices)) != len(choices):
                 raise ValidationError({'choice_list': _('Alternativen måste vara unika.')})
-            self.choice_list = ','.join(choices)
+            self.choice_list = choices
         else:
-            self.choice_list = ''
+            self.choice_list = []
 
     def save(self, *args, **kwargs):  # noqa: DJ012
         # Only set choice_number if it's the default value (0).
@@ -639,6 +647,17 @@ class EventAttendees(models.Model):  # type: ignore[django-manager-missing]
 
     def __str__(self):
         return str(self.user)
+
+    def get_inline_title(self):
+        # The collapsed attendee block has to identify the person at a glance:
+        # name, email, and a marker for an anonymous signup.
+        parts = [str(self.user or '-')]
+        if self.email:
+            parts.append(self.email)
+        title = ' · '.join(parts)
+        if self.anonymous:
+            title = f'{title} (anonym)'
+        return title
 
     @register.filter
     def get_preference(self, key):

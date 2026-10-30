@@ -22,12 +22,8 @@
         // jQuery-bound handlers -- a one-time, non-delegated .change()
         // binding silently stops working for new rows under Unfold.
         $(document).on('change', 'select[id$="type"]', function() {
-            var rowEdit = $(this).closest('tr').find('input[id$="choice_list"]');
-            if( this.value == "select") {
-                rowEdit.prop('disabled', false);
-            } else {
-                rowEdit.prop('disabled', true);
-            }
+            var choices = $(this).closest('tr').find('.choice-list-widget input[type="text"]');
+            choices.prop('disabled', this.value != "select");
         });
         // Both the classic Django admin and the Unfold admin theme dispatch
         // this event on the newly inserted row, so apply the current

@@ -11,6 +11,8 @@ from core.admin_ui import resolve_admin_links
 
 __all__ = [
     "ModelAdmin",
+    "CompactTabularInline",
+    "TEXTAREA_WIDGET",
     "TabularInline",
     "StackedInline",
     "UNFOLD_FORMFIELD_OVERRIDES",
@@ -35,6 +37,10 @@ if getattr(settings, 'USE_UNFOLD', False):
     # so Unfold's datetime/field widget overrides are not accidentally shadowed.
     UNFOLD_FORMFIELD_OVERRIDES = FORMFIELD_OVERRIDES
 
+    from unfold.widgets import UnfoldAdminTextareaWidget
+
+    TEXTAREA_WIDGET = UnfoldAdminTextareaWidget
+
     _WIDGET_MAP = {
         'TextInput': UnfoldAdminTextInputWidget,
         'URLInput': UnfoldAdminURLInputWidget,
@@ -44,6 +50,7 @@ if getattr(settings, 'USE_UNFOLD', False):
     }
 else:
     _ModelAdminBase = admin.ModelAdmin  # type: ignore[misc, assignment]
+    TEXTAREA_WIDGET = forms.Textarea
     TabularInline = admin.TabularInline
     StackedInline = admin.StackedInline
     UNFOLD_FORMFIELD_OVERRIDES = {}
@@ -53,6 +60,18 @@ else:
 class ModelAdmin(_ModelAdminBase):  # type: ignore[misc, valid-type]
     change_form_show_cancel_button = getattr(settings, 'USE_UNFOLD', False)
     unfold_enabled = getattr(settings, 'USE_UNFOLD', False)
+
+
+class CompactTabularInline(TabularInline):
+    """Tabular inline without Unfold's repeated row title.
+
+    Unfold renders the object's name in a full-width line above every form row.
+    When the inline sets ``show_change_link`` that line carries the change link;
+    otherwise it only repeats a field, and every row pays the extra height for
+    it. Inlines without a change link inherit from this class to stay compact.
+    """
+
+    show_title = False
 
 
 class UnfoldFormMixin:

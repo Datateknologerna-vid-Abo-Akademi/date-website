@@ -18,6 +18,93 @@ document.addEventListener('htmx:afterSettle', function (event) {
     });
 });
 
+// Unfold's collapsible inline blocks start collapsed, including a row added with
+// "Add another", so a new block would look like nothing happened. Open the new
+// block once Alpine has attached its data, and give any hidden select2 widget a
+// width again, since it measured zero while the block was closed.
+(function () {
+    const hasOwn = (object, key) => Object.prototype.hasOwnProperty.call(object, key);
+
+    function alpineData(element) {
+        // Alpine.$data can return an empty proxy for a freshly cloned row; the
+        // internal stack still holds the component that owns openRow.
+        const candidates = [];
+        if (window.Alpine && typeof window.Alpine.$data === 'function') {
+            try {
+                candidates.push(window.Alpine.$data(element));
+            } catch {}
+        }
+        if (element._x_dataStack) {
+            candidates.push(...element._x_dataStack);
+        }
+        return candidates.find((data) => data && typeof data === 'object' && hasOwn(data, 'openRow')) || null;
+    }
+
+    function refreshSelectWidths(root) {
+        root.querySelectorAll('.select2-container').forEach(function (container) {
+            if (container.getBoundingClientRect().width < 40) {
+                container.style.width = '100%';
+            }
+        });
+    }
+
+    // The stylesheet draws the open/closed chevron from this attribute, so the
+    // block has to say whether it is open.
+    function syncOpenState(group) {
+        if (!group || !group.hasAttribute('x-data')) return;
+        if (!(group.getAttribute('x-data') || '').includes('openRow')) return;
+        const open = [...group.querySelectorAll('input, select, textarea')].some(
+            (field) => field.type !== 'hidden' && field.getBoundingClientRect().height > 0
+        );
+        group.dataset.open = open ? 'true' : 'false';
+    }
+
+    function syncAllOpenStates() {
+        document.querySelectorAll('.form-group[x-data*="openRow"]').forEach(syncOpenState);
+    }
+
+    function openBlock(group, attempt = 0) {
+        const data = alpineData(group);
+        if (data) {
+            data.openRow = true;
+            window.setTimeout(function () {
+                refreshSelectWidths(group);
+                syncOpenState(group);
+            }, 50);
+            return;
+        }
+        if (attempt < 10) {
+            window.setTimeout(function () {
+                openBlock(group, attempt + 1);
+            }, 50);
+        }
+    }
+
+    document.addEventListener('formset:added', function (event) {
+        const group = event.target.closest('.form-group');
+        if (group) openBlock(group);
+    });
+
+    // Re-measure the widgets when a closed block is opened by hand.
+    document.addEventListener('click', function (event) {
+        const title = event.target.closest('.form-group h3');
+        if (!title) return;
+        window.setTimeout(function () {
+            const group = title.closest('.form-group');
+            refreshSelectWidths(group);
+            syncOpenState(group);
+        }, 50);
+    });
+
+    // Alpine applies the open state when it starts, which is after this script.
+    if (document.readyState === 'complete') {
+        syncAllOpenStates();
+    } else {
+        window.addEventListener('load', syncAllOpenStates);
+    }
+    window.setTimeout(syncAllOpenStates, 400);
+})();
+
 // Keep Unfold's filter sheet open when filter actions reload the changelist.
 (function () {
     const KEY = 'admin_reopen_filter_sheet';

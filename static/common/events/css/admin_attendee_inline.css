@@ -1,0 +1,37 @@
+/* Attendee inline: one collapsible block per attendee.
+ *
+ * The collapsed block shows the person; opening it gives the fields and the
+ * registration answers the full width, which a table cell could not do. The
+ * answer rows keep the label and its control on one line so several answers
+ * fit without a tall stack.
+ *
+ * Scoped to the inline's own group id so no other admin inline is affected.
+ */
+#eventattendees_set-group .event-answer-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+#eventattendees_set-group .event-answer-label {
+  flex: none;
+  margin: 0;
+  min-width: 10rem;
+}
+
+#eventattendees_set-group .event-answer-control {
+  flex: 1;
+  min-width: 0;
+}
+
+#eventattendees_set-group .event-answer-control input,
+#eventattendees_set-group .event-answer-control select,
+#eventattendees_set-group .event-answer-control textarea {
+  width: 100%;
+}
+
+/* The order number is edited by dragging, not by typing: keep its input in the
+   form so the formset still posts it, but drop the empty row from the block. */
+#eventattendees_set-group .field-attendee_nr {
+  display: none;
+}

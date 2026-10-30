@@ -3926,3 +3926,10 @@ msgstr "Bokningen har redan börjat och kan inte flyttas. Du kan ändra titel oc
 #: templates/common/booking/partials/edit_booking_form.html
 msgid "Bokningen har redan börjat. Tiden kan inte ändras, men titel och beskrivning går bra."
 msgstr "Bokningen har redan börjat. Tiden kan inte ändras, men titel och beskrivning går bra."
+
+
+msgid "Lägg till alternativ"
+msgstr "Lägg till alternativ"
+
+msgid "Ta bort"
+msgstr "Ta bort"
