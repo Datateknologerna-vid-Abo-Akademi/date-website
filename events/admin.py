@@ -428,7 +428,12 @@ class EventAttendeesFormInline(AvecAwareMixin, OrderableAdmin, EventTranslationI
         )
 
     def get_fields(self, request, event):
-        fields = ['attendee_nr', 'open_link', 'user', 'email', 'anonymous', 'preferences', 'registered_at']
+        # Classic admin renders the change link in its own row title, so the
+        # Unfold-only link column would be a duplicate there.
+        fields = ['attendee_nr']
+        if settings.USE_UNFOLD:  # type: ignore[misc]
+            fields.append('open_link')
+        fields += ['user', 'email', 'anonymous', 'preferences', 'registered_at']
         if event and event.children.exists():
             fields.append('original_event')
         if self._event_uses_avec(event):
@@ -439,7 +444,9 @@ class EventAttendeesFormInline(AvecAwareMixin, OrderableAdmin, EventTranslationI
         return [(None, {'fields': self.get_fields(request, event)})]
 
     def get_readonly_fields(self, request, event=None):
-        readonly_fields = ['registered_at', 'open_link']
+        readonly_fields = ['registered_at']
+        if settings.USE_UNFOLD:  # type: ignore[misc]
+            readonly_fields.append('open_link')
         if event and event.children.exists():
             readonly_fields.append('original_event')
         return readonly_fields

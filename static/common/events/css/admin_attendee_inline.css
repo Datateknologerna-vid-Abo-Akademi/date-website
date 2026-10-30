@@ -7,9 +7,10 @@
  * widest input. The min-width keeps the table from collapsing on a narrow
  * screen; the wrapper already scrolls horizontally there.
  *
- * Scoped to the inline's own group id so no other admin inline is affected.
+ * Scoped to Unfold's own inline wrapper so the stock admin keeps its layout,
+ * which its paginated template does not render.
  */
-#eventattendees_set-group table {
+#eventattendees_set-group .formset-wrapper table {
   table-layout: fixed;
   width: 100%;
   min-width: 56rem;
@@ -17,50 +18,50 @@
 
 /* Unfold's widgets carry min-w-20 and w-full; the fixed layout needs the
    widgets to follow the column instead of their own minimum. */
-#eventattendees_set-group table input {
+#eventattendees_set-group .formset-wrapper table input {
   min-width: 0;
 }
 
-#eventattendees_set-group .column-attendee_nr {
+#eventattendees_set-group .formset-wrapper .column-attendee_nr {
   width: 8%;
 }
 
-#eventattendees_set-group .column-open_link {
+#eventattendees_set-group .formset-wrapper .column-open_link {
   width: 6%;
 }
 
-#eventattendees_set-group .column-user {
+#eventattendees_set-group .formset-wrapper .column-user {
   width: 18%;
 }
 
-#eventattendees_set-group .column-email {
+#eventattendees_set-group .formset-wrapper .column-email {
   width: 23%;
 }
 
-#eventattendees_set-group .column-anonymous {
+#eventattendees_set-group .formset-wrapper .column-anonymous {
   width: 6%;
 }
 
-#eventattendees_set-group .column-preferences {
+#eventattendees_set-group .formset-wrapper .column-preferences {
   width: 8%;
 }
 
-#eventattendees_set-group .column-registered_at {
+#eventattendees_set-group .formset-wrapper .column-registered_at {
   width: 11%;
 }
 
-#eventattendees_set-group .column-avec_for {
+#eventattendees_set-group .formset-wrapper .column-avec_for {
   width: 15%;
 }
 
-#eventattendees_set-group th:last-child {
+#eventattendees_set-group .formset-wrapper th:last-child {
   width: 5%;
 }
 
-#eventattendees_set-group .field-registered_at {
+#eventattendees_set-group .formset-wrapper .field-registered_at {
   white-space: nowrap;
 }
 
-#eventattendees_set-group .field-avec_for .select2-container {
+#eventattendees_set-group .formset-wrapper .field-avec_for .select2-container {
   max-width: 100%;
 }

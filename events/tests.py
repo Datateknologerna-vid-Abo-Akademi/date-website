@@ -841,7 +841,10 @@ class EventAdminTests(TestCase):
         inline.get_formset(request, obj=self.event)
 
         _, kwargs = get_formset.call_args
-        self.assertCountEqual(kwargs["exclude"], ["registered_at", "open_link", "avec_for"])
+        expected = ["registered_at", "avec_for"]
+        if settings.USE_UNFOLD:
+            expected.append("open_link")
+        self.assertCountEqual(kwargs["exclude"], expected)
 
     def _attendees_formset(self, rows, initial_forms=None):
         data = {
