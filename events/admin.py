@@ -94,6 +94,7 @@ class EventRegistrationFormInlineMixin(AvecAwareMixin):
     line_numbering = 0
     class Media:
         css = {'all': ('events/css/admin_registration_inline.css',)}
+        js = ('events/js/admin_registration_inline.js',)
 
     model = EventRegistrationForm
     formset = EventRegistrationFormSet
