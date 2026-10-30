@@ -35,7 +35,9 @@ class CompactTabularInlineTests(TestCase):
         )
 
     def test_event_inlines_are_compact(self):
-        self.assertFalse(EventAttendeesFormInline.show_title)
+        # The attendee list is a collapsible block per person; the registration
+        # fields stay a table without the repeated title row.
+        self.assertTrue(EventAttendeesFormInline.collapsible)
         self.assertFalse(EventRegistrationFormInline.show_title)
 
 

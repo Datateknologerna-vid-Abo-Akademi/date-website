@@ -640,6 +640,17 @@ class EventAttendees(models.Model):  # type: ignore[django-manager-missing]
     def __str__(self):
         return str(self.user)
 
+    def get_inline_title(self):
+        # The collapsed attendee block has to identify the person at a glance:
+        # name, email, and a marker for an anonymous signup.
+        parts = [str(self.user or '-')]
+        if self.email:
+            parts.append(self.email)
+        title = ' · '.join(parts)
+        if self.anonymous:
+            title = f'{title} (anonym)'
+        return title
+
     @register.filter
     def get_preference(self, key):
         return self.preferences.get(str(key), "")

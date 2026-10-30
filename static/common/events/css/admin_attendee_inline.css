@@ -1,67 +1,31 @@
-/* Attendee inline: keep the editable content readable.
+/* Attendee inline: one collapsible block per attendee.
  *
- * A paginated attendee table has nine columns, and auto layout gave the width
- * to the number input while the name and email fields clipped their content.
- * The table now uses a fixed layout with a share per column, so the text
- * fields fill their cell at any usable width instead of being sized by the
- * widest input. The min-width keeps the table from collapsing on a narrow
- * screen; the wrapper already scrolls horizontally there.
+ * The collapsed block shows the person; opening it gives the fields and the
+ * registration answers the full width, which a table cell could not do. The
+ * answer rows keep the label and its control on one line so several answers
+ * fit without a tall stack.
  *
- * Scoped to Unfold's own inline wrapper so the stock admin keeps its layout,
- * which its paginated template does not render.
+ * Scoped to the inline's own group id so no other admin inline is affected.
  */
-#eventattendees_set-group .formset-wrapper table {
-  table-layout: fixed;
-  width: 100%;
-  min-width: 56rem;
+#eventattendees_set-group .event-answer-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-/* Unfold's widgets carry min-w-20 and w-full; the fixed layout needs the
-   widgets to follow the column instead of their own minimum. */
-#eventattendees_set-group .formset-wrapper table input {
+#eventattendees_set-group .event-answer-label {
+  flex: none;
+  margin: 0;
+  min-width: 10rem;
+}
+
+#eventattendees_set-group .event-answer-control {
+  flex: 1;
   min-width: 0;
 }
 
-#eventattendees_set-group .formset-wrapper .column-attendee_nr {
-  width: 8%;
-}
-
-#eventattendees_set-group .formset-wrapper .column-open_link {
-  width: 6%;
-}
-
-#eventattendees_set-group .formset-wrapper .column-user {
-  width: 18%;
-}
-
-#eventattendees_set-group .formset-wrapper .column-email {
-  width: 23%;
-}
-
-#eventattendees_set-group .formset-wrapper .column-anonymous {
-  width: 6%;
-}
-
-#eventattendees_set-group .formset-wrapper .column-preferences {
-  width: 8%;
-}
-
-#eventattendees_set-group .formset-wrapper .column-registered_at {
-  width: 11%;
-}
-
-#eventattendees_set-group .formset-wrapper .column-avec_for {
-  width: 15%;
-}
-
-#eventattendees_set-group .formset-wrapper th:last-child {
-  width: 5%;
-}
-
-#eventattendees_set-group .formset-wrapper .field-registered_at {
-  white-space: nowrap;
-}
-
-#eventattendees_set-group .formset-wrapper .field-avec_for .select2-container {
-  max-width: 100%;
+#eventattendees_set-group .event-answer-control input,
+#eventattendees_set-group .event-answer-control select,
+#eventattendees_set-group .event-answer-control textarea {
+  width: 100%;
 }

@@ -25,7 +25,7 @@ from core.admin import (
     LanguageTabbedTranslationAdmin,
     TranslationCompletionAdminMixin,
 )
-from core.admin_base import UNFOLD_FORMFIELD_OVERRIDES, ModelAdmin, PublicUrlAdminMixin, TabularInline
+from core.admin_base import UNFOLD_FORMFIELD_OVERRIDES, ModelAdmin, PublicUrlAdminMixin, StackedInline, TabularInline
 from core.admin_widgets import FLATPICKR_ADMIN_CSS, FLATPICKR_ADMIN_JS
 from events import forms
 from events.models import Event, EventAttendees, EventRegistrationForm, registration_terms_feature_enabled
@@ -35,17 +35,23 @@ from .widgets import EventAnswersWidget
 logger = logging.getLogger('date')
 
 if settings.ENABLE_LANGUAGE_FEATURES:  # type: ignore[misc]
-    from modeltranslation.admin import TranslationTabularInline
+    from modeltranslation.admin import TranslationStackedInline, TranslationTabularInline
 
     # MRO when USE_UNFOLD=True: Mixin → Translation → unfold.TabularInline → admin.TabularInline
     # unfold sits between modeltranslation and Django's base so both layers get their super() calls.
     class EventTranslationInlineBase(ActiveLanguageTranslationAdminMixin, TranslationTabularInline, TabularInline):
         pass
 
+    class EventAttendeesTranslationInlineBase(
+        ActiveLanguageTranslationAdminMixin, TranslationStackedInline, StackedInline
+    ):
+        pass
+
     class EventTranslationAdminBase(ActiveLanguageTranslationAdminMixin, LanguageTabbedTranslationAdmin, ModelAdmin):
         pass
 else:
     EventTranslationInlineBase = TabularInline  # type: ignore[misc, assignment]
+    EventAttendeesTranslationInlineBase = StackedInline  # type: ignore[misc, assignment]
     EventTranslationAdminBase = ModelAdmin  # type: ignore[misc, assignment]
 
 
@@ -369,7 +375,9 @@ class EventScopedAutocompleteSelect(AutocompleteSelect):
         return url
 
 
-class EventAttendeesFormInline(AvecAwareMixin, OrderableAdmin, EventTranslationInlineBase):
+class EventAttendeesInlineMixin(AvecAwareMixin):
+    """Behaviour shared by the attendee inline in both admin themes."""
+
     ordering_field = 'attendee_nr'
     ordering_field_hide_input = True
     model = EventAttendees
@@ -377,18 +385,7 @@ class EventAttendeesFormInline(AvecAwareMixin, OrderableAdmin, EventTranslationI
     formset = EventAttendeesInlineFormSet
     fk_name = 'event'
     extra = 0
-    # Unfold renders one form row per attendee otherwise; EventAttendeesInlineFormSet
-    # is a PaginationInlineFormSet only when USE_UNFOLD is on. Stock Django admin
-    # ignores this attribute, so the classic admin still lists every attendee.
-    per_page = 50
-    if settings.USE_UNFOLD:  # type: ignore[misc]
-        template = 'admin/events/attendees_tabular.html'
-    # Unfold repeats the attendee name in a full-width title row above every
-    # form row and puts the per-row change link there. That row doubled the
-    # height of an already long table for information the first field already
-    # shows, so the change link moved into its own column instead.
-    show_title = False
-    show_change_link = False
+    show_change_link = True
     formfield_overrides = {
         **UNFOLD_FORMFIELD_OVERRIDES,
     }
@@ -485,6 +482,26 @@ class EventAttendeesFormInline(AvecAwareMixin, OrderableAdmin, EventTranslationI
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
+class EventAttendeesFormInline(  # noqa: N801 - name kept for existing imports
+    EventAttendeesInlineMixin, OrderableAdmin, EventAttendeesTranslationInlineBase
+):
+    """Attendee list as one collapsible block per person (Unfold admin)."""
+
+    # Unfold renders one form row per attendee otherwise; the formset is a
+    # PaginationInlineFormSet only when USE_UNFOLD is on.
+    per_page = 50
+    template = 'admin/events/attendees_stacked.html'
+    collapsible = True
+
+
+class EventAttendeesClassicInline(EventAttendeesInlineMixin, OrderableAdmin, EventTranslationInlineBase):
+    """Attendee list as a table (stock admin).
+
+    The stock admin has no collapsible inline, so a block per attendee would
+    render every form expanded down the page.
+    """
+
+
 @admin.register(EventAttendees)
 class EventAttendeesAdmin(ModelAdmin):
     form = EventAttendeesForm
@@ -578,7 +595,10 @@ class EventAdmin(PublicUrlAdminMixin, TranslationCompletionAdminMixin, EventTran
 
     form = forms.EventCreationForm
 
-    inlines = [EventRegistrationFormInline, EventAttendeesFormInline]
+    inlines = [
+        EventRegistrationFormInline,
+        EventAttendeesFormInline if settings.USE_UNFOLD else EventAttendeesClassicInline,
+    ]
 
     def get_list_display(self, request):
         list_display = list(super().get_list_display(request))

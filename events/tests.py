@@ -823,7 +823,9 @@ class EventAdminTests(TestCase):
         response = self.client.get(reverse("admin:events_event_change", args=[self.event.pk]))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'column-original_event')
+        # The inline is a stacked block, so the field renders as a readonly row
+        # that links to the child event rather than as a table column.
+        self.assertContains(response, reverse('admin:events_event_change', args=[child.pk]))
 
     @patch("modeltranslation.admin.TranslationInlineModelAdmin.get_formset")
     def test_attendees_inline_formset_passes_complete_exclude_list(self, get_formset):
