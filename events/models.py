@@ -557,6 +557,10 @@ class EventRegistrationForm(models.Model):  # type: ignore[django-manager-missin
     def __str__(self):
         return str(self.name)
 
+    def get_inline_title(self):
+        # The collapsed block on the event page is the field name.
+        return str(self.name) or f'#{self.choice_number}'
+
     def get_choices(self):
         return [choice.strip() for choice in str(self.choice_list).split(',') if choice.strip()]
 

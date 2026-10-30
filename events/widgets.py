@@ -188,7 +188,7 @@ class EventAnswersWidget(forms.Widget):
                 else:
                     answers[str(key)] = raw
             index += 1
-        return answers
+        return json.dumps(answers, ensure_ascii=False)
 
     @property
     def media(self):

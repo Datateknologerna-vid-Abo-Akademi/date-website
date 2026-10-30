@@ -198,6 +198,10 @@ class PDFFile(models.Model):
             return reverse('publications:pdf_view', args=[collection.slug, self.slug])
         return reverse('publications:collection_detail', args=[self.slug])
 
+    def get_inline_title(self):
+        # The collapsed block on the collection page is the publication title.
+        return self.title or str(self.slug)
+
     def clean(self):
         super().clean()
         if not self.file and not self.redirect_url:

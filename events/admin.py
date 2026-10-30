@@ -42,16 +42,14 @@ if settings.ENABLE_LANGUAGE_FEATURES:  # type: ignore[misc]
     class EventTranslationInlineBase(ActiveLanguageTranslationAdminMixin, TranslationTabularInline, TabularInline):
         pass
 
-    class EventAttendeesTranslationInlineBase(
-        ActiveLanguageTranslationAdminMixin, TranslationStackedInline, StackedInline
-    ):
+    class EventStackedInlineBase(ActiveLanguageTranslationAdminMixin, TranslationStackedInline, StackedInline):
         pass
 
     class EventTranslationAdminBase(ActiveLanguageTranslationAdminMixin, LanguageTabbedTranslationAdmin, ModelAdmin):
         pass
 else:
     EventTranslationInlineBase = TabularInline  # type: ignore[misc, assignment]
-    EventAttendeesTranslationInlineBase = StackedInline  # type: ignore[misc, assignment]
+    EventStackedInlineBase = StackedInline  # type: ignore[misc, assignment]
     EventTranslationAdminBase = ModelAdmin  # type: ignore[misc, assignment]
 
 
@@ -90,9 +88,10 @@ class EventRegistrationFormSet(BaseInlineFormSet):
                 raise ValidationError(_('Fältnamnen måste vara unika inom evenemanget.'))
 
 
-class EventRegistrationFormInline(AvecAwareMixin, OrderableAdmin, EventTranslationInlineBase):
+class EventRegistrationFormInlineMixin(AvecAwareMixin):
+    """Behaviour shared by the registration-field inline in both themes."""
+
     line_numbering = 0
-    show_title = False
     model = EventRegistrationForm
     formset = EventRegistrationFormSet
     fk_name = 'event'
@@ -117,6 +116,24 @@ class EventRegistrationFormInline(AvecAwareMixin, OrderableAdmin, EventTranslati
             kwargs.setdefault('exclude', [])
             kwargs['exclude'] = [*kwargs['exclude'], 'hide_for_avec']
         return super().get_formset(request, obj, **kwargs)
+
+
+class EventRegistrationFormInline(  # noqa: N801 - name kept for existing imports
+    EventRegistrationFormInlineMixin, OrderableAdmin, EventStackedInlineBase
+):
+    """Registration fields as collapsible blocks (Unfold admin)."""
+
+    collapsible = True
+
+
+class EventRegistrationFormClassicInline(EventRegistrationFormInlineMixin, OrderableAdmin, EventTranslationInlineBase):
+    """Registration fields as a table (stock admin).
+
+    The stock admin has no collapsible inline, and a field row is short, so the
+    table stays the compact choice there.
+    """
+
+    show_title = False
 
 
 class EventAttendeesForm(ModelForm):
@@ -483,7 +500,7 @@ class EventAttendeesInlineMixin(AvecAwareMixin):
 
 
 class EventAttendeesFormInline(  # noqa: N801 - name kept for existing imports
-    EventAttendeesInlineMixin, OrderableAdmin, EventAttendeesTranslationInlineBase
+    EventAttendeesInlineMixin, OrderableAdmin, EventStackedInlineBase
 ):
     """Attendee list as one collapsible block per person (Unfold admin)."""
 
@@ -596,7 +613,7 @@ class EventAdmin(PublicUrlAdminMixin, TranslationCompletionAdminMixin, EventTran
     form = forms.EventCreationForm
 
     inlines = [
-        EventRegistrationFormInline,
+        EventRegistrationFormInline if settings.USE_UNFOLD else EventRegistrationFormClassicInline,
         EventAttendeesFormInline if settings.USE_UNFOLD else EventAttendeesClassicInline,
     ]
 

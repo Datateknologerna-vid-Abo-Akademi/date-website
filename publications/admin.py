@@ -1,6 +1,7 @@
 import logging
 
 from django import forms
+from django.conf import settings
 from django.contrib import admin
 from django.core.exceptions import PermissionDenied
 from django.db import models
@@ -18,6 +19,7 @@ from core.admin_base import (
     ExtraChangeListLinksMixin,
     ModelAdmin,
     PublicUrlAdminMixin,
+    StackedInline,
     TabularInline,
     UnfoldFormMixin,
 )
@@ -168,7 +170,7 @@ class PublicationCollectionAdmin(PublicUrlAdminMixin, ExtraChangeListLinksMixin,
     def get_inlines(self, request, obj):
         if obj is None:
             return []
-        return [PublicationInline]
+        return [PublicationInline if settings.USE_UNFOLD else PublicationClassicInline]
 
     @admin.display(description=_('Access'))
     def access_summary(self, obj):
@@ -217,7 +219,9 @@ class PublicationCollectionAdmin(PublicUrlAdminMixin, ExtraChangeListLinksMixin,
         return self.manage_publications(obj)
 
 
-class PublicationInline(TabularInline):
+class PublicationInlineMixin:
+    """Behaviour shared by the publication inline in both admin themes."""
+
     model = PDFFile
     fk_name = 'collection'
     extra = 1
@@ -238,6 +242,10 @@ class PublicationInline(TabularInline):
         models.ImageField: {'widget': SafeAdminImageWidget},
     }
 
+    def get_queryset(self, request):
+        # The public-page column reads the collection for every row.
+        return super().get_queryset(request).select_related('collection')
+
     def get_formset(self, request, obj=None, **kwargs):
         formset = super().get_formset(request, obj, **kwargs)
         base_form = formset.form
@@ -254,11 +262,6 @@ class PublicationInline(TabularInline):
         formset.form = ExistingFileReadonlyForm
         return formset
 
-    def get_queryset(self, request):
-        # public_page renders get_absolute_url(), which reads obj.collection.
-        # Join it here so the inline does not run one query per row.
-        return super().get_queryset(request).select_related('collection')
-
     @admin.display(description='Public page')
     def public_page(self, obj):
         if not obj or not obj.pk:
@@ -268,6 +271,21 @@ class PublicationInline(TabularInline):
             obj.get_absolute_url(),
             _('Open'),
         )
+
+
+class PublicationInline(PublicationInlineMixin, StackedInline):
+    """Publications as collapsible blocks (Unfold admin).
+
+    Seven fields, a file picker and a long title do not fit a table row, so the
+    collapsed block reads as the publication title and the block gives every
+    field the full width.
+    """
+
+    collapsible = True
+
+
+class PublicationClassicInline(PublicationInlineMixin, TabularInline):
+    """Publications as a table (stock admin)."""
 
 
 class PublicationAdminMixin(ExtraChangeListLinksMixin):

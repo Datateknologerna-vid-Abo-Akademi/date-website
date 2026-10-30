@@ -13,7 +13,12 @@ from django.test import TestCase
 
 from booking.admin import BookingInline, ClosureInline
 from booking.models import Booking, Closure
-from events.admin import EventAttendeesFormInline, EventRegistrationFormInline
+from events.admin import (
+    EventAttendeesClassicInline,
+    EventAttendeesFormInline,
+    EventRegistrationFormClassicInline,
+    EventRegistrationFormInline,
+)
 
 
 class CompactTabularInlineTests(TestCase):
@@ -35,10 +40,13 @@ class CompactTabularInlineTests(TestCase):
         )
 
     def test_event_inlines_are_compact(self):
-        # The attendee list is a collapsible block per person; the registration
-        # fields stay a table without the repeated title row.
+        # The themed admin gives each attendee and each registration field a
+        # collapsible block, so neither needs the repeated table title row.
         self.assertTrue(EventAttendeesFormInline.collapsible)
-        self.assertFalse(EventRegistrationFormInline.show_title)
+        self.assertTrue(EventRegistrationFormInline.collapsible)
+        # The stock admin keeps both as compact tables.
+        self.assertTrue(issubclass(EventAttendeesClassicInline, admin.TabularInline))
+        self.assertTrue(issubclass(EventRegistrationFormClassicInline, admin.TabularInline))
 
 
 class BookingDescriptionWidgetTests(TestCase):

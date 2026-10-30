@@ -1422,6 +1422,37 @@ class EventAdminTests(TestCase):
         attendee.refresh_from_db()
         self.assertEqual(attendee.preferences, {"Meal": "vegetarian"})
 
+    def test_bound_answers_widget_rerenders_after_a_validation_error(self):
+        EventRegistrationForm.objects.create(
+            event=self.event,
+            name="Meal",
+            type="select",
+            choice_list="fish,vegetarian",
+        )
+        attendee = EventAttendees.objects.create(
+            event=self.event,
+            user="Answer Editor",
+            email="answer-editor@example.com",
+            time_registered=timezone.now(),
+            preferences={"Meal": "fish"},
+        )
+        row = self._attendee_row(0, attendee.pk, attendee.attendee_nr, attendee.user, attendee.email)
+        row.update(
+            {
+                "eventattendees_set-0-preferences__key__0": "Meal",
+                "eventattendees_set-0-preferences__kind__0": "select",
+                "eventattendees_set-0-preferences__value__0": "vegetarian",
+                "eventattendees_set-0-email": "",
+            }
+        )
+        formset = self._attendees_formset([row])
+
+        self.assertFalse(formset.is_valid())
+        # The admin renders the bound form again with the validation errors. The
+        # JSONField expects the string a browser posts, not the parsed answers,
+        # and used to raise a TypeError here.
+        self.assertIn("vegetarian", str(formset.forms[0]["preferences"]))
+
     def test_child_event_attendee_uses_the_child_events_questions(self):
         child = Event.objects.create(
             title="Child Question Event",
