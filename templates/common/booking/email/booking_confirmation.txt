@@ -3,7 +3,9 @@
 {% trans "Utrymme:" %} {{ room.name }}
 {% trans "Tid:" %} {{ start_local|short_date }} {{ start_local|date:"H:i" }} - {% if start_local|date:"Ymd" != end_local|date:"Ymd" %}{{ end_local|short_date }} {% endif %}{{ end_local|date:"H:i" }}
 
-{% if booking.description %}{% trans "Beskrivning:" %} {{ booking.description }}
+{% if booking.title %}{% trans "Titel:" %} {{ booking.title }}
+
+{% endif %}{% if booking.description %}{% trans "Beskrivning:" %} {{ booking.description }}
 
 {% endif %}{% trans "Om tiden inte passar" %}
 

@@ -3050,11 +3050,9 @@ msgstr "Website:"
 msgid "Mina bokningar"
 msgstr "My bookings"
 
-#: templates/common/booking/my_bookings.html:20
-msgid ""
-"Här ser du dina kommande bokningar och kan ta bort en som inte längre passar."
-msgstr ""
-"Here are your upcoming bookings, and you can remove one that no longer suits."
+#: templates/common/booking/my_bookings.html
+msgid "Här ser du dina kommande bokningar och kan ändra eller ta bort en som inte längre passar."
+msgstr "Here you see your upcoming bookings and can change or remove one that no longer suits."
 
 #: templates/common/booking/my_bookings.html:36
 msgid "Du har inga kommande bokningar."
@@ -3904,3 +3902,55 @@ msgstr "Shows the title with a shine effect on the homepage, in the news list an
 #: events/models.py
 msgid "Visar titeln med glanseffekt på startsidan, i evenemangslistan och på evenemangssidan."
 msgstr "Shows the title with a shine effect on the homepage, in the event list and on the event page."
+
+#: booking/models.py
+msgid "Ange en kort titel för bokningen."
+msgstr "Enter a short title for the booking."
+
+#: booking/models.py
+msgid "Visas offentligt för alla som tittar på bokningarna."
+msgstr "Shown publicly to everyone who looks at the bookings."
+
+#: booking/forms.py
+msgid "Visas offentligt på bokningssidorna. Skriv kort vad bokningen gäller."
+msgstr "Shown publicly on the booking pages. Briefly describe what the booking is for."
+
+#: templates/common/booking/cancel_booking.html
+msgid "Ändra bokningen"
+msgstr "Edit booking"
+
+#: templates/common/booking/partials/edit_booking_form.html
+msgid "Ändra titeln eller tiden och spara."
+msgstr "Change the title or the time and save."
+
+#: templates/common/booking/partials/edit_booking_form.html
+msgid "Samma avbokningskod gäller fortfarande."
+msgstr "The same cancellation code still applies."
+
+#: templates/common/booking/cancel_booking.html
+msgid "Spara ändringen"
+msgstr "Save changes"
+
+#: booking/views.py
+msgid "Bokningen är uppdaterad."
+msgstr "The booking has been updated."
+
+#: templates/common/booking/email/booking_confirmation.txt
+msgid "Titel:"
+msgstr "Title:"
+
+#: templates/common/booking/edit_booking.html
+msgid "Tillbaka till mina bokningar"
+msgstr "Back to my bookings"
+
+#: templates/common/booking/my_bookings.html
+msgid "Ändra"
+msgstr "Edit"
+
+#: booking/forms.py
+msgid "Bokningen har redan börjat och kan inte flyttas. Du kan ändra titel och beskrivning i stället."
+msgstr "The booking has already started and cannot be moved. You can change the title and description instead."
+
+#: templates/common/booking/partials/edit_booking_form.html
+msgid "Bokningen har redan börjat. Tiden kan inte ändras, men titel och beskrivning går bra."
+msgstr "The booking has already started. The time cannot be changed, but the title and description can."
