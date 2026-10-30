@@ -11,7 +11,7 @@ class Migration(migrations.Migration):
     atomic = False
 
     dependencies = [
-        ('booking', '0001_initial'),
+        ('booking', '0002_booking_title'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
