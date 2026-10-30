@@ -693,6 +693,79 @@ class BookingModelTests(TestCase):
         self.assertFalse(form.is_valid())
         self.assertIn('title', form.errors)
 
+    def test_a_form_edit_cannot_move_a_future_booking_into_the_past(self):
+        booking = make_booking(self.room, self.start, self.end, title='Något', booker_name='Någon')
+        past = timezone.now() - datetime.timedelta(days=1)
+
+        form = BookingForm(
+            data={
+                'title': 'Något',
+                'start': local_input_time(past),
+                'end': local_input_time(past + datetime.timedelta(hours=1)),
+                'description': '',
+            },
+            instance=booking,
+        )
+
+        self.assertFalse(form.is_valid())
+        self.assertIn('start', form.errors)
+
+    def test_a_form_edit_keeps_a_start_that_has_already_passed(self):
+        # The admin exemption still applies to a booking that has started: its
+        # start is not a change, so correcting its title or description works.
+        start = timezone.now() - datetime.timedelta(hours=1)
+        booking = make_booking(
+            self.room,
+            start,
+            start + datetime.timedelta(hours=2),
+            title='Något',
+            booker_name='Någon',
+        )
+
+        form = BookingForm(
+            data={
+                'title': 'Något',
+                'start': local_input_time(start),
+                'end': local_input_time(start + datetime.timedelta(hours=2)),
+                'description': '',
+            },
+            instance=booking,
+        )
+
+        self.assertTrue(form.is_valid(), form.errors)
+
+    def test_a_legacy_booking_form_does_not_require_a_title(self):
+        booking = make_booking(self.room, self.start, self.end, booker_name='Någon')
+
+        form = BookingForm(
+            data={
+                'title': '',
+                'start': local_input_time(self.start),
+                'end': local_input_time(self.end),
+                'description': '',
+            },
+            instance=booking,
+        )
+
+        self.assertFalse(form.fields['title'].required)
+        self.assertTrue(form.is_valid(), form.errors)
+
+    def test_a_titled_booking_form_cannot_clear_its_title(self):
+        booking = make_booking(self.room, self.start, self.end, title='Något', booker_name='Någon')
+
+        form = BookingForm(
+            data={
+                'title': '',
+                'start': local_input_time(self.start),
+                'end': local_input_time(self.end),
+                'description': '',
+            },
+            instance=booking,
+        )
+
+        self.assertFalse(form.is_valid())
+        self.assertIn('title', form.errors)
+
 
 class BookingDateFilterTests(PinnedNowMixin, SimpleTestCase):
     """The date badges say the weekday, and the year only when it is needed."""
@@ -1450,6 +1523,11 @@ class BookingMemberFlowTests(TestCase):
         self.assertEqual(shown.status_code, 200)
         self.assertContains(shown, 'name="title"')
         self.assertContains(shown, 'Gammal titel')
+        self.assertContains(shown, self.room.name)
+        # The edit page uses the same date and clock controls as the create
+        # page, so the two forms do not drift apart.
+        self.assertContains(shown, 'data-booking-time-range')
+        self.assertContains(shown, 'booking-time-range.js')
         # This page is authenticated by the account, so there is no code to
         # carry and no sentence about one.
         self.assertNotContains(shown, 'name="code"')
@@ -1539,6 +1617,64 @@ class BookingMemberFlowTests(TestCase):
         booking.refresh_from_db()
         self.assertEqual(booking.title, 'Gammal titel')
         self.assertNotEqual(booking.start, other_start)
+
+    def test_a_member_cannot_move_a_future_booking_into_the_past(self):
+        booking = self.member_booking()
+        past = timezone.now() - datetime.timedelta(days=1)
+
+        response = self.client.post(
+            reverse('booking:edit_my_booking', args=[booking.pk]),
+            {
+                'title': 'Ny titel',
+                'start': local_input_time(past),
+                'end': local_input_time(past + datetime.timedelta(hours=1)),
+                'description': '',
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('start', response.context['edit_form'].errors)
+        booking.refresh_from_db()
+        self.assertEqual(booking.title, 'Gammal titel')
+        self.assertNotEqual(booking.start, past)
+
+    def test_an_edit_that_changes_the_title_sends_a_new_confirmation(self):
+        booking = self.member_booking()
+
+        with patch('booking.emails.send_email_with_attachments_task') as send_email:
+            with self.captureOnCommitCallbacks(execute=True):
+                response = self.client.post(
+                    reverse('booking:edit_my_booking', args=[booking.pk]),
+                    {
+                        'title': 'Ny titel',
+                        'start': local_input_time(booking.start),
+                        'end': local_input_time(booking.end),
+                        'description': '',
+                    },
+                )
+
+        self.assertRedirects(response, reverse('booking:my_bookings'))
+        self.assertEqual(send_email.delay.call_count, 1)
+        self.assertEqual(send_email.delay.call_args.args[3], [self.member.email])
+
+    def test_an_edit_that_only_changes_the_description_sends_nothing(self):
+        start = timezone.localtime(timezone.now()).replace(second=0, microsecond=0) + datetime.timedelta(days=1)
+        booking = self.member_booking(start=start)
+
+        with patch('booking.emails.send_email_with_attachments_task') as send_email:
+            with self.captureOnCommitCallbacks(execute=True):
+                response = self.client.post(
+                    reverse('booking:edit_my_booking', args=[booking.pk]),
+                    {
+                        'title': booking.title,
+                        'start': local_input_time(booking.start),
+                        'end': local_input_time(booking.end),
+                        'description': 'Ny beskrivning',
+                    },
+                )
+
+        self.assertRedirects(response, reverse('booking:my_bookings'))
+        send_email.delay.assert_not_called()
 
 
 class BookingAdminPermissionTests(TestCase):
@@ -2620,6 +2756,11 @@ class BookingCancellationTests(PinnedNowMixin, TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn('edit_form', response.context)
         self.assertContains(response, 'name="title"')
+        # The page has to say which booking the code belongs to; the room is not
+        # a form field, so the summary row above the form is what identifies it.
+        self.assertContains(response, self.room.name)
+        self.assertContains(response, 'data-booking-time-range')
+        self.assertContains(response, 'booking-time-range.js')
         # The code rides along in the form, so the save does not need the
         # visitor to paste it a second time.
         self.assertContains(response, f'name="code" value="{code}"')
@@ -2627,6 +2768,19 @@ class BookingCancellationTests(PinnedNowMixin, TestCase):
         booking.refresh_from_db()
         self.assertEqual(booking.title, '')
         self.assertEqual(booking.start, self.start)
+
+    def test_an_edit_that_changes_the_title_emails_the_booker(self):
+        booking = self.outsider_booking()
+
+        with patch('booking.emails.send_email_with_attachments_task') as send_email:
+            with self.captureOnCommitCallbacks(execute=True):
+                response = self.client.post(self.cancel_url, self.edit_payload(booking))
+
+        self.assertRedirects(response, reverse('booking:index'))
+        self.assertEqual(send_email.delay.call_count, 1)
+        _subject, body, _from_email, recipients = send_email.delay.call_args.args
+        self.assertEqual(recipients, ['besokare@example.com'])
+        self.assertIn(access.cancel_code(booking), body)
 
     def test_the_code_can_change_the_title_and_the_time(self):
         booking = self.outsider_booking()
@@ -2651,8 +2805,8 @@ class BookingCancellationTests(PinnedNowMixin, TestCase):
         self.assertEqual(booking.end, new_end)
         self.assertEqual(booking.description, 'Rättad beskrivning')
 
-    def test_an_edit_without_a_title_changes_nothing(self):
-        booking = self.outsider_booking()
+    def test_a_titled_booking_cannot_be_edited_to_a_blank_title(self):
+        booking = self.outsider_booking(title='Ursprunglig titel')
         new_start = self.start + datetime.timedelta(hours=1)
 
         response = self.client.post(
@@ -2671,10 +2825,21 @@ class BookingCancellationTests(PinnedNowMixin, TestCase):
         booking.refresh_from_db()
         # A rejected submission is not partly applied: the valid fields in it
         # must not have been saved while the title was refused.
-        self.assertEqual(booking.title, '')
+        self.assertEqual(booking.title, 'Ursprunglig titel')
         self.assertEqual(booking.start, self.start)
         self.assertEqual(booking.end, self.end)
         self.assertEqual(booking.description, '')
+
+    def test_a_legacy_booking_can_be_edited_without_adding_a_title(self):
+        # The title requirement is for new bookings. A row made before the field
+        # existed can have its time corrected and stay untitled.
+        booking = self.outsider_booking()
+
+        response = self.client.post(self.cancel_url, self.edit_payload(booking, title=''))
+
+        self.assertRedirects(response, reverse('booking:index'))
+        booking.refresh_from_db()
+        self.assertEqual(booking.title, '')
 
     def test_an_edit_that_overlaps_another_booking_is_refused(self):
         booking = self.outsider_booking()

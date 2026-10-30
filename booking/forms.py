@@ -85,6 +85,7 @@ class BookingForm(forms.ModelForm):
             self.room = room
         if author is not None:
             self.author = author
+        self._initial_start = self.instance.start if self.instance.pk is not None else None
         if self.instance.pk is None:
             # The model refuses a new booking that starts before its own grace
             # boundary, so the input offers exactly the same range: deriving the
@@ -105,6 +106,28 @@ class BookingForm(forms.ModelForm):
             # the form data.
             self.instance.room = room
             self.instance.author = author
+        elif not (self.instance.title or '').strip():
+            # A booking made before titles existed may keep its blank title
+            # while its time or description is corrected. A row that has a title
+            # keeps it required, so an edit cannot silently erase it.
+            self.fields['title'].required = False
+
+    def clean_start(self):
+        """Refuse moving a future booking's start into the past.
+
+        `Booking.clean()` exempts every existing row from the past-start rule so
+        the board can correct a booking whose time is over. A booker editing
+        their own row does not need that exemption: the start a booking already
+        has is kept, and a future booking cannot be moved behind the same grace
+        boundary the create form enforces.
+        """
+        start = self.cleaned_data['start']
+        if self.instance.pk is None or start is None:
+            return start
+        boundary = access.now_at() - BOOKING_PAST_GRACE
+        if start < boundary and (self._initial_start is None or self._initial_start >= boundary):
+            raise forms.ValidationError(_('Starttiden kan inte vara i det förflutna.'))
+        return start
 
 
 class AnonymousBookingForm(BookingForm):

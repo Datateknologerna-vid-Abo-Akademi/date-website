@@ -15,15 +15,6 @@
 <form method="post" class="booking-form">
   {% csrf_token %}
   {% if edit_code %}<input type="hidden" name="code" value="{{ edit_code }}">{% endif %}
-  {% for field in edit_form %}
-    <p>
-      {{ field.label_tag }}
-      {{ field }}
-      {% for error in field.errors %}
-        <span class="booking-error"><strong>{{ error|escape }}</strong></span>
-      {% endfor %}
-      {% if field.help_text %}<small class="booking-help">{{ field.help_text }}</small>{% endif %}
-    </p>
-  {% endfor %}
+  {% include 'booking/partials/booking_fields.html' with form=edit_form %}
   <button class="theme-button" type="submit" name="save" value="1">{% trans "Spara ändringen" %}</button>
 </form>

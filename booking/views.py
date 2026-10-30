@@ -203,7 +203,7 @@ def edit_my_booking(request, pk):
     return render(
         request,
         'booking/edit_booking.html',
-        {'booking': booking, 'edit_form': edit_form},
+        {'booking': booking, 'edit_form': edit_form, 'room': booking.room},
     )
 
 
@@ -254,6 +254,7 @@ def cancel_booking(request):
             'form': form,
             'booking': booking,
             'edit_form': edit_form,
+            'room': booking.room if booking else None,
             # The form partial puts it back in the hidden field. Taking it from
             # the bound form keeps the value the visitor submitted, so a
             # rejected edit does not make them type the code again.
@@ -308,6 +309,12 @@ def _save_edited_booking(request, booking, owner=None):
             if not edit_form.is_valid():
                 return edit_form, False
             edit_form.save()
+            # A changed title or time invalidates the confirmation the booker
+            # already has, and the stable invite UID makes a new mail update the
+            # calendar event instead of adding a second one. A description-only
+            # edit stays between the booker and the board and sends nothing.
+            if set(edit_form.changed_data) & {'title', 'start', 'end'}:
+                emails.notify_booker(edit_form.instance, request=request)
             return edit_form, True
     # The booking moved twice while the code was being checked. Refusing is
     # better than validating it against a room it is no longer in.

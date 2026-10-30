@@ -10,6 +10,7 @@
   <link rel="stylesheet"
         href="{% static 'booking/css/booking.css' %}"
         type="text/css">
+  <script src="{% static 'booking/js/booking-time-range.js' %}" defer></script>
 {% endblock %}
 {% block content %}
   <div class="container-md min-vh-100 container-margin-top">
@@ -17,16 +18,7 @@
       <div class="content">
         <h1 class="booking-heading">{% trans "Ändra bokningen" %}</h1>
         <ul class="booking-list">
-          <li class="booking-list-item">
-            <span class="booking-badge">{{ booking.start|short_date }}</span>
-            <span class="booking-details">
-              {% if booking.title %}<span class="booking-title">{{ booking.title }}</span>{% endif %}
-              <span class="booking-meta">
-                <span class="booking-time">{{ booking.start|date:"H:i" }} - {% if booking.start|date:"Ymd" != booking.end|date:"Ymd" %}{{ booking.end|short_date }} {% endif %}{{ booking.end|date:"H:i" }}</span>
-                <span class="booking-room-name">{{ booking.room.name }}</span>
-              </span>
-            </span>
-          </li>
+          <li class="booking-list-item">{% include 'booking/partials/booking_row.html' with show_room=True %}</li>
         </ul>
         {% include 'booking/partials/edit_booking_form.html' %}
         <p class="booking-help booking-back">
