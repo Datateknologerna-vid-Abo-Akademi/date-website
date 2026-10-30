@@ -1,0 +1,23 @@
+{% load i18n %}
+<p class="booking-help">
+  {% trans "Ändra titeln eller tiden och spara." %}
+  {% if edit_code %}
+    {% trans "Samma avbokningskod gäller fortfarande." %}
+  {% endif %}
+</p>
+{% if times_frozen %}
+  <p class="booking-help">{% trans "Bokningen har redan börjat. Tiden kan inte ändras, men titel och beskrivning går bra." %}</p>
+{% endif %}
+{% if edit_form.non_field_errors %}
+  <div class="booking-error">
+    {% for error in edit_form.non_field_errors %}
+      <p>{{ error|escape }}</p>
+    {% endfor %}
+  </div>
+{% endif %}
+<form method="post" class="booking-form">
+  {% csrf_token %}
+  {% if edit_code %}<input type="hidden" name="code" value="{{ edit_code }}">{% endif %}
+  {% include 'booking/partials/booking_fields.html' with form=edit_form %}
+  <button class="theme-button" type="submit" name="save" value="1">{% trans "Spara ändringen" %}</button>
+</form>

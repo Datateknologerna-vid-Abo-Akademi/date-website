@@ -1540,6 +1540,7 @@ class HomepageBookingTests(TestCase):
             room=self.room,
             start=start,
             end=start + timedelta(hours=1),
+            title="Offentlig titel",
             booker_name="Hemlig Bokare",
             booker_email="hemlig@example.com",
             description="Hemlig beskrivning",
@@ -1549,6 +1550,9 @@ class HomepageBookingTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, self.room.name)
+        # The title is written for the public list, so it is the one part of the
+        # booking the front page shows beyond the room and the time.
+        self.assertContains(response, "Offentlig titel")
         self.assertEqual(
             [booking.room.name for booking in response.context["bookings"]],
             [self.room.name],
