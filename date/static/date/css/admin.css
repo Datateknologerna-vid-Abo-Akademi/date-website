@@ -192,3 +192,38 @@
     background: rgb(var(--color-base-800));
     color: rgb(var(--color-primary-300));
 }
+
+/* Collapsible stacked inline blocks.
+ *
+ * Unfold's collapsible inline renders the block title as plain bold text, so
+ * nothing showed that the row opens. The chevron is driven by the data-open
+ * attribute that date/js/admin_sidebar.js keeps in sync with Alpine. */
+.form-group[data-open] > .form-row > h3 {
+    cursor: pointer;
+    transition: background-color 0.15s;
+}
+
+.form-group[data-open] > .form-row > h3:hover {
+    background: rgb(var(--color-base-50));
+}
+
+.dark .form-group[data-open] > .form-row > h3:hover {
+    background: rgb(var(--color-base-800));
+}
+
+.form-group[data-open] > .form-row > h3::before {
+    content: '';
+    display: inline-block;
+    flex: none;
+    width: 0.45rem;
+    height: 0.45rem;
+    margin-right: 0.65rem;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: rotate(-45deg);
+    transition: transform 0.15s ease;
+}
+
+.form-group[data-open='true'] > .form-row > h3::before {
+    transform: rotate(45deg);
+}
