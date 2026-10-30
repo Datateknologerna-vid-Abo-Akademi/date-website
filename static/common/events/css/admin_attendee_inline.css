@@ -29,3 +29,9 @@
 #eventattendees_set-group .event-answer-control textarea {
   width: 100%;
 }
+
+/* The order number is edited by dragging, not by typing: keep its input in the
+   form so the formset still posts it, but drop the empty row from the block. */
+#eventattendees_set-group .field-attendee_nr {
+  display: none;
+}
