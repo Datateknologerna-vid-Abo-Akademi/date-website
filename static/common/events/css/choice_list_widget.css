@@ -1,0 +1,40 @@
+/* One input per choice, with a remove control per row and an add button below. */
+.choice-list-widget {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    max-width: 40rem;
+}
+
+.choice-list-widget .choice-list-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.choice-list-widget .choice-list-row input[type='text'] {
+    flex: 1;
+}
+
+.choice-list-widget .choice-list-remove {
+    background: none;
+    border: 0;
+    color: var(--color-font-subtle-light, #6b7280);
+    cursor: pointer;
+    font-size: 1.1rem;
+    line-height: 1;
+    padding: 0.25rem 0.5rem;
+}
+
+.choice-list-widget .choice-list-remove:hover {
+    color: var(--color-font-important-light, #111827);
+}
+
+.choice-list-widget .choice-list-add {
+    align-self: flex-start;
+    background: none;
+    border: 0;
+    color: var(--color-primary-600, #2563eb);
+    cursor: pointer;
+    padding: 0.25rem 0;
+}

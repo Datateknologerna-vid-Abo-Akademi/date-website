@@ -120,7 +120,6 @@ class EventRegistrationFormInlineMixin(AvecAwareMixin):
         formfield = super().formfield_for_dbfield(db_field, request, **kwargs)
         if db_field.name == 'choice_list':
             formfield.widget = ChoiceListWidget()
-            formfield.help_text = _('Ett alternativ per rad.')
         return formfield
 
     def get_formset(self, request, obj=None, **kwargs):

@@ -3927,6 +3927,9 @@ msgstr "Bokningen har redan börjat och kan inte flyttas. Du kan ändra titel oc
 msgid "Bokningen har redan börjat. Tiden kan inte ändras, men titel och beskrivning går bra."
 msgstr "Bokningen har redan börjat. Tiden kan inte ändras, men titel och beskrivning går bra."
 
-#: events/admin.py
-msgid "Ett alternativ per rad."
-msgstr "Ett alternativ per rad."
+
+msgid "Lägg till alternativ"
+msgstr "Lägg till alternativ"
+
+msgid "Ta bort"
+msgstr "Ta bort"

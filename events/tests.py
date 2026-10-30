@@ -1392,16 +1392,35 @@ class EventAdminTests(TestCase):
         else:
             self.assertNotIn("border-base-200", html)
 
-    def test_choice_list_widget_edits_one_option_per_line(self):
+    def test_choice_list_widget_renders_an_input_per_option(self):
+        html = ChoiceListWidget().render("choice_list", "fish,vegetarian", {"id": "id_choice_list"})
+
+        self.assertIn('name="choice_list__choice__0"', html)
+        self.assertIn('value="fish"', html)
+        self.assertIn('name="choice_list__choice__2"', html)
+        self.assertIn("choice_list__count", html)
+
+    def test_choice_list_widget_collects_rows_and_skips_gaps(self):
+        value = ChoiceListWidget().value_from_datadict(
+            {
+                "choice_list__count": "3",
+                "choice_list__choice__0": "fish",
+                "choice_list__choice__2": " water ",
+            },
+            {},
+            "choice_list",
+        )
+
+        self.assertEqual(value, "fish,water")
+
+    def test_choice_list_widget_accepts_a_single_posted_value(self):
         widget = ChoiceListWidget()
 
-        self.assertEqual(widget.format_value('fish,vegetarian'), 'fish\nvegetarian')
-        self.assertEqual(widget.format_value(None), '')
         self.assertEqual(
-            widget.value_from_datadict({'choice_list': 'fish\n vegetarian\nalcohol, water'}, {}, 'choice_list'),
-            'fish,vegetarian,alcohol,water',
+            widget.value_from_datadict({"choice_list": "fish\n vegetarian,water"}, {}, "choice_list"),
+            "fish,vegetarian,water",
         )
-        self.assertEqual(widget.value_from_datadict({'choice_list': ''}, {}, 'choice_list'), '')
+        self.assertIsNone(widget.value_from_datadict({}, {}, "choice_list"))
 
     def test_attendee_answers_are_saved_from_question_fields(self):
         EventRegistrationForm.objects.create(
