@@ -70,7 +70,7 @@ class CollapsibleInlineTests(TestCase):
             with self.subTest(inline=inline_class.__name__):
                 self.assertTrue(getattr(inline_class, 'collapsible', False))
 
-    def test_collapsed_booking_titles_do_not_repeat_the_room(self):
+    def test_collapsed_booking_titles_show_the_period_and_title(self):
         from datetime import datetime, timedelta
 
         from django.utils import timezone
@@ -79,9 +79,39 @@ class CollapsibleInlineTests(TestCase):
 
         room = Room(name='Audit room')
         start = timezone.make_aware(datetime(2026, 5, 1, 18, 0))
-        booking = Booking(room=room, start=start, end=start + timedelta(hours=3))
+        booking = Booking(room=room, start=start, end=start + timedelta(hours=3), title='Styrelsemöte')
 
         title = booking.get_inline_title()
 
         self.assertNotIn(room.name, title)
         self.assertIn('18:00', title)
+        self.assertIn('Styrelsemöte', title)
+
+    def test_collapsed_booking_title_falls_back_to_the_booker(self):
+        from datetime import datetime, timedelta
+
+        from django.utils import timezone
+
+        from booking.models import Booking, Room
+
+        room = Room(name='Audit room')
+        start = timezone.make_aware(datetime(2026, 5, 1, 18, 0))
+        booking = Booking(room=room, start=start, end=start + timedelta(hours=3), booker_name='Albin Bäck')
+
+        self.assertIn('Albin Bäck', booking.get_inline_title())
+
+    def test_collapsed_closure_title_shows_the_reason(self):
+        from datetime import datetime, timedelta
+
+        from django.utils import timezone
+
+        from booking.models import Closure, Room
+
+        room = Room(name='Audit room')
+        start = timezone.make_aware(datetime(2026, 5, 1, 8, 0))
+        closure = Closure(room=room, start=start, end=start + timedelta(days=2), description='Renovering av golvet')
+
+        title = closure.get_inline_title()
+
+        self.assertNotIn(room.name, title)
+        self.assertIn('Renovering av golvet', title)
