@@ -227,3 +227,19 @@
 .form-group[data-open='true'] > .form-row > h3::before {
     transform: rotate(45deg);
 }
+
+/* CKEditor toolbar in the admin.
+ *
+ * The content field row is a flex item, so its minimum width followed the
+ * toolbar's single-row width and pushed the page wider than the screen on a
+ * 1080p display. Let the editor shrink and let the toolbar wrap onto a second
+ * line instead of running past the right edge. */
+.field-line .ck.ck-toolbar.ck-toolbar > .ck-toolbar__items {
+    flex-wrap: wrap;
+}
+
+.field-line .ck.ck-editor,
+.field-line .ck-editor-container,
+.field-line > .grow {
+    min-width: 0;
+}
