@@ -86,6 +86,7 @@ class BookingForm(forms.ModelForm):
         if author is not None:
             self.author = author
         self._initial_start = self.instance.start if self.instance.pk is not None else None
+        self._initial_end = self.instance.end if self.instance.pk is not None else None
         if self.instance.pk is None:
             # The model refuses a new booking that starts before its own grace
             # boundary, so the input offers exactly the same range: deriving the
@@ -128,6 +129,33 @@ class BookingForm(forms.ModelForm):
         if start < boundary and (self._initial_start is None or self._initial_start >= boundary):
             raise forms.ValidationError(_('Starttiden kan inte vara i det förflutna.'))
         return start
+
+    def clean(self):
+        """Refuse moving a booking that has already started.
+
+        A booking is the booker's to reschedule as often as they like while it is
+        still ahead. Once its start has passed, moving it would rewrite what has
+        already happened, so the times are frozen and only the title and the
+        description can change. The comparison is at the widget's minute
+        precision, so a title-only save does not trip over the seconds the stored
+        row may carry.
+        """
+        cleaned_data = super().clean()
+        if self.instance.pk is None or self._initial_start is None or self._initial_end is None:
+            return cleaned_data
+        if self._initial_start > access.now_at():
+            return cleaned_data
+        start = cleaned_data.get('start')
+        end = cleaned_data.get('end')
+        if start is None or end is None:
+            return cleaned_data
+        same_start = start.replace(second=0, microsecond=0) == self._initial_start.replace(second=0, microsecond=0)
+        same_end = end.replace(second=0, microsecond=0) == self._initial_end.replace(second=0, microsecond=0)
+        if not (same_start and same_end):
+            raise forms.ValidationError(
+                _('Bokningen har redan börjat och kan inte flyttas. Du kan ändra titel och beskrivning i stället.')
+            )
+        return cleaned_data
 
 
 class AnonymousBookingForm(BookingForm):

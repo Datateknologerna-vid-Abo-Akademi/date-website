@@ -3986,3 +3986,11 @@ msgstr "Takaisin omiin varauksiini"
 #: templates/common/booking/my_bookings.html
 msgid "Ändra"
 msgstr "Muokkaa"
+
+#: booking/forms.py
+msgid "Bokningen har redan börjat och kan inte flyttas. Du kan ändra titel och beskrivning i stället."
+msgstr "Varaus on jo alkanut, eikä sitä voi siirtää. Voit muuttaa otsikkoa ja kuvausta."
+
+#: templates/common/booking/partials/edit_booking_form.html
+msgid "Bokningen har redan börjat. Tiden kan inte ändras, men titel och beskrivning går bra."
+msgstr "Varaus on jo alkanut. Aikaa ei voi muuttaa, mutta otsikkoa ja kuvausta voi."

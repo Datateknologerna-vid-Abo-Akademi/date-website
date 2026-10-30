@@ -734,6 +734,52 @@ class BookingModelTests(TestCase):
 
         self.assertTrue(form.is_valid(), form.errors)
 
+    def test_a_started_booking_form_cannot_be_moved(self):
+        start = timezone.now() - datetime.timedelta(hours=1)
+        booking = make_booking(
+            self.room,
+            start,
+            start + datetime.timedelta(hours=2),
+            title='Något',
+            booker_name='Någon',
+        )
+        new_start = timezone.now() + datetime.timedelta(days=1)
+
+        form = BookingForm(
+            data={
+                'title': 'Något',
+                'start': local_input_time(new_start),
+                'end': local_input_time(new_start + datetime.timedelta(hours=1)),
+                'description': '',
+            },
+            instance=booking,
+        )
+
+        self.assertFalse(form.is_valid())
+        self.assertTrue(form.non_field_errors())
+
+    def test_a_started_booking_form_can_still_be_retitled(self):
+        start = timezone.now() - datetime.timedelta(hours=1)
+        booking = make_booking(
+            self.room,
+            start,
+            start + datetime.timedelta(hours=2),
+            title='Något',
+            booker_name='Någon',
+        )
+
+        form = BookingForm(
+            data={
+                'title': 'Nytt namn',
+                'start': local_input_time(start),
+                'end': local_input_time(start + datetime.timedelta(hours=2)),
+                'description': 'Uppdaterad beskrivning',
+            },
+            instance=booking,
+        )
+
+        self.assertTrue(form.is_valid(), form.errors)
+
     def test_a_legacy_booking_form_does_not_require_a_title(self):
         booking = make_booking(self.room, self.start, self.end, booker_name='Någon')
 
@@ -1524,6 +1570,7 @@ class BookingMemberFlowTests(TestCase):
         self.assertContains(shown, 'name="title"')
         self.assertContains(shown, 'Gammal titel')
         self.assertContains(shown, self.room.name)
+        self.assertNotContains(shown, 'Tiden kan inte ändras')
         # The edit page uses the same date and clock controls as the create
         # page, so the two forms do not drift apart.
         self.assertContains(shown, 'data-booking-time-range')
@@ -1637,6 +1684,85 @@ class BookingMemberFlowTests(TestCase):
         booking.refresh_from_db()
         self.assertEqual(booking.title, 'Gammal titel')
         self.assertNotEqual(booking.start, past)
+
+    def test_a_started_booking_cannot_be_moved(self):
+        booking = self.member_booking(start=timezone.now() - datetime.timedelta(minutes=30))
+        new_start = timezone.now() + datetime.timedelta(days=1)
+
+        response = self.client.post(
+            reverse('booking:edit_my_booking', args=[booking.pk]),
+            {
+                'title': booking.title,
+                'start': local_input_time(new_start),
+                'end': local_input_time(new_start + datetime.timedelta(hours=1)),
+                'description': '',
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context['edit_form'].non_field_errors())
+        booking.refresh_from_db()
+        self.assertNotEqual(booking.start, new_start.replace(second=0, microsecond=0))
+
+    def test_a_started_booking_can_still_be_retitled(self):
+        booking = self.member_booking(start=timezone.now() - datetime.timedelta(minutes=30))
+        start = booking.start
+        end = booking.end
+        shown = self.client.get(reverse('booking:edit_my_booking', args=[booking.pk]))
+        self.assertContains(shown, 'Tiden kan inte ändras')
+
+        response = self.client.post(
+            reverse('booking:edit_my_booking', args=[booking.pk]),
+            {
+                'title': 'Nytt namn',
+                'start': local_input_time(start),
+                'end': local_input_time(end),
+                'description': 'Uppdaterad beskrivning',
+            },
+        )
+
+        self.assertRedirects(response, reverse('booking:my_bookings'))
+        booking.refresh_from_db()
+        self.assertEqual(booking.title, 'Nytt namn')
+        self.assertEqual(booking.description, 'Uppdaterad beskrivning')
+        # The widget has minute precision, so the saved times are the stored
+        # ones at that precision, not moved.
+        self.assertEqual(booking.start.replace(second=0, microsecond=0), start.replace(second=0, microsecond=0))
+        self.assertEqual(booking.end.replace(second=0, microsecond=0), end.replace(second=0, microsecond=0))
+
+    def test_a_future_booking_can_be_moved_more_than_once(self):
+        booking = self.member_booking()
+        edit_url = reverse('booking:edit_my_booking', args=[booking.pk])
+        first_start = (booking.start + datetime.timedelta(hours=1)).replace(second=0, microsecond=0)
+
+        first = self.client.post(
+            edit_url,
+            {
+                'title': booking.title,
+                'start': local_input_time(first_start),
+                'end': local_input_time(first_start + datetime.timedelta(hours=1)),
+                'description': '',
+            },
+        )
+
+        self.assertRedirects(first, reverse('booking:my_bookings'))
+        booking.refresh_from_db()
+        self.assertEqual(booking.start, first_start)
+
+        second_start = first_start + datetime.timedelta(hours=1)
+        second = self.client.post(
+            edit_url,
+            {
+                'title': booking.title,
+                'start': local_input_time(second_start),
+                'end': local_input_time(second_start + datetime.timedelta(hours=1)),
+                'description': '',
+            },
+        )
+
+        self.assertRedirects(second, reverse('booking:my_bookings'))
+        booking.refresh_from_db()
+        self.assertEqual(booking.start, second_start)
 
     def test_an_edit_that_changes_the_title_sends_a_new_confirmation(self):
         booking = self.member_booking()
@@ -2745,6 +2871,15 @@ class BookingCancellationTests(PinnedNowMixin, TestCase):
         data.update(overrides)
         return data
 
+    def ongoing_outsider_booking(self):
+        return make_booking(
+            self.room,
+            self.now - datetime.timedelta(minutes=30),
+            self.now + datetime.timedelta(minutes=90),
+            booker_name='Extern Besökare',
+            booker_email='besokare@example.com',
+        )
+
     def test_the_code_opens_an_edit_form_and_changes_nothing_by_itself(self):
         # Opening the form is a POST so the code never has to be put in a URL,
         # and it is still only a read: the save is a second, separate step.
@@ -2781,6 +2916,34 @@ class BookingCancellationTests(PinnedNowMixin, TestCase):
         _subject, body, _from_email, recipients = send_email.delay.call_args.args
         self.assertEqual(recipients, ['besokare@example.com'])
         self.assertIn(access.cancel_code(booking), body)
+
+    def test_a_started_booking_code_cannot_move_the_booking(self):
+        booking = self.ongoing_outsider_booking()
+        new_start = self.now + datetime.timedelta(days=1)
+
+        response = self.client.post(
+            self.cancel_url,
+            self.edit_payload(
+                booking,
+                start=local_input_time(new_start),
+                end=local_input_time(new_start + datetime.timedelta(hours=1)),
+            ),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context['edit_form'].non_field_errors())
+        self.assertContains(response, 'Tiden kan inte ändras')
+        booking.refresh_from_db()
+        self.assertNotEqual(booking.start, new_start)
+
+    def test_a_started_booking_code_can_still_retitle_it(self):
+        booking = self.ongoing_outsider_booking()
+
+        response = self.client.post(self.cancel_url, self.edit_payload(booking, title='Nytt namn'))
+
+        self.assertRedirects(response, reverse('booking:index'))
+        booking.refresh_from_db()
+        self.assertEqual(booking.title, 'Nytt namn')
 
     def test_the_code_can_change_the_title_and_the_time(self):
         booking = self.outsider_booking()

@@ -3946,3 +3946,11 @@ msgstr "Back to my bookings"
 #: templates/common/booking/my_bookings.html
 msgid "Ändra"
 msgstr "Edit"
+
+#: booking/forms.py
+msgid "Bokningen har redan börjat och kan inte flyttas. Du kan ändra titel och beskrivning i stället."
+msgstr "The booking has already started and cannot be moved. You can change the title and description instead."
+
+#: templates/common/booking/partials/edit_booking_form.html
+msgid "Bokningen har redan börjat. Tiden kan inte ändras, men titel och beskrivning går bra."
+msgstr "The booking has already started. The time cannot be changed, but the title and description can."

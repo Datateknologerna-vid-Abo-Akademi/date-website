@@ -203,7 +203,12 @@ def edit_my_booking(request, pk):
     return render(
         request,
         'booking/edit_booking.html',
-        {'booking': booking, 'edit_form': edit_form, 'room': booking.room},
+        {
+            'booking': booking,
+            'edit_form': edit_form,
+            'room': booking.room,
+            'times_frozen': booking.start <= access.now_at(),
+        },
     )
 
 
@@ -255,6 +260,7 @@ def cancel_booking(request):
             'booking': booking,
             'edit_form': edit_form,
             'room': booking.room if booking else None,
+            'times_frozen': booking.start <= at if booking else False,
             # The form partial puts it back in the hidden field. Taking it from
             # the bound form keeps the value the visitor submitted, so a
             # rejected edit does not make them type the code again.
