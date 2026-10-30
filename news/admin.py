@@ -113,6 +113,7 @@ class PostAdmin(PublicUrlAdminMixin, TranslationCompletionAdminMixin, NewsTransl
     list_select_related = ('author', 'category')
     ordering = ('-created_time',)
     date_hierarchy = 'created_time'
+    show_full_result_count = False
 
     def get_form(self, request, obj=None, change=False, **kwargs):
         if obj is None:

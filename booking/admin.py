@@ -366,7 +366,13 @@ class BookingSettingsAdmin(ModelAdmin):
     )
 
     def has_add_permission(self, request):
-        return not BookingSettings.objects.exists() and super().has_add_permission(request)
+        # The admin asks this several times per page. Remember the singleton
+        # lookup on the request instead of running it again for each call.
+        exists = getattr(request, '_booking_settings_exists', None)
+        if exists is None:
+            exists = BookingSettings.objects.exists()
+            request._booking_settings_exists = exists
+        return not exists and super().has_add_permission(request)
 
     def has_delete_permission(self, request, obj=None):
         return False
