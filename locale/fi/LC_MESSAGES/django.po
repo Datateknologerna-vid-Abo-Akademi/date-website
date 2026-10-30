@@ -3994,3 +3994,7 @@ msgstr "Varaus on jo alkanut, eikä sitä voi siirtää. Voit muuttaa otsikkoa j
 #: templates/common/booking/partials/edit_booking_form.html
 msgid "Bokningen har redan börjat. Tiden kan inte ändras, men titel och beskrivning går bra."
 msgstr "Varaus on jo alkanut. Aikaa ei voi muuttaa, mutta otsikkoa ja kuvausta voi."
+
+#: events/admin.py
+msgid "Ett alternativ per rad."
+msgstr "Yksi vaihtoehto per rivi."

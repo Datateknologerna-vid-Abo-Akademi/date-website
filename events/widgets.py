@@ -38,6 +38,35 @@ def _question_rows(questions):
     return rows
 
 
+class ChoiceListWidget(forms.Textarea):
+    """Edit the comma-separated choices one option per line.
+
+    ``choice_list`` is stored as ``a,b,c``, which used to be what the admin
+    showed too. The list is easier to write one option per line, so the widget
+    converts on the way in and out and still accepts commas in a pasted value.
+    """
+
+    def __init__(self, attrs=None):
+        base = {'rows': 3, **(attrs or {})}
+        if TEXTAREA_CLASSES:
+            base.setdefault('class', ' '.join(TEXTAREA_CLASSES))
+        super().__init__(base)
+
+    def format_value(self, value):
+        if value is None:
+            return ''
+        return str(value).replace(',', '\n')
+
+    def value_from_datadict(self, data, files, name):
+        value = data.get(name)
+        if value is None:
+            return None
+        choices = []
+        for chunk in value.splitlines():
+            choices.extend(part.strip() for part in chunk.split(','))
+        return ','.join(choice for choice in choices if choice)
+
+
 class EventAnswersWidget(forms.Widget):
     """Edit one participant's answers as fields instead of raw JSON.
 

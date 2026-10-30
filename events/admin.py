@@ -30,7 +30,7 @@ from core.admin_widgets import FLATPICKR_ADMIN_CSS, FLATPICKR_ADMIN_JS
 from events import forms
 from events.models import Event, EventAttendees, EventRegistrationForm, registration_terms_feature_enabled
 
-from .widgets import EventAnswersWidget
+from .widgets import ChoiceListWidget, EventAnswersWidget
 
 logger = logging.getLogger('date')
 
@@ -92,6 +92,7 @@ class EventRegistrationFormInlineMixin(AvecAwareMixin):
     """Behaviour shared by the registration-field inline in both themes."""
 
     line_numbering = 0
+
     class Media:
         css = {'all': ('events/css/admin_registration_inline.css',)}
         js = ('events/js/admin_registration_inline.js',)
@@ -114,6 +115,13 @@ class EventRegistrationFormInlineMixin(AvecAwareMixin):
 
     def get_fieldsets(self, request, event=None):
         return [(None, {'fields': self.get_fields(request, event)})]
+
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        formfield = super().formfield_for_dbfield(db_field, request, **kwargs)
+        if db_field.name == 'choice_list':
+            formfield.widget = ChoiceListWidget()
+            formfield.help_text = _('Ett alternativ per rad.')
+        return formfield
 
     def get_formset(self, request, obj=None, **kwargs):
         if not self._event_uses_avec(obj):

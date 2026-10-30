@@ -38,7 +38,7 @@ from events.models import BackgroundImageLayout, Event, EventAttendees, EventReg
 from events.registration import EventSignupError, register_event_signup
 from events.routing import websocket_urlpatterns
 from events.websocket_utils import ws_data, ws_send
-from events.widgets import EventAnswersWidget
+from events.widgets import ChoiceListWidget, EventAnswersWidget
 from members.models import ORDINARY_MEMBER, Member, MembershipType, Subscription, SubscriptionPayment
 from news.models import Category, Post
 from staticpages.models import StaticPage, StaticPageNav, StaticUrl
@@ -1391,6 +1391,17 @@ class EventAdminTests(TestCase):
             self.assertIn("appearance-none", html)
         else:
             self.assertNotIn("border-base-200", html)
+
+    def test_choice_list_widget_edits_one_option_per_line(self):
+        widget = ChoiceListWidget()
+
+        self.assertEqual(widget.format_value('fish,vegetarian'), 'fish\nvegetarian')
+        self.assertEqual(widget.format_value(None), '')
+        self.assertEqual(
+            widget.value_from_datadict({'choice_list': 'fish\n vegetarian\nalcohol, water'}, {}, 'choice_list'),
+            'fish,vegetarian,alcohol,water',
+        )
+        self.assertEqual(widget.value_from_datadict({'choice_list': ''}, {}, 'choice_list'), '')
 
     def test_attendee_answers_are_saved_from_question_fields(self):
         EventRegistrationForm.objects.create(
