@@ -193,3 +193,19 @@ class EventAnswersWidget(forms.Widget):
     @property
     def media(self):
         return forms.Media(css={"all": ("events/css/admin_event_answers.css",)})
+
+
+class EventAnswersField(forms.JSONField):
+    """The JSON field the answers widget is attached to.
+
+    A bound field normally holds the raw string from the request, which
+    ``JSONField.bound_data`` parses with ``json.loads``. The answers widget
+    hands back a dict of answers instead, so re-rendering the page after a
+    validation error would raise ``TypeError`` and the admin would answer 500
+    instead of showing what went wrong.
+    """
+
+    def bound_data(self, data, initial):
+        if isinstance(data, dict):
+            return data
+        return super().bound_data(data, initial)

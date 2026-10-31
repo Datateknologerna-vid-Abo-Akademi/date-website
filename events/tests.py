@@ -1417,6 +1417,53 @@ class EventAdminTests(TestCase):
         attendee.refresh_from_db()
         self.assertEqual(attendee.preferences, {"Meal": "vegetarian"})
 
+    def test_attendee_answers_survive_a_failed_save(self):
+        """A bound answers field must not be parsed as JSON text again.
+
+        The answers widget hands the field a dict, and JSONField.bound_data
+        ran json.loads on it, so any validation error on the change page
+        answered 500 and the submitted answers were lost.
+        """
+        EventRegistrationForm.objects.create(
+            event=self.event,
+            name="Meal",
+            type="select",
+            choice_list="fish,vegetarian",
+        )
+        attendee = EventAttendees.objects.create(
+            event=self.event,
+            user="Answer Editor",
+            email="answer-editor@example.com",
+            time_registered=timezone.now(),
+            preferences={"Meal": "fish"},
+        )
+        self.client.force_login(self.admin_user)
+        row = self._attendee_row(0, attendee.pk, attendee.attendee_nr, attendee.user, attendee.email)
+        row.update(
+            {
+                "eventattendees_set-0-preferences__key__0": "Meal",
+                "eventattendees_set-0-preferences__kind__0": "select",
+                "eventattendees_set-0-preferences__value__0": "vegetarian",
+            }
+        )
+        data = {
+            "eventattendees_set-TOTAL_FORMS": "1",
+            "eventattendees_set-INITIAL_FORMS": "1",
+            "eventattendees_set-MIN_NUM_FORMS": "0",
+            "eventattendees_set-MAX_NUM_FORMS": "1000",
+            # The title is required, so the admin re-renders the page with the
+            # submitted answers instead of saving.
+            "title": "",
+            **row,
+        }
+
+        response = self.client.post(reverse("admin:events_event_change", args=[self.event.pk]), data)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'value="vegetarian" selected')
+        attendee.refresh_from_db()
+        self.assertEqual(attendee.preferences, {"Meal": "fish"})
+
     def test_child_event_attendee_uses_the_child_events_questions(self):
         child = Event.objects.create(
             title="Child Question Event",
