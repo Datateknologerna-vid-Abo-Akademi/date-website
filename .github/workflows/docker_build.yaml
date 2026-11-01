@@ -155,7 +155,7 @@ jobs:
           echo "GHCR login failed after 3 attempts."
           exit 1
       - name: Download digests
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           pattern: digest-*
           path: ${{ runner.temp }}/digests
