@@ -56,7 +56,7 @@ dev = [
     "djlint==1.44.2",
     "mypy>=2.3.0",
     "pre-commit>=4.6.2",
-    "ruff>=0.15.20",
+    "ruff>=0.17.3",
     "types-requests>=2.33.0.20260518",
     # Used directly by scripts/css_regression.py, which drives Chrome over the
     # DevTools Protocol. uvicorn[standard] already pulls it in for the runtime.
