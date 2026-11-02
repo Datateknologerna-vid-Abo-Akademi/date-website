@@ -52,3 +52,7 @@
     </div>
   {% endif %}
 {% endblock %}
+{% block extrahead %}
+  {{ block.super }}
+  {% include "admin/x_cloak_fallback.html" %}
+{% endblock %}

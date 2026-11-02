@@ -168,3 +168,4 @@ class GuessAdmin(ModelAdmin):
     list_select_related = ('ctf', 'flag', 'user')
     ordering = ('-timestamp',)
     date_hierarchy = 'timestamp'
+    show_full_result_count = False

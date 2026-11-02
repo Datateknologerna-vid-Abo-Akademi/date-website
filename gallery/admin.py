@@ -25,7 +25,10 @@ def safe_image_preview(image_field):
     if not image_field:
         return '-'
     try:
-        return format_html('<img src="{}" style="width: auto; height: 80px"/>', image_field.url)
+        return format_html(
+            '<img src="{}" style="width: auto; height: 80px" loading="lazy" decoding="async"/>',
+            image_field.url,
+        )
     except Exception as exc:
         logger.warning("Unable to resolve gallery image URL for %s: %s", image_field.name, exc)
         return image_field.name

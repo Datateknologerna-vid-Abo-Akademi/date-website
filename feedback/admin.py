@@ -78,7 +78,13 @@ class FeedbackFormSettingsAdmin(FeedbackFormSettingsTranslationAdminBase):
         return queryset.filter(pk=solo_pk)
 
     def has_add_permission(self, request):
-        return not FeedbackFormSettings.objects.exists() and super().has_add_permission(request)
+        # The admin asks this several times per page. Remember the singleton
+        # lookup on the request instead of running it again for each call.
+        exists = getattr(request, '_feedback_form_settings_exists', None)
+        if exists is None:
+            exists = FeedbackFormSettings.objects.exists()
+            request._feedback_form_settings_exists = exists
+        return not exists and super().has_add_permission(request)
 
     def has_delete_permission(self, request, obj=None):
         return False

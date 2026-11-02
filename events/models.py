@@ -143,6 +143,8 @@ class Event(models.Model):  # type: ignore[django-manager-missing]
         indexes = [
             # Homepage/listing filters: published events by end date.
             models.Index(fields=['published_time', 'event_date_end'], name='event_pub_end_idx'),
+            # Admin changelist default ordering and date hierarchy.
+            models.Index(fields=['event_date_start'], name='event_date_start_idx'),
         ]
 
     def __str__(self):
@@ -629,6 +631,10 @@ class EventAttendees(models.Model):  # type: ignore[django-manager-missing]
                 fields=('event', 'attendee_nr'),
                 name='unique_attendee_nr_per_event',
             ),
+        ]
+        indexes = [
+            # Admin changelist ordering, date hierarchy and time_registered filter.
+            models.Index(fields=['time_registered'], name='attendee_time_registered_idx'),
         ]
 
     def __str__(self):
