@@ -88,8 +88,9 @@
   --vc-months-years-color-selected: var(--secondaryColor);
   --vc-months-years-color-disabled: #d3d3d3;
 
-  /* event popup */
-  --vc-date-popup-bg: var(--secondaryColorDarker);
+  /* event popup: the card is painted by the rules at the end of this file, so
+     these only stop the vendored grey from showing through. */
+  --vc-date-popup-bg: var(--secondaryColor);
   --vc-date-popup-color: var(--primaryColor);
 
   /* Arrow bar colours, so an association can recolour the arrows without
@@ -218,4 +219,57 @@
   right: 0;
   left: 4px;
   transform: rotateZ(180deg);
+}
+
+/* Event popup.
+
+   3.x draws a narrow grey rounded box with no pointer. 2.x drew a white card
+   with a soft shadow and a small tail pointing at the day, 130 px of text plus
+   the side padding, and room above the card for the tail. Restore that shape:
+   the box itself stays transparent and the card is painted by the :before, so
+   the tail can sit in the gap the padding leaves above it. The width is the
+   130 px of text plus the 12 px side padding, matching 2.x: this element sizes
+   as content-box, as 2.x's did. */
+.vc [data-vc-date-popup] {
+  width: 130px;
+  min-width: 0;
+  max-width: none;
+  padding: 16px 12px 8px;
+  border-radius: 0;
+  background-color: transparent;
+  color: var(--primaryColor);
+  font-size: 12px;
+  line-height: 14px;
+  font-weight: 400;
+  z-index: 2;
+}
+
+.vc [data-vc-date-popup]:before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  left: 0;
+  bottom: 0;
+  display: block;
+  width: 100%;
+  height: calc(100% - 8px);
+  border-radius: 4px;
+  background-color: var(--secondaryColor);
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+}
+
+.vc [data-vc-date-popup]:after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  left: 50%;
+  top: 2px;
+  display: block;
+  width: 0;
+  height: 0;
+  transform: translateX(-50%);
+  border: 0 solid transparent;
+  border-bottom: 8px solid var(--secondaryColor);
+  border-left-width: 10px;
+  border-right-width: 10px;
 }
