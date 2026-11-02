@@ -148,9 +148,7 @@ This project uses CKEditor5-backed content in places that are also translated. `
 The setting already exists in `core/settings/common.py`:
 
 ```python
-MODELTRANSLATION_CUSTOM_FIELDS = (
-    "CKEditor5Field",
-)
+MODELTRANSLATION_CUSTOM_FIELDS = ("CKEditor5Field",)
 ```
 
 If you introduce another non-standard field type that should be translated, update that setting and verify the admin/widget behavior.
