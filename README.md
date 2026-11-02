@@ -405,7 +405,10 @@ TRANSLATION_LANGUAGES = get_translation_languages()
 
 @register(Event)
 class EventTranslationOptions(TranslationOptions):
-    fields = ('title', 'content',)
+    fields = (
+        'title',
+        'content',
+    )
     languages = TRANSLATION_LANGUAGES
 ```
 
@@ -423,9 +426,7 @@ Example solution:
 1. add the field class to settings.py:
 
 ```python 
-MODELTRANSLATION_CUSTOM_FIELDS = (
-    'CKEditor5Field',
-)
+MODELTRANSLATION_CUSTOM_FIELDS = ('CKEditor5Field',)
 ```
 
 2. Change the field model to a standard TextField (or whatever suits your need)
