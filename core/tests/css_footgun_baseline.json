@@ -20,10 +20,10 @@
     "static/common/members/style.css": 1,
     "static/common/publications/css/publications.css": 1,
     "static/date/core/css/base.css": 2,
-    "static/date/date/css/homepage.css": 10,
+    "static/date/date/css/homepage.css": 8,
     "static/date/events/css/arsfest.css": 41,
     "static/impuls/core/css/base.css": 3,
-    "static/impuls/date/css/homepage.css": 9,
+    "static/impuls/date/css/homepage.css": 7,
     "static/kk/core/css/base.css": 3,
     "static/kk/date/css/april_homepage.css": 10,
     "static/kk/date/css/homepage.css": 4,
@@ -32,11 +32,11 @@
     "static/kk/events/css/wappmiddag.css": 15,
     "static/pulterit/core/css/base.css": 3,
     "static/pulterit/core/css/header-overrides.css": 9,
-    "static/pulterit/date/css/homepage.css": 17,
+    "static/pulterit/date/css/homepage.css": 13,
     "static/pulterit/events/css/arsfest.css": 41,
     "static/sf/core/css/base.css": 3,
     "static/sf/core/css/header.css": 6,
-    "static/sf/date/css/homepage.css": 10
+    "static/sf/date/css/homepage.css": 8
   },
   "media_queries": [
     "(max-width: 1024px)",
@@ -100,6 +100,10 @@
     ],
     "static/common/core/css/cookie-banner.css": [
       "1000"
+    ],
+    "static/common/date/css/vanilla-calendar-theme.css": [
+      "-1",
+      "2"
     ],
     "static/common/events/css/arsfest.css": [
       "-1",
