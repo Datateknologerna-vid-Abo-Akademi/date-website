@@ -52,7 +52,7 @@ instagram = [
 
 [dependency-groups]
 dev = [
-    "django-stubs>=6.0.5",
+    "django-stubs>=6.1.2",
     "djlint==1.44.2",
     "mypy>=2.3.0",
     "pre-commit>=4.6.2",
