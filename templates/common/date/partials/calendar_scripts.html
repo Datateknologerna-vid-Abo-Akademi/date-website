@@ -98,6 +98,12 @@
                         }
                     }
                 },
+                // 3.x replaces the element's whole className with its own, which drops
+                // the `calendar` hook the shared homepage sheet styles (the gap under
+                // the panel). Keep it alongside the library's class.
+                styles: {
+                    calendar: 'vc calendar'
+                },
                 // The 3.x sheet ships only its light theme, so a browser that prefers a
                 // dark colour scheme would set data-vc-theme="dark" and lose the colours
                 // and the arrow icon. The site has no dark mode, so pin light.
