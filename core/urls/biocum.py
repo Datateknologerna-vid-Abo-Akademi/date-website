@@ -10,6 +10,7 @@ app_name = 'core'
 
 urlpatterns = build_urlpatterns(
     'index',
+    'lunch',
     'news',
     'members',
     'two_factor',
