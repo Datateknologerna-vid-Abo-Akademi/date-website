@@ -98,6 +98,7 @@
 .main-container{
     grid-template-areas: 
       ". news events ."
+      ". news lunch ."
       ". news extras ."
       ". ig-scroll ig-scroll ."
       ". logos logos .";
@@ -186,6 +187,11 @@ div.news-content a:hover{
 
 .events-container{
     grid-area: events;
+}
+
+.lunch-container{
+    grid-area: lunch;
+    display: block;
 }
 
 
@@ -379,6 +385,7 @@ div.calendar-container a {
         grid-template-areas:
           ". events ."
           ". news ."
+          ". lunch ."
           ". extras ."
           ". logos ."
           ". ig-scroll .";

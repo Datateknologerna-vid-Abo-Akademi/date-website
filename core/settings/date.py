@@ -79,7 +79,7 @@ TITLE_SHINE_ENABLED = True
 BOOKING_ENABLED = env('BOOKING_ENABLED', bool, True)
 # The lunchmenu.fi student lunch widget is on by default for DaTe. Other
 # associations keep the shared default from core/settings/common.py (off) until
-# their release sets LUNCH_ENABLED.
+# they turn it on in their own settings module.
 LUNCH_ENABLED = env('LUNCH_ENABLED', bool, True)
 # The widget measures from Arken, where the DaTe kansli is (Fabriksgatan 2,
 # 20500 Åbo). Other associations keep the shared city or set their own

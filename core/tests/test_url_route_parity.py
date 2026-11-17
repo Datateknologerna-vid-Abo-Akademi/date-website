@@ -63,6 +63,7 @@ EXPECTED_PREFIXES = {
     "biocum": [
         *COMMON_PREFIXES,
         "",
+        "lunch/",
         "news/",
         "members/",
         "members/two-factor/",
@@ -153,7 +154,7 @@ EXPECTED_URL_NAMES = {
         "api:events:upcoming",
     ],
     "kk": ["news:index", "lucia:index", "publications:pdf_list", "alumni:alumni_signup", "api:events:upcoming"],
-    "biocum": ["news:index", "archive:years", "publications:pdf_list", "api:events:upcoming"],
+    "biocum": ["news:index", "lunch", "archive:years", "publications:pdf_list", "api:events:upcoming"],
     "pulterit": ["news:index", "archive:exams", "publications:pdf_list", "api:events:upcoming"],
     "sf": ["news:index", "archive:years", "publications:pdf_list", "klotterplanket:index", "api:events:upcoming"],
     "impuls": [
