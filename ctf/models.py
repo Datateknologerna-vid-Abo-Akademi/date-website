@@ -137,6 +137,10 @@ class Guess(models.Model):
     class Meta:
         verbose_name = _('Gissning')
         verbose_name_plural = _('Gissningar')
+        indexes = [
+            # Admin changelist default ordering.
+            models.Index(fields=['timestamp'], name='guess_timestamp_idx'),
+        ]
 
     def __str__(self):
         return f"{self.ctf.title} - {self.flag.title} - {self.user.username} - {self.guess}"

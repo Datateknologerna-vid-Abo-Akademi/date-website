@@ -1,3 +1,23 @@
+// Unfold hides the document with x-cloak until Alpine boots. If a script is
+// blocked or delayed, reveal the page after a short grace period instead of
+// leaving an indefinitely blank admin page.
+window.setTimeout(function () {
+    document.documentElement.removeAttribute('x-cloak');
+}, 2500);
+
+// Unfold binds the inline "add row" control once, at window load. Its paginated
+// inline replaces the whole table, including that control, on every page
+// change, so the replacement has no click listener. Rebind it after each swap.
+document.addEventListener('htmx:afterSettle', function (event) {
+    if (typeof window.addInlineTemplateHandler !== 'function') return;
+    if (!event.target || !event.target.querySelectorAll) return;
+
+    event.target.querySelectorAll('.add-row').forEach(function (button) {
+        button.removeEventListener('click', window.addInlineTemplateHandler);
+        button.addEventListener('click', window.addInlineTemplateHandler);
+    });
+});
+
 // Keep Unfold's filter sheet open when filter actions reload the changelist.
 (function () {
     const KEY = 'admin_reopen_filter_sheet';

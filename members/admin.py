@@ -5,21 +5,17 @@ from django.conf import settings
 from django.contrib import admin
 from django.contrib.admin.models import LogEntry
 from django.contrib.auth import admin as auth_admin
-from django.contrib.auth.models import Permission
+from django.contrib.auth.models import Group, Permission
 from django.db.models import CharField, Exists, F, OuterRef, Q, Value
 from django.db.models.functions import Lower, Replace
+from django.utils.text import smart_split, unescape_string_literal
 from django.utils.translation import gettext_lazy as _
 from django_otp.plugins.otp_static.models import StaticDevice
 from django_otp.plugins.otp_totp.models import TOTPDevice
 from django_otp_webauthn.models import WebAuthnCredential
 
 from core.admin_base import ModelAdmin, TabularInline
-from members.forms import (
-    AdminMemberUpdateForm,
-    MemberCreationForm,
-    SubscriptionPaymentChoiceField,
-    SubscriptionPaymentForm,
-)
+from members.forms import AdminMemberUpdateForm, MemberCreationForm, SubscriptionPaymentForm
 from members.models import Member, MembershipType, Subscription, SubscriptionPayment
 
 logger = logging.getLogger('date')
@@ -28,6 +24,7 @@ logger = logging.getLogger('date')
 @admin.register(Permission)
 class PermissionAdmin(ModelAdmin):
     list_display = ('name', 'content_type', 'codename')
+    list_select_related = ('content_type',)
     search_fields = ('name', 'codename', 'content_type__app_label', 'content_type__model')
     list_filter = ('content_type__app_label',)
     ordering = ('content_type__app_label', 'content_type__model', 'codename')
@@ -142,13 +139,12 @@ class UserAdmin(_UserAdminBase):
         'city',
         'country',
         'membership_type__name',
-        'groups__name',
-        'subscriptionpayment__subscription__name',
     )
     search_help_text = _(
         'Search by name, username, email, phone, address, postal code, city, '
         'membership type, group, subscription, admission year, member ID, or GitHub ID.'
     )
+    show_full_result_count = False
     ordering = [
         Lower('username'),
     ]
@@ -158,7 +154,10 @@ class UserAdmin(_UserAdminBase):
 
     @admin.display(boolean=True)
     def is_staff(self, obj):
-        return obj.is_staff
+        annotated = getattr(obj, '_is_staff', None)
+        if annotated is None:
+            return obj.is_staff
+        return obj.is_superuser or annotated
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
@@ -173,10 +172,10 @@ class UserAdmin(_UserAdminBase):
             queryset = queryset.filter(membership_type__name=restricted_membership)
         confirmed_totp = TOTPDevice.objects.filter(user=OuterRef('pk'), confirmed=True)
         confirmed_passkeys = WebAuthnCredential.objects.filter(user=OuterRef('pk'), confirmed=True)
-        return (
-            queryset.select_related('membership_type')
-            .prefetch_related('groups')
-            .annotate(_has_two_factor=Exists(confirmed_totp) | Exists(confirmed_passkeys))
+        staff_groups = Group.objects.filter(user=OuterRef('pk'), name__in=settings.STAFF_GROUPS)
+        return queryset.select_related('membership_type').annotate(
+            _has_two_factor=Exists(confirmed_totp) | Exists(confirmed_passkeys),
+            _is_staff=Exists(staff_groups),
         )
 
     def _has_restricted_object_access(self, request, obj):
@@ -229,12 +228,16 @@ class UserAdmin(_UserAdminBase):
         return to_delete, model_count, perms_needed, protected
 
     def get_search_results(self, request, queryset, search_term):
-        base_queryset = queryset
-        queryset, may_have_duplicates = super().get_search_results(request, queryset, search_term)
-        search_term = search_term.strip()
+        """Search text fields without joining the member's to-many tables.
 
+        Group and subscription names used to be ``search_fields`` entries,
+        which fanned every member row out by its groups and payments before the
+        changelist could paginate. Match them with correlated EXISTS subqueries
+        instead, so each member appears at most once and no DISTINCT is needed.
+        """
+        search_term = search_term.strip()
         if not search_term:
-            return queryset, may_have_duplicates
+            return queryset, False
 
         extra_query = Q()
 
@@ -272,19 +275,35 @@ class UserAdmin(_UserAdminBase):
                 output_field=CharField(),
             )
 
-            # Ensure both querysets have matching selected columns before OR-combining.
             queryset = queryset.annotate(_phone_digits=phone_digits_annotation)
-            base_queryset = base_queryset.annotate(_phone_digits=phone_digits_annotation)
             phone_query = Q()
             for variant in phone_variants:
                 phone_query |= Q(_phone_digits__icontains=variant)
             extra_query |= phone_query
 
-        if extra_query:
-            queryset = queryset | base_queryset.filter(extra_query)
-            may_have_duplicates = True
+        # Match whole terms the same way Django's keyword search does: every
+        # term has to match one field (AND across terms, OR within a term).
+        # Groups and subscriptions are matched with one EXISTS per term, not a
+        # shared join. Two terms can therefore match two different related rows
+        # for the same member, where the join version required one row to
+        # contain both. This widening is deliberate; docs/dev/members.md
+        # documents it and the tests in core/tests/test_admin_perf_members.py
+        # pin it.
+        text_query = Q()
+        for term in smart_split(search_term):
+            if term.startswith(('"', "'")) and term[0] == term[-1]:
+                term = unescape_string_literal(term)
+            term_query = Q()
+            for field_name in self.get_search_fields(request):
+                term_query |= Q(**{f'{field_name}__icontains': term})
+            group_match = Group.objects.filter(user=OuterRef('pk'), name__icontains=term)
+            subscription_match = SubscriptionPayment.objects.filter(
+                member=OuterRef('pk'), subscription__name__icontains=term
+            )
+            term_query |= Q(Exists(group_match)) | Q(Exists(subscription_match))
+            text_query &= term_query
 
-        return queryset, may_have_duplicates
+        return queryset.filter(text_query | extra_query), False
 
     @admin.display(boolean=True, description="2FA")
     def has_two_factor(self, obj):
@@ -343,15 +362,11 @@ class SubscriptionPaymentAdmin(ModelAdmin):
         'member__email',
         'subscription__name',
     )
-    autocomplete_fields = ('subscription',)
+    autocomplete_fields = ('member', 'subscription')
     list_select_related = ('member', 'subscription')
     ordering = ('-date_paid',)
     date_hierarchy = 'date_paid'
+    show_full_result_count = False
 
     def full_name(self, obj):
         return obj.member.get_full_name()
-
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        if db_field.name == 'member':
-            return SubscriptionPaymentChoiceField(queryset=Member.objects.all())
-        return super().formfield_for_foreignkey(db_field, request, **kwargs)
