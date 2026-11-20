@@ -1,5 +1,6 @@
 {% load static %}
 {% load i18n %}
+{% load social_meta %}
 <!DOCTYPE html>
 {% get_current_language as LANGUAGE_CODE %}
 <html lang="{{ LANGUAGE_CODE }}">
@@ -26,6 +27,9 @@
       <link rel="shortcut icon"
             type="image/png"
             href="{% static 'core/images/logo.ico' %}" />
+    {% endblock %}
+    {% block social_meta %}
+      {% social_meta %}
     {% endblock %}
     {% block preconnect_head %}{% endblock %}
     {% block font_links %}
