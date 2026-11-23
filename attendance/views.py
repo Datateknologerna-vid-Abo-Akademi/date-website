@@ -193,7 +193,7 @@ class AttendanceEventDetailView(UserPassesTestMixin, AttendanceEventObjectMixin[
         participant still lands on the page that sent them here.
         """
         candidate = request.POST.get("next", "") if request.method == "POST" else request.GET.get("next", "")
-        if candidate and url_has_allowed_host_and_scheme(
+        if url_has_allowed_host_and_scheme(
             candidate, allowed_hosts={request.get_host()}, require_https=request.is_secure()
         ):
             return candidate
