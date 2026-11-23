@@ -169,6 +169,11 @@ table.table {
     transition: opacity 0.2s, filter 0.2s;
 }
 
+/* The shared DaTe logo is white; Pulterit's footer is light, so it is drawn black. */
+.footer-credit-link img {
+    filter: invert(1);
+}
+
 .association-footer-social .btn:hover {
     color: var(--accentColorBright);
     border-color: var(--accentColorBright);

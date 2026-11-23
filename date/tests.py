@@ -290,14 +290,17 @@ class SiteShellTemplateTests(TestCase):
                 else:
                     self.assertNotIn("aa-logo-small.png", rendered)
 
-        # Impuls is checked separately: it layers the date templates but
-        # overrides footer_right, and it is deliberately not part of
-        # ASSOCIATION_SETTINGS_MODULES.
-        impuls_settings = importlib.import_module("core.settings.impuls")
-        with override_settings(TEMPLATES=impuls_settings.TEMPLATES):
-            template = Template("{% include 'core/footer.html' %}")
-            rendered = template.render(Context(self._content_context()))
-        self.assertNotIn("aa-logo-small.png", rendered)
+    def test_every_association_but_date_credits_date_in_the_footer(self):
+        # Every site DaTe builds and maintains credits DaTe (for SF it is a contract
+        # term, #1171); DaTe's own footer does not.
+        for association, settings_module in ASSOCIATION_SETTINGS_MODULES.items():
+            with self.subTest(association=association):
+                module = importlib.import_module(settings_module)
+                with override_settings(TEMPLATES=module.TEMPLATES):
+                    rendered = Template("{% include 'core/footer.html' %}").render(Context(self._content_context()))
+                credited = association != "date"
+                self.assertEqual(rendered.count('href="https://datateknologerna.org/"'), 2 if credited else 0)
+                self.assertEqual("core/images/Sp_Albin.png" in rendered, credited)
 
     def test_only_date_loads_the_dad_joke_fetcher(self):
         # The joke is DaTe's: every other association includes the calendar script

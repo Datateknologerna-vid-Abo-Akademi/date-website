@@ -17,6 +17,18 @@ div a{
 div a:hover{
     color: var(--linkSecondaryHover);
 }
+
+/* The DaTe credit sits on the green footer, where the green link colour above vanishes. */
+.footer-credit-link,
+.footer-credit-link:hover {
+    color: var(--textColorLight);
+    transition: opacity 0.2s, filter 0.2s;
+}
+
+.footer-credit-link:hover {
+    opacity: 0.85;
+    filter: drop-shadow(0 0 8px var(--linkColorLightHover)) drop-shadow(0 0 16px var(--linkColorLight));
+}
 /* ---- */
 
 .content{

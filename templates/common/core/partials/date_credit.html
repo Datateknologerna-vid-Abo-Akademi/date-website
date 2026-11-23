@@ -1,0 +1,22 @@
+{% load static i18n %}
+{# The "developed and maintained by DaTe" credit for association sites DaTe builds. DaTe's own footer leaves it out. #}
+{# The logo repeats the text link, so it is hidden from screen readers and the tab order: one link, read once. #}
+<p class="text-center mb-2 mt-3">
+  <small>{% trans "Website developed and maintained by" %}
+    <a class="footer-credit-link"
+       href="https://datateknologerna.org/"
+       target="_blank"
+       rel="noopener">DaTe</a>
+    <br>
+    <a class="footer-credit-link"
+       href="https://datateknologerna.org/"
+       target="_blank"
+       rel="noopener"
+       aria-hidden="true"
+       tabindex="-1">
+      <img src="{% static 'core/images/Sp_Albin.png' %}"
+           alt=""
+           style="max-height: 40px">
+    </a>
+  </small>
+</p>
