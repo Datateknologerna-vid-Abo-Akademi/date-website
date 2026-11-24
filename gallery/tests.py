@@ -6,6 +6,7 @@ from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
 import pillow_heif
+from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth.models import Permission
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -163,6 +164,21 @@ class GalleryLegacyAdminPermissionTests(TestCase):
         self.assertTrue(inline.has_add_permission(self.request))
         self.assertTrue(inline.has_change_permission(self.request))
         self.assertTrue(inline.has_delete_permission(self.request))
+
+    def test_album_admin_labels_unfold_photo_favorite(self):
+        self.client.force_login(
+            Member.objects.create_superuser(username='album-editor', email='editor@example.invalid', password=None)
+        )
+        album = Album.objects.create(title='Demo album')
+        Photo.objects.bulk_create([Photo(album=album, image='demo-photo.jpg')])
+        response = self.client.get(reverse('admin:gallery_album_change', args=[album.pk]))
+
+        if settings.USE_UNFOLD:
+            self.assertContains(response, 'admin/css/assignment-photo-inline.css')
+            for row in ('0', '__prefix__'):
+                self.assertContains(response, f'for="id_photo_set-{row}-favorite"')
+        else:
+            self.assertNotContains(response, 'admin/css/assignment-photo-inline.css')
 
 
 class GalleryUploadViewTests(TestCase):

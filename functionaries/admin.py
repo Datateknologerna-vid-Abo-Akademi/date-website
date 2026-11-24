@@ -66,6 +66,12 @@ class FunctionaryInline(LegacyFunctionaryPermissionMixin, CompactTabularInline):
     fields = ('member', 'name', 'year')
     ordering = ('-year', 'name')
 
+    if getattr(settings, 'USE_UNFOLD', False):
+        template = 'admin/functionaries_gallery/responsive_inline.html'
+
+        class Media:
+            css = {'all': ('admin/css/assignment-photo-inline.css',)}
+
 
 @admin.register(Functionary)
 class FunctionaryAdmin(LegacyFunctionaryPermissionMixin, ModelAdmin):

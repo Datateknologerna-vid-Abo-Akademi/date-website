@@ -1,0 +1,65 @@
+{% comment %}
+  These two compact inlines have no row titles or nested inlines. Keep Unfold's
+  formset structure and helpers, but add a label to each cell for the narrow layout.
+{% endcomment %}
+<div id="{{ inline_admin_formset.formset.prefix }}-group"
+     class="assignment-photo-inline"
+     data-inline-type="tabular"
+     x-show="activeTab == 'general'">
+  <div class="tabular inline-related {% if forloop.last %}last-related{% endif %}">
+    <fieldset class="module relative {{ inline_admin_formset.classes }} min-w-0"
+              aria-labelledby="{{ inline_admin_formset.formset.prefix }}-heading">
+      {% include "unfold/helpers/inline_heading.html" %}
+      <div class="formset-wrapper border border-base-200 overflow-x-auto relative shadow-xs dark:border-base-800 rounded-default scrollbar-default">
+        {{ inline_admin_formset.formset.management_form }}
+        {% include "unfold/helpers/edit_inline/inline_errors.html" %}
+        <table id="{{ inline_admin_formset.formset.prefix }}-data"
+               class="bg-white dark:bg-base-900 formset group/formset-parent w-full"
+               data-inline-formset="{{ inline_admin_formset.inline_formset_data }}">
+          {% include "unfold/helpers/edit_inline/tabular_heading.html" %}
+          {% for inline_admin_form in inline_admin_formset %}
+            <tbody class="form-group relative group/parent {% if forloop.revcounter == 2 and inline_admin_formset.has_add_permission %}last{% endif %} {% if inline_admin_form.original %}original{% else %}template{% endif %}{% if forloop.last and inline_admin_formset.has_add_permission %} empty-form{% endif %}">
+              {% include "unfold/helpers/edit_inline/tabular_error.html" %}
+              <tr class="form-row has-[.delete:checked]:[&+.form-delete]:table-row">
+                {% spaceless %}
+                  {% for fieldset in inline_admin_form %}
+                    {% for line in fieldset %}
+                      {% for field in line %}
+                        {% if not field.is_readonly and field.field.is_hidden %}{{ field.field }}{% endif %}
+                      {% endfor %}
+                    {% endfor %}
+                  {% endfor %}
+                {% endspaceless %}
+                {% for fieldset in inline_admin_form %}
+                  {% for line in fieldset %}
+                    {% for field in line %}
+                      {% if field.is_readonly or not field.field.is_hidden %}
+                        <td class="min-h-[62.5px] align-middle border-b border-base-200 lg:group-[.last]/parent:border-b-0 dark:border-base-800 field-{{ field.field.name }} group field-tabular {% if field.field.errors %}errors{% endif %} {% if inline_admin_form.original %}p-3 lg:py-3{% else %}py-3{% endif %} font-normal px-1.5 first:pl-3 last:pr-3 text-left">
+                          <div class="assignment-photo-inline-label">
+                            {% if field.is_readonly %}
+                              {{ field.field.label|capfirst }}
+                            {% else %}
+                              {{ field.label_tag }}
+                            {% endif %}
+                          </div>
+                          {% include "unfold/helpers/edit_inline/tabular_field.html" %}
+                        </td>
+                      {% endif %}
+                    {% endfor %}
+                  {% endfor %}
+                {% endfor %}
+                {% include "unfold/helpers/edit_inline/tabular_delete.html" %}
+              </tr>
+              {% if inline_admin_form.original %}
+                <tr class="hidden form-delete">
+                  <td colspan="100%">{% include "unfold/helpers/edit_inline/inline_delete_undo.html" %}</td>
+                </tr>
+              {% endif %}
+            </tbody>
+          {% endfor %}
+          {% include "unfold/helpers/edit_inline/tabular_footer.html" %}
+        </table>
+      </div>
+    </fieldset>
+  </div>
+</div>

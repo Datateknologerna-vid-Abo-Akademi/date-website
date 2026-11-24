@@ -278,4 +278,14 @@
     .change-form:not(.popup) #header-inner .admin-header-actions > div > ul {
         top: calc(100% + 0.25rem);
     }
+
+    /* Let these Unfold fieldsets fit the form instead of their widest widget. */
+    :is(#event_form, #publicationcollection_form, #pdffile_form) fieldset {
+        min-inline-size: 0;
+    }
+
+    /* Shrink the filename display before the adjacent file actions are clipped. */
+    :is(#event_form, #publicationcollection_form, #pdffile_form) .field-line label:has(> input.text-ellipsis[disabled]) {
+        min-inline-size: 0;
+    }
 }

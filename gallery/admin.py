@@ -1,5 +1,6 @@
 import logging
 
+from django.conf import settings
 from django.contrib import admin, messages
 from django.db import models
 from django.utils.html import format_html
@@ -53,6 +54,12 @@ class PhotoInline(CompactTabularInline):
         **UNFOLD_FORMFIELD_OVERRIDES,
         models.ImageField: {'widget': SafeAdminImageWidget},
     }
+
+    if getattr(settings, 'USE_UNFOLD', False):
+        template = 'admin/functionaries_gallery/responsive_inline.html'
+
+        class Media:
+            css = {'all': ('admin/css/assignment-photo-inline.css',)}
 
     def preview_image(self, obj):
         return safe_image_preview(obj.image)

@@ -96,6 +96,7 @@ class CollapsibleInlineTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         if settings.USE_UNFOLD:
+            self.assertNotContains(response, 'core/js/stock_admin_inlines.js')
             self.assertInHTML(
                 '<button type="button" class="inline-disclosure-toggle" aria-expanded="false" '
                 'x-bind:aria-expanded="openRow ? \'true\' : \'false\'" x-on:click="openRow = !openRow">'
@@ -105,6 +106,8 @@ class CollapsibleInlineTests(TestCase):
             )
         else:
             self.assertNotContains(response, 'inline-disclosure-toggle')
+            self.assertContains(response, 'core/css/stock_admin_inlines.css')
+            self.assertContains(response, 'core/js/stock_admin_inlines.js')
 
     def test_blocks_that_need_space_are_collapsible(self):
         from booking.admin import BookingInline, ClosureInline

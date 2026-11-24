@@ -1,6 +1,7 @@
 from types import SimpleNamespace
 from unittest.mock import Mock
 
+from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth.models import AnonymousUser
 from django.test import RequestFactory, TestCase, override_settings
@@ -280,3 +281,17 @@ class FunctionaryTutorSectionTests(TestCase):
         self.assertIn('title_sv', fieldset_fields)
         self.assertContains(response, 'name="board"')
         self.assertContains(response, 'name="tutor"')
+
+    def test_role_admin_labels_unfold_assignment_fields(self):
+        self.client.force_login(
+            Member.objects.create_superuser(username='assignment-editor', email='editor@example.invalid', password=None)
+        )
+        response = self.client.get(reverse('admin:functionaries_functionaryrole_change', args=[self.tutor_role.pk]))
+
+        if settings.USE_UNFOLD:
+            self.assertContains(response, 'admin/css/assignment-photo-inline.css')
+            for row in ('0', '__prefix__'):
+                for field in ('name', 'year'):
+                    self.assertContains(response, f'for="id_functionary_set-{row}-{field}"')
+        else:
+            self.assertNotContains(response, 'admin/css/assignment-photo-inline.css')
