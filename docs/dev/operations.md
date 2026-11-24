@@ -21,7 +21,7 @@ Set `USE_UNFOLD=True` in `.env` to run Django admin with the Unfold theme. Leave
 
 Changing this value requires restarting or recreating the Django containers, because admin apps, widgets, templates, and static assets are selected when Django starts.
 
-In stock admin, the wide inline tables for events, polls, publications, gallery, exams, documents, and functionaries stack their fields below 768 px. `stock_admin_inlines.js` copies the table headings into each row, including the empty form Django clones when adding a row. The desktop layout and the stock table fallback without JavaScript are unchanged.
+In stock admin, the wide inline tables for events, polls, gallery, exams, documents, and functionaries stack their fields below 768 px. `stock_admin_inlines.js` copies the table headings into each row, including the empty form Django clones when adding a row. The desktop layout and the stock table fallback without JavaScript are unchanged.
 
 The Unfold admin loads `date/static/date/css/admin.css`. It carries the small layout fixes that only apply to the themed admin, including the rule that lets the CKEditor toolbar wrap: the content field is a flex item, and without the rule its single-row toolbar set the minimum width and pushed the page wider than a 1080p screen.
 

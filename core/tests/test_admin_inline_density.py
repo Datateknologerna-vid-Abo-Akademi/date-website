@@ -21,6 +21,7 @@ from events.admin import (
     EventRegistrationFormClassicInline,
     EventRegistrationFormInline,
 )
+from publications.admin import PublicationClassicInline
 
 
 class CompactTabularInlineTests(TestCase):
@@ -62,6 +63,13 @@ class BookingDescriptionWidgetTests(TestCase):
             with self.subTest(inline=inline_class.__name__):
                 self.assertTrue(issubclass(inline_class, admin.StackedInline))
                 self.assertFalse(issubclass(inline_class, admin.TabularInline))
+
+    def test_classic_publications_are_stacked_blocks(self):
+        # A stored filename and the redirect URL made the stock table wider
+        # than the change form, which put the access flags and delete control
+        # out of view.
+        self.assertTrue(issubclass(PublicationClassicInline, admin.StackedInline))
+        self.assertFalse(issubclass(PublicationClassicInline, admin.TabularInline))
 
     def test_booking_and_closure_descriptions_render_as_textareas(self):
         for inline_class, model in ((BookingInline, Booking), (ClosureInline, Closure)):

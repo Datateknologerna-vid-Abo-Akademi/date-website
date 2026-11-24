@@ -20,7 +20,6 @@ from core.admin_base import (
     ModelAdmin,
     PublicUrlAdminMixin,
     StackedInline,
-    TabularInline,
     UnfoldFormMixin,
 )
 from core.admin_ui import AdminLink
@@ -143,7 +142,7 @@ class PublicationCollectionAdmin(PublicUrlAdminMixin, ExtraChangeListLinksMixin,
             },
         ),
     )
-    inlines: list[type[TabularInline]] = []
+    inlines: list[type[StackedInline]] = []
 
     def get_list_display(self, request):
         list_display = list(super().get_list_display(request))
@@ -224,7 +223,10 @@ class PublicationInlineMixin:
 
     model = PDFFile
     fk_name = 'collection'
-    extra = 1
+    # No blank row: the model's date default renders in it, so an untouched
+    # row counts as changed and the page refuses to save without a title.
+    # "Add another" still inserts a blank publication block.
+    extra = 0
     show_change_link = True
     fields = (
         'title',
@@ -284,8 +286,14 @@ class PublicationInline(PublicationInlineMixin, StackedInline):
     collapsible = True
 
 
-class PublicationClassicInline(PublicationInlineMixin, TabularInline):
-    """Publications as a table (stock admin)."""
+class PublicationClassicInline(PublicationInlineMixin, StackedInline):
+    """Publications as stacked blocks (stock admin).
+
+    A table would need more width than the change form has: a stored filename
+    and the redirect URL alone pushed the access checkboxes and the delete
+    control out of view, and squeezing the columns left the title input too
+    narrow to read. A block gives every field its own line.
+    """
 
 
 class PublicationAdminMixin(ExtraChangeListLinksMixin):

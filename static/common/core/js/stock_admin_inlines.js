@@ -4,7 +4,7 @@
     var groups = [
         'functionary_set-group', 'photo_set-group', 'examfile_set-group',
         'document_set-group', 'eventregistrationform_set-group',
-        'eventattendees_set-group', 'choice_set-group', 'publications-group'
+        'eventattendees_set-group', 'choice_set-group'
     ];
 
     document.addEventListener('DOMContentLoaded', function () {
