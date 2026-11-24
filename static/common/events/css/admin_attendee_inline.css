@@ -2,20 +2,28 @@
  *
  * The collapsed block shows the person; opening it gives the fields and the
  * registration answers the full width, which a table cell could not do. The
- * answer rows keep the label and its control on one line so several answers
- * fit without a tall stack.
+ * answer rows share a label column on desktop and stack on narrow screens.
  *
  * Scoped to the inline's own group id so no other admin inline is affected.
  */
-#eventattendees_set-group .event-answer-row {
+@media (min-width: 769px) {
+  #eventattendees_set-group[data-inline-type='stacked'] .event-answer-row {
+    grid-template-columns: 10rem minmax(0, 1fr);
+  }
+}
+
+#eventattendees_set-group:not([data-inline-type='stacked']) .event-answer-row {
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
 #eventattendees_set-group .event-answer-label {
-  flex: none;
   margin: 0;
+}
+
+#eventattendees_set-group:not([data-inline-type='stacked']) .event-answer-label {
+  flex: none;
   min-width: 10rem;
 }
 
