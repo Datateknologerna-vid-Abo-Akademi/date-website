@@ -2,32 +2,10 @@
 
 from django import template
 from django.conf import settings
-from django.utils.translation import get_language, gettext
+
+from date.lunch import student_lunch_link, widget_language
 
 register = template.Library()
-
-# Languages the widget accepts, with Swedish as the fallback for anything else.
-WIDGET_LANGUAGES = ('fi', 'sv', 'en')
-SITE_URL = 'https://lunchmenu.fi/'
-
-# lunchmenu.fi names its city pages per language: fi and en use the Finnish
-# slug and sv the Swedish one. Each entry is the path of the city's student
-# lunch list for today and the label its own embed snippet uses, keyed by
-# LUNCH_CITY. Add a city here before pointing LUNCH_CITY at it, otherwise the
-# box's link falls back to the site root.
-CITY_PAGES = {
-    'turku': {
-        'fi': ('lounaslistat/turku/tanaan', 'Lounas Turku'),
-        'sv': ('sv/lunchlistor/abo/idag', 'Lunch i Åbo'),
-        'en': ('en/lunch-lists/turku/today', 'Lunch in Turku'),
-    },
-}
-
-
-def _widget_language():
-    """Return the widget language for the active language, or Swedish."""
-    language = (get_language() or '').split('-')[0].lower()
-    return language if language in WIDGET_LANGUAGES else 'sv'
 
 
 def _widget_attributes(count, heading):
@@ -43,27 +21,11 @@ def _widget_attributes(count, heading):
         attributes.append(('data-lng', str(settings.LUNCH_LNG)))
     else:
         attributes.append(('data-city', settings.LUNCH_CITY))
-    attributes.append(('data-lang', _widget_language()))
+    attributes.append(('data-lang', widget_language()))
     attributes.append(('data-count', str(count)))
     attributes.append(('data-heading', str(heading)))
     attributes.append(('data-accent', settings.LUNCH_ACCENT))
     return attributes
-
-
-def _fallback_link():
-    """Return the box's own link and label for the active language.
-
-    The widget keeps the box's markup until it is drawn, so this link is what a
-    visitor sees first and what stays when the script can't run. Its label is
-    lunchmenu.fi's own wording for that page, not site copy, so it is not run
-    through gettext.
-    """
-    slug = str(settings.LUNCH_CITY).strip().lower()
-    page = CITY_PAGES.get(slug, {}).get(_widget_language())
-    if page is None:
-        return SITE_URL, gettext('Lunch')
-    path, label = page
-    return SITE_URL + path, label
 
 
 @register.inclusion_tag('date/components/lunch_widget.html')
@@ -77,7 +39,7 @@ def lunch_widget(count=None, heading=3, wrapper_class='lunch-container'):
     if not settings.LUNCH_ENABLED:
         return {'enabled': False}
 
-    fallback_url, fallback_text = _fallback_link()
+    fallback_url, fallback_text = student_lunch_link()
     return {
         'enabled': True,
         'wrapper_class': wrapper_class,

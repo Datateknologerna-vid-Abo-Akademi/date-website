@@ -1174,6 +1174,21 @@ class AssociationHomepageSmokeTests(TestCase):
                 response = self._get_association_homepage(association)
                 self.assertEqual(response.status_code, 200)
 
+    def test_biocum_and_pulterit_homepages_render_the_lunch_widget(self):
+        for association, count in (("biocum", 3), ("pulterit", 1)):
+            with self.subTest(association=association):
+                cache.clear()  # The homepage fragment cache is shared by these test clients.
+                module = importlib.import_module(self.association_settings_modules[association])
+                response = self._get_association_homepage(
+                    association,
+                    LUNCH_ENABLED=True,
+                    LUNCH_COUNT=module.LUNCH_COUNT,
+                    LUNCH_LAT=module.LUNCH_LAT,
+                    LUNCH_LNG=module.LUNCH_LNG,
+                )
+                self.assertContains(response, 'class="lunchmenu-student-widget"')
+                self.assertContains(response, f'data-count="{count}"')
+
     def test_biocum_homepage_offers_swedish_and_english_only(self):
         biocum_settings = importlib.import_module("core.settings.biocum")
         cache.clear()
@@ -1669,7 +1684,7 @@ class HomepageTitleShineTests(TestCase):
 
 
 class LunchWidgetTests(TestCase):
-    """The lunchmenu.fi student lunch widget on the homepage and /lunch/."""
+    """The homepage lunch widget and legacy /lunch/ redirect."""
 
     def test_homepage_renders_the_widget_when_enabled(self):
         cache.clear()
@@ -1757,20 +1772,18 @@ class LunchWidgetTests(TestCase):
         self.assertNotContains(response, "lunchmenu-student-widget")
         self.assertNotContains(response, "https://lunchmenu.fi/static/widget/student.js")
 
-    def test_lunch_page_renders_the_widget_when_enabled(self):
-        with override_settings(LUNCH_ENABLED=True):
-            response = self.client.get(reverse("lunch"))
+    @override_settings(LUNCH_CITY="turku")
+    def test_old_lunch_page_redirects_to_the_student_list_in_the_active_language(self):
+        for language, path in (
+            ("sv", "sv/lunchlistor/abo/idag"),
+            ("en", "en/lunch-lists/turku/today"),
+        ):
+            with self.subTest(language=language):
+                self.client.cookies[settings.LANGUAGE_COOKIE_NAME] = language
+                response = self.client.get(reverse("lunch"))
+                self.assertRedirects(response, f"https://lunchmenu.fi/{path}", fetch_redirect_response=False)
 
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "date/lunch.html")
-        self.assertContains(response, "<h1>Lunch</h1>")
-        self.assertContains(response, 'class="lunch-page"')
-        self.assertContains(response, 'data-count="10"')
-        self.assertContains(response, 'data-heading="2"')
-        self.assertContains(response, "https://lunchmenu.fi/static/widget/student.js")
-
-    def test_lunch_page_is_not_found_when_disabled(self):
-        with override_settings(LUNCH_ENABLED=False):
-            response = self.client.get(reverse("lunch"))
-
-        self.assertEqual(response.status_code, 404)
+    @override_settings(LUNCH_ENABLED=False, LUNCH_CITY="turku")
+    def test_old_lunch_links_still_work_when_the_homepage_widget_is_disabled(self):
+        response = self.client.get(reverse("lunch"))
+        self.assertRedirects(response, "https://lunchmenu.fi/sv/lunchlistor/abo/idag", fetch_redirect_response=False)
