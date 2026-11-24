@@ -193,38 +193,49 @@
     color: rgb(var(--color-primary-300));
 }
 
-/* Collapsible stacked inline blocks.
- *
- * Unfold's collapsible inline renders the block title as plain bold text, so
- * nothing showed that the row opens. The chevron is driven by the data-open
- * attribute that date/js/admin_sidebar.js keeps in sync with Alpine. */
-.form-group[data-open] > .form-row > h3 {
+/* Keep disclosure, drag, links and delete as separate controls. */
+.inline-disclosure-heading .inline-disclosure-title {
+    flex: 1;
+    min-width: 0;
+}
+
+.inline-disclosure-toggle {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    min-width: 0;
+    padding: 0.25rem;
+    border-radius: 0.25rem;
     cursor: pointer;
-    transition: background-color 0.15s;
+    text-align: start;
+    overflow-wrap: anywhere;
 }
 
-.form-group[data-open] > .form-row > h3:hover {
-    background: rgb(var(--color-base-50));
+.inline-disclosure-toggle:hover {
+    background: var(--color-base-100);
 }
 
-.dark .form-group[data-open] > .form-row > h3:hover {
-    background: rgb(var(--color-base-800));
+.dark .inline-disclosure-toggle:hover {
+    background: var(--color-base-800);
 }
 
-.form-group[data-open] > .form-row > h3::before {
+.inline-disclosure-toggle:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+}
+
+.inline-disclosure-toggle::before {
     content: '';
-    display: inline-block;
     flex: none;
     width: 0.45rem;
     height: 0.45rem;
-    margin-right: 0.65rem;
+    margin-inline-end: 0.65rem;
     border-right: 2px solid currentColor;
     border-bottom: 2px solid currentColor;
     transform: rotate(-45deg);
-    transition: transform 0.15s ease;
 }
 
-.form-group[data-open='true'] > .form-row > h3::before {
+.inline-disclosure-toggle[aria-expanded='true']::before {
     transform: rotate(45deg);
 }
 
@@ -242,4 +253,29 @@
 .field-line .ck-editor-container,
 .field-line > .grow {
     min-width: 0;
+}
+
+/* Stack the Unfold change-form title and actions on narrow screens. */
+@media (max-width: 767.98px) {
+    .change-form:not(.popup) :has(> #header-inner) {
+        height: auto;
+        min-height: 4rem;
+    }
+
+    .change-form:not(.popup) #header-inner > div {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+    }
+
+    .change-form:not(.popup) #header-inner .admin-header-actions {
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        margin-inline-start: 0;
+    }
+
+    /* The built-in overflow menu must start below the now variable-height row. */
+    .change-form:not(.popup) #header-inner .admin-header-actions > div > ul {
+        top: calc(100% + 0.25rem);
+    }
 }

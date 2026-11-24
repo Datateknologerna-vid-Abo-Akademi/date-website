@@ -8,8 +8,10 @@ this test keeps a new inline from quietly reintroducing the tall row.
 """
 
 from django import forms
+from django.conf import settings
 from django.contrib import admin
 from django.test import TestCase
+from django.urls import reverse
 
 from booking.admin import BookingInline, ClosureInline
 from booking.models import Booking, Closure
@@ -73,6 +75,36 @@ class BookingDescriptionWidgetTests(TestCase):
 
 class CollapsibleInlineTests(TestCase):
     """Inline blocks that hold several fields stay as collapsed summaries."""
+
+    def test_room_disclosures_use_native_buttons_only_in_unfold(self):
+        from datetime import timedelta
+
+        from django.utils import timezone
+
+        from booking.models import Room
+        from members.models import Member
+
+        user = Member.objects.create_superuser(
+            username='inline-auditor', email='inline-auditor@example.invalid', password=None
+        )
+        self.client.force_login(user)
+        room = Room.objects.create(name='Audit room')
+        start = timezone.now() + timedelta(days=1)
+        Booking.objects.create(room=room, start=start, end=start + timedelta(hours=1), title='Audit booking')
+
+        response = self.client.get(reverse('admin:booking_room_change', args=[room.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        if settings.USE_UNFOLD:
+            self.assertInHTML(
+                '<button type="button" class="inline-disclosure-toggle" aria-expanded="false" '
+                'x-bind:aria-expanded="openRow ? \'true\' : \'false\'" x-on:click="openRow = !openRow">'
+                f'<strong class="font-semibold select-none">{Booking.objects.get().get_inline_title()}</strong>'
+                '</button>',
+                response.content.decode(),
+            )
+        else:
+            self.assertNotContains(response, 'inline-disclosure-toggle')
 
     def test_blocks_that_need_space_are_collapsible(self):
         from booking.admin import BookingInline, ClosureInline

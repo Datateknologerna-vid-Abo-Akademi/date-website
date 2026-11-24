@@ -6,9 +6,13 @@
  *
  * Scoped to the inline's own group id so no other admin inline is affected.
  */
-@media (min-width: 769px) {
+#eventattendees_set-group[data-inline-type='stacked'] .event-answer-row {
+  grid-template-columns: 10rem minmax(0, 1fr);
+}
+
+@media (max-width: 768px) {
   #eventattendees_set-group[data-inline-type='stacked'] .event-answer-row {
-    grid-template-columns: 10rem minmax(0, 1fr);
+    grid-template-columns: 1fr;
   }
 }
 

@@ -10,10 +10,10 @@
         which the pagination swap does not replace, so a partial last page would
         post the wrong counts. Keep it inside the swap target.
       {% endcomment %}
-      <div id="{{ inline_admin_formset.formset.prefix }}-data"
-           class="formset group/formset-parent{% if inline_admin_formset.forms|length == 0 %} empty{% endif %} bg-white dark:bg-base-900"
-           data-inline-formset="{{ inline_admin_formset.inline_formset_data }}">
-        <div class="border border-base-200 overflow-hidden rounded-default shadow-xs w-full dark:border-base-800"
+      <div class="border border-base-200 overflow-hidden rounded-default shadow-xs w-full dark:border-base-800">
+        <div id="{{ inline_admin_formset.formset.prefix }}-data"
+             class="formset group/formset-parent{% if inline_admin_formset.forms|length == 0 %} empty{% endif %} bg-white dark:bg-base-900"
+             data-inline-formset="{{ inline_admin_formset.inline_formset_data }}"
              data-ordering-field="{{ inline_admin_formset.opts.ordering_field }}"
              x-sort.ghost
              x-sort:config="{preventOnFilter: false, filter: '.template', onMove: moveRecords, onEnd: sortRecords}">

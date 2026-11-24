@@ -33,7 +33,7 @@ Create public event pages, manage registration windows, collect attendee data, a
 
 ## Customize the Signup Form
 Each event can have dynamic questions managed inline:
-1. Scroll to **Anmälningsfält**. In Unfold, click a question's name to expand it. In stock admin, questions are displayed in a table.
+1. Scroll to **Anmälningsfält**. In Unfold, click a question's name or focus it and press Enter or Space to expand it. In stock admin, questions are displayed in a table.
 2. Click **Add another Event registration form** for each question.
 3. Fields:
    - **#** – ordering token. Values jump by 10 automatically so you can drag to reorder.

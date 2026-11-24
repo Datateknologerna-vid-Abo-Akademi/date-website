@@ -121,9 +121,10 @@
   If another FK is added to the inline, use autocomplete or a raw id field and
   scope it the same way.
 - Unfold displays attendees and registration questions as collapsible blocks.
-  The collapsed titles identify the attendee or question; expanding a block
-  gives its answers or choices the full width. Stock admin keeps both as tables,
-  with the attendee change link in its own `Ändra` column.
+  Each title is a disclosure button whose `aria-expanded` state follows Alpine.
+  Expanding it with a click, Enter or Space gives the answers or choices the
+  full width. Drag, change and delete controls remain separate. Stock admin keeps
+  both as tables, with the attendee change link in its own `Ändra` column.
 - The attendee inline uses Unfold's paginated inline formset (50 rows per page)
   when `USE_UNFOLD` is on; stock admin still renders every row. Its scoped
   template keeps the management form inside the pagination response target, so
