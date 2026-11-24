@@ -157,7 +157,8 @@
 
 .main-container{
     grid-template-areas: 
-      ". news sidebar .";
+      ". news sidebar ."
+      ". news lunch .";
     align-items: start;
 }
 
@@ -198,6 +199,11 @@ div.news-content a:hover{
 
 .sidebar-container{
     grid-area: sidebar;
+}
+
+.lunch-container{
+    grid-area: lunch;
+    display: block;
 }
 
 /*Event start*/
@@ -365,6 +371,7 @@ div.carousel-logos img{
         grid-template-areas:
           ". events ."
           ". news ."
+          ". lunch ."
           ". logos ."
           ". ig-scroll .";
     }

@@ -9,7 +9,7 @@ from django.apps import apps
 from django.conf import settings
 from django.core.cache import cache
 from django.db import close_old_connections, connection, transaction
-from django.http import Http404, JsonResponse
+from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils import timezone, translation
@@ -21,6 +21,7 @@ from instagram.models import IgUrl
 from news.models import Post
 
 from .language_utils import resolve_language, strip_language_prefix
+from .lunch import student_lunch_link
 
 logger = logging.getLogger(__name__)
 ALBINS_ANGELS_CATEGORY_NAME = "Albins Angels"
@@ -214,10 +215,9 @@ def index(request):
 
 
 def lunch(request):
-    """Render the lunchmenu.fi lunch page when the widget is enabled."""
-    if not settings.LUNCH_ENABLED:
-        raise Http404
-    return render(request, 'date/lunch.html')
+    """Keep DaTe's old lunch links working without hosting a separate page."""
+    url, _ = student_lunch_link()
+    return redirect(url)
 
 
 def set_language(request):

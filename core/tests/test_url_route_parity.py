@@ -167,8 +167,8 @@ EXPECTED_URL_NAMES = {
 
 FORBIDDEN_URL_NAMES = {
     "kk": ["booking:index"],
-    "biocum": ["booking:index"],
-    "pulterit": ["archive:years", "booking:index"],
+    "biocum": ["booking:index", "lunch"],
+    "pulterit": ["archive:years", "booking:index", "lunch"],
     "sf": ["booking:index"],
     "impuls": ["booking:index"],
 }

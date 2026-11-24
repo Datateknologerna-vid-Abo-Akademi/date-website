@@ -59,3 +59,9 @@ LUNCH_KANSLI_LATITUDE = 60.4493152
 LUNCH_KANSLI_LONGITUDE = 22.2932317
 LUNCH_LAT = env('LUNCH_LAT', float, LUNCH_KANSLI_LATITUDE) if os.environ.get('LUNCH_LAT') else LUNCH_KANSLI_LATITUDE
 LUNCH_LNG = env('LUNCH_LNG', float, LUNCH_KANSLI_LONGITUDE) if os.environ.get('LUNCH_LNG') else LUNCH_KANSLI_LONGITUDE
+
+# The lunchmenu.fi student lunch widget, the same list DaTe shows, measuring
+# from Biocity.
+LUNCH_ENABLED = env('LUNCH_ENABLED', bool, True)
+# The widget's link and price colour: the site's own link colour.
+LUNCH_ACCENT = env('LUNCH_ACCENT', str, '#49796b')

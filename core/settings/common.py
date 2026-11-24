@@ -417,10 +417,11 @@ BOOKING_ENABLED = False
 TITLE_SHINE_ENABLED = False
 INSTAGRAM_USERNAME = ''
 
-# lunchmenu.fi student lunch widget. Off by default; DaTe turns it on in
-# core/settings/date.py. LUNCH_LAT and LUNCH_LNG replace LUNCH_CITY as the
-# widget search area when both are set. An empty env value means "not set":
-# django-environ would otherwise try to cast an empty string to float.
+# lunchmenu.fi student lunch widget. Off by default; DaTe, Biologica and
+# Pulterit turn it on in their own settings modules. LUNCH_LAT and LUNCH_LNG
+# replace LUNCH_CITY as the widget search area when both are set. An empty env
+# value means "not set": django-environ would otherwise try to cast an empty
+# string to float.
 LUNCH_ENABLED = env('LUNCH_ENABLED', bool, False)
 LUNCH_CITY = env('LUNCH_CITY', str, 'turku')
 LUNCH_LAT = env('LUNCH_LAT', float, None) if os.environ.get('LUNCH_LAT') else None

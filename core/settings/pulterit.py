@@ -52,8 +52,15 @@ CONTENT_VARIABLES = {
     ],
 }
 
-# Lunch widget fallback coordinates for the association kansli (Geohuset, Akatemiankatu 1).
-LUNCH_KANSLI_LATITUDE = 60.4510752
-LUNCH_KANSLI_LONGITUDE = 22.2788933
-LUNCH_LAT = env('LUNCH_LAT', float, LUNCH_KANSLI_LATITUDE) if os.environ.get('LUNCH_LAT') else LUNCH_KANSLI_LATITUDE
-LUNCH_LNG = env('LUNCH_LNG', float, LUNCH_KANSLI_LONGITUDE) if os.environ.get('LUNCH_LNG') else LUNCH_KANSLI_LONGITUDE
+# The lunchmenu.fi student lunch widget follows the place it searches from.
+# Pulterit points it at Kåren (Hämeenkatu 22) and asks for one restaurant, so
+# the widget lists Kåren alone with its student prices. There is no /lunch page:
+# the widget sits on the homepage only.
+KAREN_LATITUDE = 60.4495319
+KAREN_LONGITUDE = 22.2756869
+LUNCH_ENABLED = env('LUNCH_ENABLED', bool, True)
+LUNCH_LAT = env('LUNCH_LAT', float, KAREN_LATITUDE) if os.environ.get('LUNCH_LAT') else KAREN_LATITUDE
+LUNCH_LNG = env('LUNCH_LNG', float, KAREN_LONGITUDE) if os.environ.get('LUNCH_LNG') else KAREN_LONGITUDE
+LUNCH_COUNT = env('LUNCH_COUNT', int, 1)
+# The widget's link and price colour: the site's own link colour.
+LUNCH_ACCENT = env('LUNCH_ACCENT', str, '#6d6d69')
