@@ -39,6 +39,7 @@ This means:
 - `templates/<association>/` overrides only the blocks it needs; everything else falls through to the common template.
 - Associations can also layer another association's templates before common templates. For example, Impuls uses `templates/impuls`, then `templates/date`, then `templates/common` so it can reuse the DaTe homepage layout while overriding only Impuls branding and copy.
 - In a layered variant, `{% raw %}{% extends %}{% endraw %}` resolves to the parent variant's override when one exists, so blocks DaTe fills are inherited too. `templates/date/core/footer.html` puts the DaTe-only AA partner badge in `footer_right`; `templates/biocum/core/footer.html` empties that block again, and Impuls replaces it. `templates/sf/core/footer.html` does not extend the common footer at all (it is a standalone footer with no `footer_right` block), so SF replaces the whole footer. Check biocum, impuls and sf when adding content to a `templates/date/` override.
+- Every association except DaTe shows the "Website developed and maintained by DaTe" credit with the DaTe logo: its `extra_footer` includes the shared `core/partials/date_credit.html` (SF's standalone footer has the same block). The logo is white, so a site with a light footer recolours it in CSS, as Pulterit does with `.footer-credit-link img { filter: invert(1); }`; the link colour and hover glow are per-site `.footer-credit-link` rules in each `core/css/base.css`. `date/tests.py` checks that the credit is on every footer except DaTe's.
 
 ## Adding New Block Slots
 
