@@ -6,6 +6,12 @@
     max-width: 40rem;
 }
 
+.choice-list-widget .choice-list-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
 .choice-list-widget .choice-list-row {
     display: flex;
     align-items: center;
