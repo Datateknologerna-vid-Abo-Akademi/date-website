@@ -43,7 +43,7 @@ if ATTENDANCE_INSTALLED:
     # module is imported for every association and only DaTe installs attendance.
     from attendance.models import AttendancePoll
 
-    class AttendancePollInline(TabularInline):
+    class AttendancePollInline(CompactTabularInline):
         """Pick the meeting whose room a voter has to be in.
 
         The poll itself is the inline's parent, so Django fills that side in and

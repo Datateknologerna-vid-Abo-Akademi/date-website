@@ -24,15 +24,18 @@ from events.admin import (
 class CompactTabularInlineTests(TestCase):
     def test_tabular_inlines_without_a_change_link_drop_the_title_row(self):
         offenders = []
+        tabular_inlines = []
         for model, model_admin in admin.site._registry.items():
-            for inline in getattr(model_admin, 'inlines', ()) or ():
-                if not isinstance(inline, admin.TabularInline):
+            for inline in model_admin.inlines:
+                if not issubclass(inline, admin.TabularInline):
                     continue
+                tabular_inlines.append(inline)
                 if getattr(inline, 'show_change_link', False):
                     continue
                 if getattr(inline, 'show_title', True):
                     offenders.append(f'{model._meta.label}.{inline.__name__}')
 
+        self.assertTrue(tabular_inlines, 'Expected to inspect registered tabular inlines.')
         self.assertEqual(
             offenders,
             [],

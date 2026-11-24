@@ -120,14 +120,10 @@
   `select_related('original_event')` for the readonly column on parent events.
   If another FK is added to the inline, use autocomplete or a raw id field and
   scope it the same way.
-- The attendee and registration-field inlines drop Unfold's repeated row title
-  (`show_title = False`, or `CompactTabularInline` for inlines with no change
-  link), which repeated the name in a full-width line above every row and
-  doubled its height. The attendee inline renders the per-row change link in
-  its own `Ändra` column instead, and
-  `static/common/events/css/admin_attendee_inline.css` gives the table a fixed
-  column layout so the name and email fields fill their cell rather than being
-  sized by the widest input. The stylesheet is scoped to the inline's group id.
+- Unfold displays attendees and registration questions as collapsible blocks.
+  The collapsed titles identify the attendee or question; expanding a block
+  gives its answers or choices the full width. Stock admin keeps both as tables,
+  with the attendee change link in its own `Ändra` column.
 - The attendee inline uses Unfold's paginated inline formset (50 rows per page)
   when `USE_UNFOLD` is on; stock admin still renders every row. Its scoped
   template keeps the management form inside the pagination response target, so
@@ -154,20 +150,12 @@
   resolves questions from the attendee's `original_event` or `event`.
 - Extra admin URL `/list/` renders `events/list.html` for an event, showing
   the registration answers.
-- `static/common/core/js/eventform.js` (loaded via `EventAdmin.Media`)
-  enables/disables the choices inputs based on the row's `type` select, and
-  toggles the whole registration-fields section based on `sign_up`. The `type` → `choice_list` handler is delegated
-  (`$(document).on('change', 'select[id$="type"]', ...)`), not bound directly,
-  and there's also a `formset:added` listener that re-applies the
-  enabled/disabled state to a freshly inserted row. Both are required: rows
-  added via the inline's "Add another" control are cloned from the (hidden,
-  already-disabled-by-default) empty-form template, and under the Unfold admin
-  theme that clone uses plain DOM `cloneNode` rather than jQuery's
-  `clone(true)`, so it does not carry over directly-bound jQuery handlers. A
-  non-delegated handler works for pre-existing rows and for classic-admin "Add
-  another" (which clones with jQuery and does carry handlers over), but silently
-  leaves new rows stuck under Unfold. If you touch this file, keep the
-  delegation and the `formset:added` handler.
+- `static/common/events/js/admin_registration_inline.js` shows the choices only
+  for multiple-choice questions in both themes. A delegated `change` listener
+  handles type changes, and `formset:added` initializes newly cloned rows.
+  `choice_list_widget.js` uses the cloned count input's name to address new
+  options, since stock Django renumbers form elements but not custom data
+  attributes.
 - New or modified registration question names must be non-empty, unique per
   event, and must not collide with built-in signup or avec fields.
   Multiple-choice options are trimmed and must contain at least one unique

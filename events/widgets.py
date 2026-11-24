@@ -39,12 +39,10 @@ def _question_rows(questions):
 
 
 class ChoiceListWidget(forms.Widget):
-    """Edit the comma-separated choices as one input per option.
+    """Edit a JSON list of choices as one input per option.
 
-    ``choice_list`` is stored as ``a,b,c``. The widget shows an input per
-    option plus an empty one for a new choice, with JavaScript adding further
-    rows; the hidden count tells the server how many inputs to read, so
-    removing a middle row leaves a harmless gap.
+    The widget shows one spare input, with JavaScript adding further rows.
+    The hidden count is the next available index; removing a row can leave a gap.
     """
 
     template_name = "events/choice_list_widget.html"

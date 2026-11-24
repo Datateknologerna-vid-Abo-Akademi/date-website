@@ -18,7 +18,8 @@
         var template = widget.querySelector('template.choice-list-row-template');
         var row = template.content.firstElementChild.cloneNode(true);
         var input = row.querySelector('input');
-        var prefix = widget.getAttribute('data-choice-list-prefix');
+        // Both inline implementations renumber input names when cloning a form.
+        var prefix = count.name.slice(0, -'__count'.length);
         input.name = prefix + '__choice__' + index;
         input.id = 'id_' + prefix + '_choice_' + index;
         input.value = '';

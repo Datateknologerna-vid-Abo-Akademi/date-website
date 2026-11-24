@@ -1,5 +1,5 @@
 {% load i18n %}
-<div class="choice-list-widget" data-choice-list-prefix="{{ name }}">
+<div class="choice-list-widget">
   <input type="hidden" name="{{ name }}__count" value="{{ count }}">
   <div class="choice-list-rows">
     {% for row in rows %}
@@ -8,16 +8,24 @@
                name="{{ name }}__choice__{{ row.index }}"
                id="{{ row.input_id }}"
                value="{{ row.value }}"
+               aria-label="{% translate 'Alternativ' %}"
                class="{{ input_class }}">
-        <button type="button" class="choice-list-remove" aria-label="{{ remove_label }}">&times;</button>
+        <button type="button"
+                class="choice-list-remove"
+                aria-label="{{ remove_label }}">&times;</button>
       </div>
     {% endfor %}
   </div>
   <button type="button" class="choice-list-add">+ {{ add_label }}</button>
   <template class="choice-list-row-template">
     <div class="choice-list-row">
-      <input type="text" value="" class="{{ input_class }}">
-      <button type="button" class="choice-list-remove" aria-label="{{ remove_label }}">&times;</button>
+      <input type="text"
+             value=""
+             aria-label="{% translate 'Alternativ' %}"
+             class="{{ input_class }}">
+      <button type="button"
+              class="choice-list-remove"
+              aria-label="{{ remove_label }}">&times;</button>
     </div>
   </template>
 </div>

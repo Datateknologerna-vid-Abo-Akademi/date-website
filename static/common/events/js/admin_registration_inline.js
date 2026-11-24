@@ -1,38 +1,24 @@
-/* The choices list only applies to a Multiple choice field. Hide its row for
-   the other types instead of leaving an input whose value the model discards.
-   The input stays in the DOM, so the formset payload does not change. */
+/* Hide the choices controls when the question does not use them. Keep the
+   table cell in stock admin so the columns still line up. */
 (function () {
-    var GROUP_ID = 'eventregistrationform_set-group';
+    var TYPE_SELECTOR = '#eventregistrationform_set-group select[name$="-type"]';
 
-    function sync(block) {
-        var type = block.querySelector('select[name$="-type"]');
-        var row = block.querySelector('.field-choice_list');
-        if (!type || !row) {
-            return;
+    function sync(type) {
+        var stacked = type.closest('[data-inline-type="stacked"]');
+        var block = type.closest(stacked ? '.form-group' : 'tr');
+        var choices = block && block.querySelector(stacked ? '.field-choice_list' : '.choice-list-widget');
+        if (choices) {
+            choices.hidden = type.value !== 'select';
         }
-        row.hidden = type.value !== 'select';
     }
 
     function syncAll() {
-        var group = document.getElementById(GROUP_ID);
-        if (!group || !group.matches('[data-inline-type="stacked"]')) {
-            return;
-        }
-        group.querySelectorAll('.form-group').forEach(sync);
+        document.querySelectorAll(TYPE_SELECTOR).forEach(sync);
     }
 
     document.addEventListener('change', function (event) {
-        var target = event.target;
-        if (!target.matches('#eventregistrationform_set-group select[name$="-type"]')) {
-            return;
-        }
-        // The stock admin keeps its table column; only the stacked blocks hide it.
-        if (!target.closest('[data-inline-type="stacked"]')) {
-            return;
-        }
-        var block = target.closest('.form-group');
-        if (block) {
-            sync(block);
+        if (event.target.matches(TYPE_SELECTOR)) {
+            sync(event.target);
         }
     });
 

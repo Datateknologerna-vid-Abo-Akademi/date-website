@@ -3,3 +3,8 @@
 #eventregistrationform_set-group[data-inline-type='stacked'] .field-choice_number {
     display: none;
 }
+
+/* The widget normally sets display: flex; respect the hidden attribute. */
+#eventregistrationform_set-group .choice-list-widget[hidden] {
+    display: none;
+}

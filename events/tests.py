@@ -1399,7 +1399,8 @@ class EventAdminTests(TestCase):
         self.assertIn('name="choice_list__choice__0"', html)
         self.assertIn('value="fish"', html)
         self.assertIn('name="choice_list__choice__2"', html)
-        self.assertIn("choice_list__count", html)
+        self.assertIn('name="choice_list__count"', html)
+        self.assertIn('aria-label="Alternativ"', html)
 
     def test_choice_list_widget_collects_rows_and_skips_gaps(self):
         value = ChoiceListWidget().value_from_datadict(
