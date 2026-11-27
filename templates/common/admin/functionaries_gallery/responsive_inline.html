@@ -35,6 +35,10 @@
                     {% for field in line %}
                       {% if field.is_readonly or not field.field.is_hidden %}
                         <td class="min-h-[62.5px] align-middle border-b border-base-200 lg:group-[.last]/parent:border-b-0 dark:border-base-800 field-{{ field.field.name }} group field-tabular {% if field.field.errors %}errors{% endif %} {% if inline_admin_form.original %}p-3 lg:py-3{% else %}py-3{% endif %} font-normal px-1.5 first:pl-3 last:pr-3 text-left">
+                          {% if forloop.parentloop.parentloop.first and forloop.parentloop.first and forloop.first %}
+                            {% if inline_admin_form.needs_explicit_pk_field %}{{ inline_admin_form.pk_field.field }}{% endif %}
+                            {% if inline_admin_form.fk_field %}{{ inline_admin_form.fk_field.field }}{% endif %}
+                          {% endif %}
                           <div class="assignment-photo-inline-label">
                             {% if field.is_readonly %}
                               {{ field.field.label|capfirst }}

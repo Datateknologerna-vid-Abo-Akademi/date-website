@@ -41,7 +41,7 @@ Each event can have dynamic questions managed inline:
    - **Typ** – `Text`, `Multiple choice`, or `Kryssryta`.
    - **Krävd** – mark required answers.
    - **Öppen info** – include responses in the public attendee list.
-   - **Alternativ** - the choices for a multiple-choice field, one input per option with **+ Lägg till alternativ** to add a row and `×` to remove one. Options may contain commas. Empty or duplicate options are rejected, and surrounding spaces are removed when saving. The row is hidden unless **Typ** is `Multiple choice`, and appears as soon as you change the select, including on rows you just added with "Add another".
+   - **Alternativ** - the choices for a multiple-choice field, one input per option with **+ Lägg till alternativ** to add a row and `×` to remove one. Options may contain commas once the deployment is complete. Empty or duplicate options are rejected, and surrounding spaces are removed when saving. The row is hidden unless **Typ** is `Multiple choice`, and appears as soon as you change the select, including on rows you just added with "Add another".
    - **Göm för avec** – hide this field from partner signups.
 4. Save the event to persist form fields.
 

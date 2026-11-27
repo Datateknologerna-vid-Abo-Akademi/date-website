@@ -108,6 +108,9 @@ class ChoiceListWidget(forms.Widget):
         # bound render can pass it through JSONField.bound_data.
         return json.dumps(choices, ensure_ascii=False)
 
+    def value_omitted_from_data(self, data, files, name):
+        return name not in data and f"{name}__count" not in data
+
     @property
     def media(self):
         return forms.Media(

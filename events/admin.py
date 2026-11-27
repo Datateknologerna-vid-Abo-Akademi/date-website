@@ -16,7 +16,7 @@ from django.template.response import TemplateResponse
 from django.urls import re_path, reverse
 from django.utils import formats
 from django.utils.html import format_html
-from django.utils.timezone import now
+from django.utils.timezone import now, template_localtime
 from django.utils.translation import gettext_lazy as _
 from django_ckeditor_5.widgets import CKEditor5Widget
 
@@ -88,6 +88,13 @@ class EventRegistrationFormSet(BaseInlineFormSet):
                 raise ValidationError(_('Fältnamnen måste vara unika inom evenemanget.'))
 
 
+class EventRegistrationChoiceForm(ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance.pk and self.initial.get('choice_list') is None:
+            self.initial['choice_list'] = self.instance.get_choices()
+
+
 class EventRegistrationFormInlineMixin(AvecAwareMixin):
     """Behaviour shared by the registration-field inline in both themes."""
 
@@ -98,6 +105,7 @@ class EventRegistrationFormInlineMixin(AvecAwareMixin):
         js = ('events/js/admin_registration_inline.js',)
 
     model = EventRegistrationForm
+    form = EventRegistrationChoiceForm
     formset = EventRegistrationFormSet
     fk_name = 'event'
     extra = 0
@@ -437,7 +445,7 @@ class EventAttendeesInlineMixin(AvecAwareMixin):
             return '-'
         return format_html(
             '<span style="white-space: nowrap">{}</span>',
-            formats.date_format(obj.time_registered, 'SHORT_DATETIME_FORMAT'),
+            formats.date_format(template_localtime(obj.time_registered), 'SHORT_DATETIME_FORMAT'),
         )
 
     @admin.display(description='')

@@ -257,7 +257,7 @@ def generate():
                 "event": 2,
                 "name": "Dryckesval",
                 "type": "select",
-                "choice_list": ["Alkohol", "Alkoholfritt"],
+                "legacy_choice_list": "Alkohol,Alkoholfritt",
                 "required": True,
             },
         }

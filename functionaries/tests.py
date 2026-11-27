@@ -56,6 +56,14 @@ class FunctionaryFormTests(TestCase):
         )
         self.role = FunctionaryRole.objects.create(title='Chair', board=True)
 
+    def test_assignment_inline_renders_existing_row_keys(self):
+        editor = Member.objects.create_superuser(username='role-editor', email='role@example.invalid', password=None)
+        self.client.force_login(editor)
+        Functionary.objects.create(member=self.member, functionary_role=self.role, year=2024)
+        response = self.client.get(reverse('admin:functionaries_functionaryrole_change', args=[self.role.pk]))
+        self.assertContains(response, 'name="functionary_set-0-id"')
+        self.assertContains(response, 'name="functionary_set-0-functionary_role"')
+
     def test_prevents_duplicate_year_role(self):
         Functionary.objects.create(member=self.member, functionary_role=self.role, year=2024)
         form = FunctionaryForm(

@@ -546,7 +546,9 @@ class EventRegistrationForm(models.Model):  # type: ignore[django-manager-missin
     )
     required = models.BooleanField(_('Krävd'), default=False)
     public_info = models.BooleanField(_('Öppen info'), default=False)
-    choice_list = models.JSONField(_('Alternativ'), default=list, blank=True)
+    # Keep the original text column readable and writable by the live release.
+    legacy_choice_list = models.CharField(_('Alternativ'), db_column='choice_list', max_length=255, blank=True)
+    choice_list = models.JSONField(_('Alternativ'), db_column='choice_list_json', blank=True, null=True)
     hide_for_avec = models.BooleanField(_('Göm för avec'), default=False)
 
     class Meta:
@@ -562,17 +564,26 @@ class EventRegistrationForm(models.Model):  # type: ignore[django-manager-missin
         return str(self.name) or f'#{self.choice_number}'
 
     def get_choices(self):
-        value = self.choice_list
+        value = self.legacy_choice_list if self.choice_list is None else self.choice_list
         if isinstance(value, str):
-            # Rows written before the list migration still hold the comma string.
             value = value.split(',')
-        return [str(choice).strip() for choice in (value or []) if str(choice).strip()]
+        if not isinstance(value, (list, tuple)):
+            return []
+        return [str(choice).strip() for choice in value if str(choice).strip()]
 
     def clean(self):
         super().clean()
         if self.pk:
-            stored = EventRegistrationForm.objects.filter(pk=self.pk).values('name', 'type', 'choice_list').first()
-            if stored and all(stored[field] == getattr(self, field) for field in stored):
+            stored = (
+                EventRegistrationForm.objects.filter(pk=self.pk)
+                .only('name', 'type', 'choice_list', 'legacy_choice_list')
+                .first()
+            )
+            if stored and (stored.name, stored.type, stored.get_choices()) == (
+                self.name,
+                self.type,
+                self.get_choices(),
+            ):
                 return
 
         name = self.name.strip()
@@ -592,6 +603,21 @@ class EventRegistrationForm(models.Model):  # type: ignore[django-manager-missin
             self.choice_list = []
 
     def save(self, *args, **kwargs):  # noqa: DJ012
+        update_fields = kwargs.get('update_fields')
+        if self.choice_list is not None and (update_fields is None or 'choice_list' in update_fields):
+            choices = self.get_choices()
+            legacy_value = ','.join(choices)
+            if len(legacy_value) <= 255 and not any(',' in choice for choice in choices):
+                # Keep representable choices in the shared column so edits by
+                # either release are visible to both during the rollout.
+                self.legacy_choice_list = legacy_value
+                self.choice_list = None
+                if update_fields is not None:
+                    kwargs['update_fields'] = {*update_fields, 'legacy_choice_list'}
+            else:
+                # Leave the last compatible value intact for the old release.
+                self.choice_list = choices
+
         # Only set choice_number if it's the default value (0).
         if self.choice_number == 0:
             # Get the current maximum choice_number for the related event.

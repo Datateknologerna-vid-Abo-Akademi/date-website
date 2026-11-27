@@ -16,10 +16,15 @@
   those fields, so the event forms carry no gate of their own and saving with
   the flag off leaves a ticked event's value alone.
 - `EventRegistrationForm` defines dynamic signup fields. `choice_number`
-  controls ordering (auto-incremented by tens). `choice_list` stores the
-  options for a multiple-choice question as a list of strings; the admin edits
-  it as one input per option, and `get_choices()` is the read path for the
-  public form and billing.
+  controls ordering (auto-incremented by tens). The admin edits multiple-choice
+  questions as one input per option; `get_choices()` reads the options for the
+  public form and billing. Migration `0030` only adds a nullable JSON column.
+  Choices that fit the original comma-separated format stay in the original
+  column, so both releases can read and edit them during blue-green rollout.
+  Choices that contain commas or exceed the old 255-character limit use the
+  JSON column, leaving the last compatible text untouched. Do not add those
+  choices until the old release is retired as a rollback target. An old image
+  cannot display or edit JSON-only choices.
 - `EventAttendees` persists registrations, including arbitrary `preferences`
   stored as `JSONField`. `attendee_nr` increments by 10 to keep admin-ordering
   drag handles stable. `Event.attendee_nr_counter` atomically reserves those
@@ -334,8 +339,7 @@
   `sign_up` set and its registration window is open, whether or not a tab points at
   the form, and hiding a tab never disables registration.
 - Any changes to registration fields must keep `Event.make_registration_form()`
-  in sync; `choice_list` is a list, and inconsistent formatting breaks
-  multiple-choice inputs.
+  in sync. Use `get_choices()` so the signup form reads both storage formats.
 - When altering attendee serialization, update both the model and the JS that
   renders real-time updates.
 - Parent/child events rely on consistent `parent` assignments; deleting a parent

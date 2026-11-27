@@ -4,6 +4,7 @@ import logging
 import tempfile
 import threading
 import time
+from datetime import UTC, datetime
 from io import BytesIO, StringIO
 from types import SimpleNamespace
 from unittest import skipUnless
@@ -1393,6 +1394,62 @@ class EventAdminTests(TestCase):
         else:
             self.assertNotIn("border-base-200", html)
 
+    def test_attendee_inline_displays_duplicate_email_error(self):
+        self.client.force_login(self.admin_user)
+        first, second = [
+            EventAttendees.objects.create(
+                event=self.event, user=f'Test {i}', email=f'test{i}@example.invalid', time_registered=timezone.now()
+            )
+            for i in range(2)
+        ]
+        data = {
+            'title_sv': self.event.title,
+            'slug': self.event.slug,
+            'sign_up': 'on',
+            'eventregistrationform_set-TOTAL_FORMS': 0,
+            'eventregistrationform_set-INITIAL_FORMS': 0,
+            'eventattendees_set-TOTAL_FORMS': 2,
+            'eventattendees_set-INITIAL_FORMS': 2,
+            **self._attendee_row(0, first.pk, first.attendee_nr, first.user, first.email),
+            **self._attendee_row(1, second.pk, second.attendee_nr, second.user, first.email),
+        }
+        response = self.client.post(reverse('admin:events_event_change', args=[self.event.pk]), data)
+        self.assertContains(response, 'Deltagare med samma Event och E-postadress finns redan.')
+
+    def test_attendee_registration_timestamp_uses_active_timezone(self):
+        stamp = datetime(2026, 11, 27, 22, 30, tzinfo=UTC)
+        attendee = EventAttendees(time_registered=stamp)
+        with timezone.override('Europe/Helsinki'):
+            expected = date_format(timezone.localtime(stamp), 'SHORT_DATETIME_FORMAT')
+            inline = EventAttendeesFormInline(Event, admin.site)
+            self.assertIn(expected, inline.registered_at(attendee))
+
+    def test_legacy_choices_render_and_clearing_them_is_rejected(self):
+        self.client.force_login(self.admin_user)
+        question = EventRegistrationForm.objects.create(
+            event=self.event, name='Meal', type='select', legacy_choice_list='Fish,Vegetarian'
+        )
+        url = reverse('admin:events_event_change', args=[self.event.pk])
+        self.assertContains(self.client.get(url), 'value="Fish"')
+        data = {
+            'title_sv': self.event.title,
+            'slug': self.event.slug,
+            'sign_up': 'on',
+            'eventregistrationform_set-TOTAL_FORMS': 1,
+            'eventregistrationform_set-INITIAL_FORMS': 1,
+            'eventregistrationform_set-0-id': question.pk,
+            'eventregistrationform_set-0-event': self.event.pk,
+            'eventregistrationform_set-0-name': question.name,
+            'eventregistrationform_set-0-type': question.type,
+            'eventregistrationform_set-0-choice_list__count': 1,
+            'eventregistrationform_set-0-choice_list__choice__0': '',
+            'eventattendees_set-TOTAL_FORMS': 0,
+            'eventattendees_set-INITIAL_FORMS': 0,
+        }
+        self.assertContains(self.client.post(url, data), 'Ange minst ett alternativ.')
+        question.refresh_from_db()
+        self.assertEqual(question.get_choices(), ['Fish', 'Vegetarian'])
+
     def test_choice_list_widget_renders_an_input_per_option(self):
         html = ChoiceListWidget().render("choice_list", ["fish", "vegetarian"], {"id": "id_choice_list"})
 
@@ -1610,11 +1667,44 @@ class EventRegistrationFormValidationTests(TestCase):
         question.full_clean()
         question.save()
 
-        self.assertEqual(question.choice_list, ['fish', 'vegetarian'])
+        self.assertEqual(question.get_choices(), ['fish', 'vegetarian'])
         self.assertEqual(
             list(self.event.make_registration_form().base_fields['Meal'].choices),
             [('fish', 'fish'), ('vegetarian', 'vegetarian')],
         )
+
+    def test_legacy_choice_column_is_shared_with_pre_migration_model(self):
+        old_apps = (
+            MigrationExecutor(connection)
+            .loader.project_state([('events', '0029_event_event_date_start_idx_and_more')])
+            .apps
+        )
+        old_model = old_apps.get_model('events', 'EventRegistrationForm')
+        old_question = old_model.objects.create(
+            event_id=self.event.pk, name='Meal', type='select', choice_list='Fish,Vegetarian'
+        )
+        question = EventRegistrationForm.objects.get(pk=old_question.pk)
+        self.assertEqual(question.get_choices(), ['Fish', 'Vegetarian'])
+
+        question.choice_list = ['Soup', 'Salad']
+        question.save(update_fields=['choice_list'])
+        old_question.refresh_from_db()
+        self.assertEqual(old_question.choice_list, 'Soup,Salad')
+
+        old_question.choice_list = 'Soup,Pasta'
+        old_question.save(update_fields=['choice_list'])
+        question.refresh_from_db()
+        self.assertEqual(question.get_choices(), ['Soup', 'Pasta'])
+
+    def test_json_choices_preserve_commas_and_legacy_text(self):
+        question = EventRegistrationForm.objects.create(
+            event=self.event, name='Meal', type='select', legacy_choice_list='Fish,Vegetarian'
+        )
+        question.choice_list = ['Fish, smoked', 'Vegetarian']
+        question.save(update_fields=['choice_list'])
+        question.refresh_from_db()
+        self.assertEqual(question.get_choices(), ['Fish, smoked', 'Vegetarian'])
+        self.assertEqual(question.legacy_choice_list, 'Fish,Vegetarian')
 
     def test_multiple_choice_requires_unique_nonempty_options(self):
         for choices in ([], ['fish', 'fish']):

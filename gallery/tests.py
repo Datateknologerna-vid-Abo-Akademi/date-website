@@ -170,8 +170,11 @@ class GalleryLegacyAdminPermissionTests(TestCase):
             Member.objects.create_superuser(username='album-editor', email='editor@example.invalid', password=None)
         )
         album = Album.objects.create(title='Demo album')
-        Photo.objects.bulk_create([Photo(album=album, image='demo-photo.jpg')])
-        response = self.client.get(reverse('admin:gallery_album_change', args=[album.pk]))
+        photo = Photo.objects.bulk_create([Photo(album=album, image='demo-photo.jpg')])[0]
+        url = reverse('admin:gallery_album_change', args=[album.pk])
+        response = self.client.get(url)
+        self.assertContains(response, 'name="photo_set-0-id"')
+        self.assertContains(response, 'name="photo_set-0-album"')
 
         if settings.USE_UNFOLD:
             self.assertContains(response, 'admin/css/assignment-photo-inline.css')
@@ -179,6 +182,23 @@ class GalleryLegacyAdminPermissionTests(TestCase):
                 self.assertContains(response, f'for="id_photo_set-{row}-favorite"')
         else:
             self.assertNotContains(response, 'admin/css/assignment-photo-inline.css')
+
+        response = self.client.post(
+            url,
+            {
+                'title': album.title,
+                'pub_date': album.pub_date.strftime('%Y-%m-%d %H:%M:%S'),
+                'photo_set-TOTAL_FORMS': 1,
+                'photo_set-INITIAL_FORMS': 1,
+                'photo_set-0-id': photo.pk,
+                'photo_set-0-album': album.pk,
+                'photo_set-0-favorite': 'on',
+                '_save': 'Save',
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        photo.refresh_from_db()
+        self.assertTrue(photo.favorite)
 
 
 class GalleryUploadViewTests(TestCase):
