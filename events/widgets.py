@@ -39,7 +39,7 @@ def _question_rows(questions):
 
 
 class ChoiceListWidget(forms.Widget):
-    """Edit a JSON list of choices as one input per option.
+    """Edit comma-separated choices as one input per option.
 
     The widget shows one spare input, with JavaScript adding further rows.
     The hidden count is the next available index; removing a row can leave a gap.
@@ -47,28 +47,11 @@ class ChoiceListWidget(forms.Widget):
 
     template_name = "events/choice_list_widget.html"
 
-    def _choices(self, value):
-        if value is None:
-            return []
-        if isinstance(value, str):
-            text = value.strip()
-            if text.startswith("["):
-                try:
-                    value = json.loads(text)
-                except TypeError, ValueError:
-                    value = text
-            if isinstance(value, str):
-                # A legacy single value: stored as a comma string, or posted as
-                # one by an older caller. Lines are accepted too.
-                return [choice.strip() for choice in value.replace("\n", ",").split(",") if choice.strip()]
-        if isinstance(value, (list, tuple)):
-            return [str(choice).strip() for choice in value if str(choice).strip()]
-        return []
-
     def render(self, name, value, attrs=None, renderer=None):
         attrs = dict(attrs or {})
         base_id = attrs.get("id") or f"id_{name}"
-        choices = self._choices(value)
+        choices = value.split(",") if isinstance(value, str) else (value or [])
+        choices = [choice.strip() for choice in choices if choice.strip()]
         rows = [
             {"index": index, "value": choice, "input_id": f"{base_id}_choice_{index}"}
             for index, choice in enumerate(choices)
@@ -89,12 +72,8 @@ class ChoiceListWidget(forms.Widget):
     def value_from_datadict(self, data, files, name):
         count = data.get(f"{name}__count")
         if count is None:
-            # Fall back to a single posted value (an older integration, or a test
-            # posting the stored comma string directly).
-            raw = data.get(name)
-            if raw is None:
-                return None
-            return json.dumps(self._choices(raw), ensure_ascii=False)
+            # Accept the previous single input as comma-separated text.
+            return data.get(name)
         try:
             total = int(count)
         except TypeError, ValueError:
@@ -104,9 +83,7 @@ class ChoiceListWidget(forms.Widget):
             raw = data.get(f"{name}__choice__{index}")
             if raw and raw.strip():
                 choices.append(raw.strip())
-        # The field is a JSONField; post the JSON text a browser would send so a
-        # bound render can pass it through JSONField.bound_data.
-        return json.dumps(choices, ensure_ascii=False)
+        return choices
 
     def value_omitted_from_data(self, data, files, name):
         return name not in data and f"{name}__count" not in data

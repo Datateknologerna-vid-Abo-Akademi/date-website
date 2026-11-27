@@ -88,13 +88,6 @@ class EventRegistrationFormSet(BaseInlineFormSet):
                 raise ValidationError(_('Fältnamnen måste vara unika inom evenemanget.'))
 
 
-class EventRegistrationChoiceForm(ModelForm):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        if self.instance.pk and self.initial.get('choice_list') is None:
-            self.initial['choice_list'] = self.instance.get_choices()
-
-
 class EventRegistrationFormInlineMixin(AvecAwareMixin):
     """Behaviour shared by the registration-field inline in both themes."""
 
@@ -105,7 +98,6 @@ class EventRegistrationFormInlineMixin(AvecAwareMixin):
         js = ('events/js/admin_registration_inline.js',)
 
     model = EventRegistrationForm
-    form = EventRegistrationChoiceForm
     formset = EventRegistrationFormSet
     fk_name = 'event'
     extra = 0
@@ -125,10 +117,9 @@ class EventRegistrationFormInlineMixin(AvecAwareMixin):
         return [(None, {'fields': self.get_fields(request, event)})]
 
     def formfield_for_dbfield(self, db_field, request, **kwargs):
-        formfield = super().formfield_for_dbfield(db_field, request, **kwargs)
         if db_field.name == 'choice_list':
-            formfield.widget = ChoiceListWidget()
-        return formfield
+            kwargs.update(form_class=forms.ChoiceListField, widget=ChoiceListWidget)
+        return super().formfield_for_dbfield(db_field, request, **kwargs)
 
     def get_formset(self, request, obj=None, **kwargs):
         if not self._event_uses_avec(obj):

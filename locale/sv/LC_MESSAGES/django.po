@@ -3933,3 +3933,7 @@ msgstr "Lägg till alternativ"
 
 msgid "Ta bort"
 msgstr "Ta bort"
+
+#: events/forms.py
+msgid "Ett alternativ får inte innehålla kommatecken."
+msgstr "Ett alternativ får inte innehålla kommatecken."

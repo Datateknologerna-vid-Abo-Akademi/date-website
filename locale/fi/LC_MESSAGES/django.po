@@ -4001,3 +4001,7 @@ msgstr "Lisää vaihtoehto"
 
 msgid "Ta bort"
 msgstr "Poista"
+
+#: events/forms.py
+msgid "Ett alternativ får inte innehålla kommatecken."
+msgstr "Vaihtoehto ei saa sisältää pilkkua."

@@ -3961,3 +3961,7 @@ msgstr "Add option"
 
 msgid "Ta bort"
 msgstr "Remove"
+
+#: events/forms.py
+msgid "Ett alternativ får inte innehålla kommatecken."
+msgstr "An option cannot contain a comma."

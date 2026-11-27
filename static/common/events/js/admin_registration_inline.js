@@ -9,6 +9,9 @@
         var choices = block && block.querySelector(stacked ? '.field-choice_list' : '.choice-list-widget');
         if (choices) {
             choices.hidden = type.value !== 'select';
+            choices.querySelectorAll('input').forEach(function (input) {
+                input.disabled = choices.hidden;
+            });
         }
     }
 

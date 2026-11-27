@@ -3,6 +3,7 @@ import re
 
 from django import forms
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
@@ -62,6 +63,17 @@ def _template_choices():
     if settings.KK_EVENT_TEMPLATES_ENABLED:
         return EVENT_TEMPLATE_CHOICES_COMMON + EVENT_TEMPLATE_CHOICES_KK
     return EVENT_TEMPLATE_CHOICES_COMMON
+
+
+class ChoiceListField(forms.CharField):
+    """Validate individual rows before joining them for the existing model field."""
+
+    def to_python(self, value):
+        if isinstance(value, list):
+            if any(',' in option for option in value):
+                raise ValidationError(_('Ett alternativ får inte innehålla kommatecken.'), code='comma_in_option')
+            value = ','.join(value)
+        return super().to_python(value)
 
 
 class EventCreationForm(UnfoldFormMixin, forms.ModelForm):

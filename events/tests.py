@@ -1,5 +1,4 @@
 import importlib
-import json
 import logging
 import tempfile
 import threading
@@ -34,7 +33,7 @@ from django_ckeditor_5.widgets import CKEditor5Widget
 from PIL import ExifTags, Image, ImageCms
 
 from events.admin import EventAttendeesFormInline, EventRegistrationFormSet
-from events.forms import EventCreationForm, EventEditForm
+from events.forms import ChoiceListField, EventCreationForm, EventEditForm
 from events.images import dominant_color, process_background_image
 from events.models import BackgroundImageLayout, Event, EventAttendees, EventRegistrationForm
 from events.registration import EventSignupError, register_event_signup
@@ -400,7 +399,7 @@ class EventTestCase(TestCase):
             type='select',
             required=False,
             public_info=True,
-            choice_list=['choice 1', 'choice 2', 'choice 3'],
+            choice_list='choice 1,choice 2,choice 3',
         ).save()
         EventRegistrationForm(
             event=self.event, choice_number=3, name='field3', type='checkbox', required=False, public_info=True
@@ -1346,7 +1345,7 @@ class EventAdminTests(TestCase):
             event=self.event,
             name="Meal",
             type="select",
-            choice_list=['fish', 'vegetarian'],
+            choice_list='fish,vegetarian',
         )
         EventAttendees.objects.create(
             event=self.event,
@@ -1384,7 +1383,7 @@ class EventAdminTests(TestCase):
         self.assertNotContains(response, "Det finns inga anmälningsfält")
 
     def test_answers_widget_uses_the_active_admin_themes_input_classes(self):
-        question = EventRegistrationForm(name="Meal", type="select", choice_list=["fish", "vegetarian"])
+        question = EventRegistrationForm(name="Meal", type="select", choice_list="fish,vegetarian")
 
         html = EventAnswersWidget(questions=[question]).render("preferences", {"Meal": "fish"})
 
@@ -1424,13 +1423,16 @@ class EventAdminTests(TestCase):
             inline = EventAttendeesFormInline(Event, admin.site)
             self.assertIn(expected, inline.registered_at(attendee))
 
-    def test_legacy_choices_render_and_clearing_them_is_rejected(self):
+    def test_choice_editor_validates_and_saves_existing_choices(self):
         self.client.force_login(self.admin_user)
         question = EventRegistrationForm.objects.create(
-            event=self.event, name='Meal', type='select', legacy_choice_list='Fish,Vegetarian'
+            event=self.event, name='Meal', type='select', choice_list='Fish,Vegetarian'
         )
         url = reverse('admin:events_event_change', args=[self.event.pk])
-        self.assertContains(self.client.get(url), 'value="Fish"')
+        response = self.client.get(url)
+        self.assertContains(response, 'value="Fish"')
+        inline = next(i for i in response.context['inline_admin_formsets'] if i.formset.model is EventRegistrationForm)
+        prefix = inline.formset.prefix
         data = {
             'title_sv': self.event.title,
             'slug': self.event.slug,
@@ -1447,11 +1449,28 @@ class EventAdminTests(TestCase):
             'eventattendees_set-INITIAL_FORMS': 0,
         }
         self.assertContains(self.client.post(url, data), 'Ange minst ett alternativ.')
+        data[f'{prefix}-0-choice_list__choice__0'] = 'Fish, smoked'
+        response = self.client.post(url, data)
+        self.assertContains(response, 'Ett alternativ får inte innehålla kommatecken.')
+        self.assertContains(response, 'value="Fish, smoked"')
         question.refresh_from_db()
-        self.assertEqual(question.get_choices(), ['Fish', 'Vegetarian'])
+        self.assertEqual(question.choice_list, 'Fish,Vegetarian')
+
+        data.update(
+            {
+                f'{prefix}-0-choice_list__count': 2,
+                f'{prefix}-0-choice_list__choice__0': ' Soup ',
+                f'{prefix}-0-choice_list__choice__1': 'Salad',
+            }
+        )
+        formset = type(inline.formset)(data, instance=self.event, prefix=prefix)
+        self.assertTrue(formset.is_valid(), formset.errors)
+        formset.save()
+        question.refresh_from_db()
+        self.assertEqual(question.choice_list, 'Soup,Salad')
 
     def test_choice_list_widget_renders_an_input_per_option(self):
-        html = ChoiceListWidget().render("choice_list", ["fish", "vegetarian"], {"id": "id_choice_list"})
+        html = ChoiceListWidget().render("choice_list", "fish,vegetarian", {"id": "id_choice_list"})
 
         self.assertIn('name="choice_list__choice__0"', html)
         self.assertIn('value="fish"', html)
@@ -1470,14 +1489,14 @@ class EventAdminTests(TestCase):
             "choice_list",
         )
 
-        self.assertEqual(json.loads(value), ["fish", "water"])
+        self.assertEqual(value, ["fish", "water"])
 
     def test_choice_list_widget_accepts_a_single_posted_value(self):
         widget = ChoiceListWidget()
 
         self.assertEqual(
-            json.loads(widget.value_from_datadict({"choice_list": "fish\n vegetarian,water"}, {}, "choice_list")),
-            ["fish", "vegetarian", "water"],
+            widget.value_from_datadict({"choice_list": "fish,vegetarian,water"}, {}, "choice_list"),
+            "fish,vegetarian,water",
         )
         self.assertIsNone(widget.value_from_datadict({}, {}, "choice_list"))
 
@@ -1486,7 +1505,7 @@ class EventAdminTests(TestCase):
             event=self.event,
             name="Meal",
             type="select",
-            choice_list=['fish', 'vegetarian'],
+            choice_list='fish,vegetarian',
         )
         attendee = EventAttendees.objects.create(
             event=self.event,
@@ -1516,7 +1535,7 @@ class EventAdminTests(TestCase):
             event=self.event,
             name="Meal",
             type="select",
-            choice_list=['fish', 'vegetarian'],
+            choice_list='fish,vegetarian',
         )
         attendee = EventAttendees.objects.create(
             event=self.event,
@@ -1661,7 +1680,7 @@ class EventRegistrationFormValidationTests(TestCase):
             event=self.event,
             name='Meal',
             type='select',
-            choice_list=[' fish', ' vegetarian '],
+            choice_list=' fish, vegetarian ',
         )
 
         question.full_clean()
@@ -1673,41 +1692,15 @@ class EventRegistrationFormValidationTests(TestCase):
             [('fish', 'fish'), ('vegetarian', 'vegetarian')],
         )
 
-    def test_legacy_choice_column_is_shared_with_pre_migration_model(self):
-        old_apps = (
-            MigrationExecutor(connection)
-            .loader.project_state([('events', '0029_event_event_date_start_idx_and_more')])
-            .apps
-        )
-        old_model = old_apps.get_model('events', 'EventRegistrationForm')
-        old_question = old_model.objects.create(
-            event_id=self.event.pk, name='Meal', type='select', choice_list='Fish,Vegetarian'
-        )
-        question = EventRegistrationForm.objects.get(pk=old_question.pk)
-        self.assertEqual(question.get_choices(), ['Fish', 'Vegetarian'])
-
-        question.choice_list = ['Soup', 'Salad']
-        question.save(update_fields=['choice_list'])
-        old_question.refresh_from_db()
-        self.assertEqual(old_question.choice_list, 'Soup,Salad')
-
-        old_question.choice_list = 'Soup,Pasta'
-        old_question.save(update_fields=['choice_list'])
-        question.refresh_from_db()
-        self.assertEqual(question.get_choices(), ['Soup', 'Pasta'])
-
-    def test_json_choices_preserve_commas_and_legacy_text(self):
-        question = EventRegistrationForm.objects.create(
-            event=self.event, name='Meal', type='select', legacy_choice_list='Fish,Vegetarian'
-        )
-        question.choice_list = ['Fish, smoked', 'Vegetarian']
-        question.save(update_fields=['choice_list'])
-        question.refresh_from_db()
-        self.assertEqual(question.get_choices(), ['Fish, smoked', 'Vegetarian'])
-        self.assertEqual(question.legacy_choice_list, 'Fish,Vegetarian')
+    def test_choice_list_field_counts_separators_toward_length_limit(self):
+        field = ChoiceListField(max_length=255)
+        self.assertEqual(len(field.clean(['a' * 127, 'b' * 127])), 255)
+        with self.assertRaises(ValidationError) as error:
+            field.clean(['a' * 127, 'b' * 128])
+        self.assertEqual(error.exception.error_list[0].code, 'max_length')
 
     def test_multiple_choice_requires_unique_nonempty_options(self):
-        for choices in ([], ['fish', 'fish']):
+        for choices in ('', 'fish,fish'):
             with self.subTest(choices=choices):
                 question = EventRegistrationForm(
                     event=self.event,
@@ -1735,10 +1728,10 @@ class EventRegistrationFormValidationTests(TestCase):
                 'eventregistrationform_set-MAX_NUM_FORMS': '1000',
                 'eventregistrationform_set-0-name': 'Meal',
                 'eventregistrationform_set-0-type': 'text',
-                'eventregistrationform_set-0-choice_list': '[]',
+                'eventregistrationform_set-0-choice_list': '',
                 'eventregistrationform_set-1-name': 'Meal',
                 'eventregistrationform_set-1-type': 'text',
-                'eventregistrationform_set-1-choice_list': '[]',
+                'eventregistrationform_set-1-choice_list': '',
             },
         )
 
@@ -1750,7 +1743,7 @@ class EventRegistrationFormValidationTests(TestCase):
             event=self.event,
             name='',
             type='select',
-            choice_list=[],
+            choice_list='',
         )
         question.required = True
 
@@ -1778,12 +1771,12 @@ class EventRegistrationFormValidationTests(TestCase):
                 'eventregistrationform_set-0-id': str(first.pk),
                 'eventregistrationform_set-0-name': 'Legacy',
                 'eventregistrationform_set-0-type': 'text',
-                'eventregistrationform_set-0-choice_list': '[]',
+                'eventregistrationform_set-0-choice_list': '',
                 'eventregistrationform_set-0-required': 'on',
                 'eventregistrationform_set-1-id': str(second.pk),
                 'eventregistrationform_set-1-name': 'Legacy',
                 'eventregistrationform_set-1-type': 'text',
-                'eventregistrationform_set-1-choice_list': '[]',
+                'eventregistrationform_set-1-choice_list': '',
             },
         )
 
@@ -2857,7 +2850,7 @@ class EventFormBuilderTests(TestCase):
             event=self.event,
             name="meal",
             type="select",
-            choice_list=['fish', 'veg'],
+            choice_list='fish,veg',
             required=True,
             choice_number=10,
         )
