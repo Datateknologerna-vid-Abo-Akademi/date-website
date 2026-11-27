@@ -98,6 +98,7 @@ class EventRegistrationFormInlineMixin(AvecAwareMixin):
         js = ('events/js/admin_registration_inline.js',)
 
     model = EventRegistrationForm
+    form = forms.EventRegistrationChoiceForm
     formset = EventRegistrationFormSet
     fk_name = 'event'
     extra = 0

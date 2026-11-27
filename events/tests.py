@@ -1426,7 +1426,7 @@ class EventAdminTests(TestCase):
     def test_choice_editor_validates_and_saves_existing_choices(self):
         self.client.force_login(self.admin_user)
         question = EventRegistrationForm.objects.create(
-            event=self.event, name='Meal', type='select', choice_list='Fish,Vegetarian'
+            event=self.event, name='Meal', type='select', choice_list='Fish,, Vegetarian'
         )
         url = reverse('admin:events_event_change', args=[self.event.pk])
         response = self.client.get(url)
@@ -1454,7 +1454,25 @@ class EventAdminTests(TestCase):
         self.assertContains(response, 'Ett alternativ får inte innehålla kommatecken.')
         self.assertContains(response, 'value="Fish, smoked"')
         question.refresh_from_db()
-        self.assertEqual(question.choice_list, 'Fish,Vegetarian')
+        self.assertEqual(question.choice_list, 'Fish,, Vegetarian')
+
+        data.update(
+            {
+                f'{prefix}-0-choice_number': question.choice_number,
+                f'{prefix}-0-name': 'Renamed meal',
+                f'{prefix}-0-choice_list__count': 3,
+                f'{prefix}-0-choice_list__choice__0': 'Fish',
+                f'{prefix}-0-choice_list__choice__1': 'Vegetarian',
+                f'{prefix}-0-choice_list__choice__2': '',
+            }
+        )
+        formset = type(inline.formset)(data, instance=self.event, prefix=prefix)
+        self.assertTrue(formset.is_valid(), formset.errors)
+        self.assertNotIn('choice_list', formset.forms[0].changed_data)
+        formset.save()
+        question.refresh_from_db()
+        self.assertEqual(question.name, 'Renamed meal')
+        self.assertEqual(question.choice_list, 'Fish,, Vegetarian')
 
         data.update(
             {

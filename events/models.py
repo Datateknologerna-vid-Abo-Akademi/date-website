@@ -566,13 +566,10 @@ class EventRegistrationForm(models.Model):  # type: ignore[django-manager-missin
 
     def clean(self):
         super().clean()
+        stored = None
         if self.pk:
-            stored = EventRegistrationForm.objects.filter(pk=self.pk).only('name', 'type', 'choice_list').first()
-            if stored and (stored.name, stored.type, stored.get_choices()) == (
-                self.name,
-                self.type,
-                self.get_choices(),
-            ):
+            stored = EventRegistrationForm.objects.filter(pk=self.pk).values('name', 'type', 'choice_list').first()
+            if stored and all(stored[field] == getattr(self, field) for field in stored):
                 return
 
         name = self.name.strip()
@@ -587,7 +584,8 @@ class EventRegistrationForm(models.Model):  # type: ignore[django-manager-missin
                 raise ValidationError({'choice_list': _('Ange minst ett alternativ.')})
             if len(set(choices)) != len(choices):
                 raise ValidationError({'choice_list': _('Alternativen måste vara unika.')})
-            self.choice_list = ','.join(choices)
+            if not stored or self.choice_list != stored['choice_list']:
+                self.choice_list = ','.join(choices)
         else:
             self.choice_list = ''
 

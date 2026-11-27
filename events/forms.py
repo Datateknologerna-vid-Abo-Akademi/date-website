@@ -75,6 +75,20 @@ class ChoiceListField(forms.CharField):
             value = ','.join(value)
         return super().to_python(value)
 
+    def has_changed(self, initial, data):
+        if isinstance(initial, str) and isinstance(data, list):
+            initial = ','.join(choice.strip() for choice in initial.split(',') if choice.strip())
+        return super().has_changed(initial, data)
+
+
+class EventRegistrationChoiceForm(forms.ModelForm):
+    def clean_choice_list(self):
+        choices = self.cleaned_data['choice_list']
+        if self.instance.pk and choices == ','.join(self.instance.get_choices()):
+            # The editor hides blank slots, but billing prices still use them.
+            return self.instance.choice_list
+        return choices
+
 
 class EventCreationForm(UnfoldFormMixin, forms.ModelForm):
     user = None
