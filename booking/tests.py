@@ -3299,9 +3299,12 @@ class BookingGateRegressionTests(PinnedNowMixin, TestCase):
         self.assertEqual(response.status_code, 429)
         self.assertEqual(response.context['lockout_minutes'], access.BOOKING_LOCKOUT_SECONDS // 60)
         # The visible message has to be in minutes, and must not print the raw
-        # seconds count as a minute count.
+        # seconds count as a minute count. Read only the message: a random
+        # CSRF token elsewhere on the page can contain the same digits.
         self.assertContains(response, '15 minuter', status_code=429)
-        self.assertNotIn(str(access.BOOKING_LOCKOUT_SECONDS), response.content.decode())
+        message = re.search(r'<p class="booking-lockout">(.*?)</p>', response.content.decode(), re.S)
+        self.assertIsNotNone(message)
+        self.assertNotIn(str(access.BOOKING_LOCKOUT_SECONDS), message.group(1))
 
     def test_admin_time_column_renders_local_time(self):
         start = timezone.localtime(self.now).replace(microsecond=0)

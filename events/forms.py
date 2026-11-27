@@ -3,6 +3,7 @@ import re
 
 from django import forms
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
@@ -62,6 +63,31 @@ def _template_choices():
     if settings.KK_EVENT_TEMPLATES_ENABLED:
         return EVENT_TEMPLATE_CHOICES_COMMON + EVENT_TEMPLATE_CHOICES_KK
     return EVENT_TEMPLATE_CHOICES_COMMON
+
+
+class ChoiceListField(forms.CharField):
+    """Validate individual rows before joining them for the existing model field."""
+
+    def to_python(self, value):
+        if isinstance(value, list):
+            if any(',' in option for option in value):
+                raise ValidationError(_('Ett alternativ får inte innehålla kommatecken.'), code='comma_in_option')
+            value = ','.join(value)
+        return super().to_python(value)
+
+    def has_changed(self, initial, data):
+        if isinstance(initial, str) and isinstance(data, list):
+            initial = ','.join(choice.strip() for choice in initial.split(',') if choice.strip())
+        return super().has_changed(initial, data)
+
+
+class EventRegistrationChoiceForm(forms.ModelForm):
+    def clean_choice_list(self):
+        choices = self.cleaned_data['choice_list']
+        if self.instance.pk and choices == ','.join(self.instance.get_choices()):
+            # The editor hides blank slots, but billing prices still use them.
+            return self.instance.choice_list
+        return choices
 
 
 class EventCreationForm(UnfoldFormMixin, forms.ModelForm):

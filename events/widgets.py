@@ -38,6 +38,64 @@ def _question_rows(questions):
     return rows
 
 
+class ChoiceListWidget(forms.Widget):
+    """Edit comma-separated choices as one input per option.
+
+    The widget shows one spare input, with JavaScript adding further rows.
+    The hidden count is the next available index; removing a row can leave a gap.
+    """
+
+    template_name = "events/choice_list_widget.html"
+
+    def render(self, name, value, attrs=None, renderer=None):
+        attrs = dict(attrs or {})
+        base_id = attrs.get("id") or f"id_{name}"
+        choices = value.split(",") if isinstance(value, str) else (value or [])
+        choices = [choice.strip() for choice in choices if choice.strip()]
+        rows = [
+            {"index": index, "value": choice, "input_id": f"{base_id}_choice_{index}"}
+            for index, choice in enumerate(choices)
+        ]
+        # One spare row so a new option can be typed without touching the mouse.
+        index = len(choices)
+        rows.append({"index": index, "value": "", "input_id": f"{base_id}_choice_{index}"})
+        context = {
+            "name": name,
+            "rows": rows,
+            "count": len(rows),
+            "input_class": " ".join(INPUT_CLASSES),
+            "add_label": _("Lägg till alternativ"),
+            "remove_label": _("Ta bort"),
+        }
+        return render_to_string(self.template_name, context)
+
+    def value_from_datadict(self, data, files, name):
+        count = data.get(f"{name}__count")
+        if count is None:
+            # Accept the previous single input as comma-separated text.
+            return data.get(name)
+        try:
+            total = int(count)
+        except TypeError, ValueError:
+            total = 0
+        choices = []
+        for index in range(total):
+            raw = data.get(f"{name}__choice__{index}")
+            if raw and raw.strip():
+                choices.append(raw.strip())
+        return choices
+
+    def value_omitted_from_data(self, data, files, name):
+        return name not in data and f"{name}__count" not in data
+
+    @property
+    def media(self):
+        return forms.Media(
+            css={"all": ("events/css/choice_list_widget.css",)},
+            js=("events/js/choice_list_widget.js",),
+        )
+
+
 class EventAnswersWidget(forms.Widget):
     """Edit one participant's answers as fields instead of raw JSON.
 

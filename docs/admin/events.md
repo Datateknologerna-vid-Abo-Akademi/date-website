@@ -33,7 +33,7 @@ Create public event pages, manage registration windows, collect attendee data, a
 
 ## Customize the Signup Form
 Each event can have dynamic questions managed inline:
-1. Scroll to the **Anmälningsfält** table (Event registration form inline).
+1. Scroll to **Anmälningsfält**. In Unfold, click a question's name or focus it and press Enter or Space to expand it. In stock admin, questions are displayed in a table.
 2. Click **Add another Event registration form** for each question.
 3. Fields:
    - **#** – ordering token. Values jump by 10 automatically so you can drag to reorder.
@@ -41,7 +41,7 @@ Each event can have dynamic questions managed inline:
    - **Typ** – `Text`, `Multiple choice`, or `Kryssryta`.
    - **Krävd** – mark required answers.
    - **Öppen info** – include responses in the public attendee list.
-   - **Alternativ** - comma-separated choices for multiple-choice fields. Empty or duplicate options are rejected, and surrounding spaces are removed when saving. This field is only editable when **Typ** is `Multiple choice`; it enables/disables automatically as you change **Typ**, including on rows you just added with "Add another". If it stays greyed out after picking `Multiple choice`, that is a bug, not expected behavior.
+   - **Alternativ** - the choices for a multiple-choice field, one input per option with **+ Lägg till alternativ** to add a row and `×` to remove one. An option cannot contain a comma. All options together, including the separators, must fit in 255 characters. Leave unused rows blank, and enter each option only once. Surrounding spaces are removed when saving. The row is hidden unless **Typ** is `Multiple choice`, and appears as soon as you change the select, including on rows you just added with "Add another".
    - **Göm för avec** – hide this field from partner signups.
 4. Save the event to persist form fields.
 

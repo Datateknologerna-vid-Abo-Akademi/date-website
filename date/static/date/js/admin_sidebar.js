@@ -18,6 +18,67 @@ document.addEventListener('htmx:afterSettle', function (event) {
     });
 });
 
+// Unfold's collapsible inline blocks start collapsed, including a row added with
+// "Add another", so a new block would look like nothing happened. Open the new
+// block once Alpine has attached its data, and give any hidden select2 widget a
+// width again, since it measured zero while the block was closed.
+(function () {
+    const hasOwn = (object, key) => Object.prototype.hasOwnProperty.call(object, key);
+
+    function alpineData(element) {
+        // Alpine.$data can return an empty proxy for a freshly cloned row; the
+        // internal stack still holds the component that owns openRow.
+        const candidates = [];
+        if (window.Alpine && typeof window.Alpine.$data === 'function') {
+            try {
+                candidates.push(window.Alpine.$data(element));
+            } catch {}
+        }
+        if (element._x_dataStack) {
+            candidates.push(...element._x_dataStack);
+        }
+        return candidates.find((data) => data && typeof data === 'object' && hasOwn(data, 'openRow')) || null;
+    }
+
+    function refreshSelectWidths(root) {
+        root.querySelectorAll('.select2-container').forEach(function (container) {
+            if (container.getBoundingClientRect().width < 40) {
+                container.style.width = '100%';
+            }
+        });
+    }
+
+    function openBlock(group, attempt = 0) {
+        const data = alpineData(group);
+        if (data) {
+            data.openRow = true;
+            window.setTimeout(() => refreshSelectWidths(group), 50);
+            return;
+        }
+        if (attempt < 10) {
+            window.setTimeout(() => openBlock(group, attempt + 1), 50);
+        }
+    }
+
+    // Pagination emits formset:added even for existing rows. Only a new
+    // template clone emits formsetGroup:added.
+    document.addEventListener('formsetGroup:added', function (event) {
+        const group = event.detail?.row;
+        if (group?.matches('.form-group[x-data*="openRow"]')) openBlock(group);
+    });
+
+    // A native button dispatches click for both pointer and keyboard activation.
+    document.addEventListener('click', function (event) {
+        const toggle = event.target.closest('.inline-disclosure-toggle');
+        if (!toggle) return;
+        window.setTimeout(function () {
+            if (toggle.getAttribute('aria-expanded') === 'true') {
+                refreshSelectWidths(toggle.closest('.form-group'));
+            }
+        }, 50);
+    });
+})();
+
 // Keep Unfold's filter sheet open when filter actions reload the changelist.
 (function () {
     const KEY = 'admin_reopen_filter_sheet';

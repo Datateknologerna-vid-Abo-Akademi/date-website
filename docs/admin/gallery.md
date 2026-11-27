@@ -14,6 +14,7 @@ Manage photo albums shown under `/archive/pictures/`.
 5. Save. With direct uploads enabled, images are compressed client-side before upload; otherwise the server compresses them to 1600px width for performance.
 
 ## Notes
+- On narrow screens, each photo's controls are stacked. **Favorite** is below the file picker.
 - Public URLs remain `/archive/pictures/<year>/...`.
 - The **Städa upp media** admin link still points to the shared archive cleanup route.
 - iPhone photos (HEIC/HEIF) are supported and get converted to JPEG like any other upload.

@@ -1,0 +1,70 @@
+.stock-inline-field-label {
+    display: none;
+}
+
+@media (max-width: 767.98px) {
+    .stock-inline-responsive .tabular .wrapper {
+        overflow: visible;
+    }
+
+    .stock-inline-responsive .tabular table,
+    .stock-inline-responsive .tabular tbody,
+    .stock-inline-responsive .tabular tr,
+    .stock-inline-responsive .tabular td {
+        display: block;
+        min-width: 0;
+    }
+
+    .stock-inline-responsive .tabular thead {
+        display: none;
+    }
+
+    .stock-inline-responsive .tabular tr.form-row {
+        padding: 0.4rem 0;
+        border-bottom: 1px solid var(--hairline-color);
+    }
+
+    .stock-inline-responsive .tabular td {
+        width: auto;
+        border-bottom: none;
+        overflow-wrap: anywhere;
+    }
+
+    .stock-inline-responsive .tabular tr.empty-form,
+    .stock-inline-responsive .tabular td.hidden,
+    .stock-inline-responsive .tabular tr:not(.has_original) > td.original {
+        display: none;
+    }
+
+    .stock-inline-responsive .tabular td.original p {
+        position: static;
+        margin: 0;
+        white-space: normal;
+    }
+
+    .stock-inline-responsive .tabular td > .stock-inline-field-label {
+        display: block;
+        width: auto;
+        float: none;
+        margin: 0 0 0.25rem;
+        padding: 0;
+        font-weight: 600;
+    }
+
+    .stock-inline-responsive .tabular td > * {
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+
+    .stock-inline-responsive .tabular td .related-widget-wrapper {
+        flex-wrap: wrap;
+    }
+
+    #eventattendees_set-group.stock-inline-responsive .event-answer-row {
+        display: grid;
+    }
+
+    #eventattendees_set-group.stock-inline-responsive .event-answer-label {
+        min-width: 0;
+    }
+}

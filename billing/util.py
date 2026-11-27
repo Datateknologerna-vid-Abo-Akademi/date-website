@@ -37,6 +37,7 @@ def get_selection_price(event, pricing, price_selector, preferences):
         except ValueError:
             return
     try:
+        # Prices are positional, including slots for blank legacy options.
         options = EventRegistrationForm.objects.get(event=event, name=price_selector).choice_list.split(",")
     except EventRegistrationForm.DoesNotExist:
         try:

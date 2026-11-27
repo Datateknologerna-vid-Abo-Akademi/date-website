@@ -166,6 +166,9 @@ class FixedLanguageAdminSite(AdminSiteOTPRequiredMixin, _AdminSiteBase):  # type
     # template that extends the dashboard and adds the same fallback.
     index_template = 'admin/admin_index.html'
 
+    def each_context(self, request):
+        return {**super().each_context(request), 'stock_admin': not settings.USE_UNFOLD}
+
     def autocomplete_view(self, request):
         return ReferringObjectAutocompleteJsonView.as_view(admin_site=self)(request)
 

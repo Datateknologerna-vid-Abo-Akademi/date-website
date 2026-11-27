@@ -8,7 +8,7 @@ Manage yearly functionary roles and assignments.
 2. Define each position title.
 3. Mark `Styrelse` for board seats so the public listing groups them separately.
 4. Mark `Tutor` for tutor roles (including exchange tutors) so they get their own **Tutorer** section between the board and other functionaries. If both boxes are ticked, the role is listed under the board.
-5. Use the inline assignment table on the same page to add or review people who have held that role.
+5. Use the inline assignments on the same page to add or review people who have held that role. On narrow screens, the member, name, and year fields are stacked.
 
 ## Functionary Assignments
 1. Open **Members › Functionary Roles**, then use **All assignments** when you need the full assignment audit list.

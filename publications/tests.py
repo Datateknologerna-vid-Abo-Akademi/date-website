@@ -137,6 +137,9 @@ class PublicationCollectionAdminTests(TestCase):
         self.assertContains(response, "Access Control")
         self.assertContains(response, "Annual Magazine")
         self.assertContains(response, "id_publications-0-title")
+        # A blank publication row renders today's date, so an untouched row
+        # would count as changed and block saving the collection.
+        self.assertNotContains(response, "id_publications-1-title")
         self.assertRegex(
             response.content.decode(),
             r'<input\b(?=[^>]*\bid="id_publications-0-file")(?=[^>]*\bdisabled\b)[^>]*>',

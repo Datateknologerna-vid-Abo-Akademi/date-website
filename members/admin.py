@@ -14,7 +14,7 @@ from django_otp.plugins.otp_static.models import StaticDevice
 from django_otp.plugins.otp_totp.models import TOTPDevice
 from django_otp_webauthn.models import WebAuthnCredential
 
-from core.admin_base import ModelAdmin, TabularInline
+from core.admin_base import CompactTabularInline, ModelAdmin
 from members.forms import AdminMemberUpdateForm, MemberCreationForm, SubscriptionPaymentForm
 from members.models import Member, MembershipType, Subscription, SubscriptionPayment
 
@@ -38,7 +38,7 @@ class SubscriptionAdmin(ModelAdmin):
     ordering = ('name',)
 
 
-class TOTPDeviceInline(TabularInline):
+class TOTPDeviceInline(CompactTabularInline):
     model = TOTPDevice
     extra = 0
     max_num = 0
@@ -49,7 +49,7 @@ class TOTPDeviceInline(TabularInline):
     verbose_name_plural = "2FA devices"
 
 
-class WebAuthnCredentialInline(TabularInline):
+class WebAuthnCredentialInline(CompactTabularInline):
     model = WebAuthnCredential
     extra = 0
     max_num = 0
@@ -61,7 +61,7 @@ class WebAuthnCredentialInline(TabularInline):
     verbose_name_plural = "Passkeys"
 
 
-class StaticDeviceInline(TabularInline):
+class StaticDeviceInline(CompactTabularInline):
     model = StaticDevice
     extra = 0
     max_num = 0

@@ -23,5 +23,8 @@ The app intentionally renders the shared `archive/...` templates so the public g
 
 When `ARCHIVE_ACCESS_REQUIRES_ELIGIBILITY` is enabled for SF, the shared `Member.has_archive_access()` check protects the gallery year index, yearly album index, and album detail. Both SF membership types require the individual `archive_access_eligible` flag; superusers remain allowed. Associations without the setting retain the historical permission-profile behavior.
 
+## Admin
+On narrow screens, album photo inlines stack labeled fields so upload, favorite, and delete controls stay in view. Unfold uses a dedicated inline template for this layout and retains the table on desktop.
+
 ## Admin Permissions
 Legacy picture-collection permissions grant the same module and inline photo access in classic admin and Unfold during the permission migration period.

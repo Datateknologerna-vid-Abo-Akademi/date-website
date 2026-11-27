@@ -16,7 +16,7 @@
 
 ## Utility Functions
 - `generate_reference_number()` implements the 7-3-1 checksum common in Finnish reference numbers.
-- `get_selection_price()` reads `EventRegistrationForm.choice_list` to map answers to prices; mismatches raise `ValueError`.
+- `get_selection_price()` reads `EventRegistrationForm.get_choices()` to map answers to prices; mismatches raise `ValueError`.
 - Email templates live in `templates/billing/`. Context merges `BILLING_CONTEXT` and `CONTENT_VARIABLES` from settings.
 
 ## Admin

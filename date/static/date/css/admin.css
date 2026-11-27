@@ -192,3 +192,100 @@
     background: rgb(var(--color-base-800));
     color: rgb(var(--color-primary-300));
 }
+
+/* Keep disclosure, drag, links and delete as separate controls. */
+.inline-disclosure-heading .inline-disclosure-title {
+    flex: 1;
+    min-width: 0;
+}
+
+.inline-disclosure-toggle {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    min-width: 0;
+    padding: 0.25rem;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    text-align: start;
+    overflow-wrap: anywhere;
+}
+
+.inline-disclosure-toggle:hover {
+    background: var(--color-base-100);
+}
+
+.dark .inline-disclosure-toggle:hover {
+    background: var(--color-base-800);
+}
+
+.inline-disclosure-toggle:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+}
+
+.inline-disclosure-toggle::before {
+    content: '';
+    flex: none;
+    width: 0.45rem;
+    height: 0.45rem;
+    margin-inline-end: 0.65rem;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: rotate(-45deg);
+}
+
+.inline-disclosure-toggle[aria-expanded='true']::before {
+    transform: rotate(45deg);
+}
+
+/* CKEditor toolbar in the admin.
+ *
+ * The content field row is a flex item, so its minimum width followed the
+ * toolbar's single-row width and pushed the page wider than the screen on a
+ * 1080p display. Let the editor shrink and let the toolbar wrap onto a second
+ * line instead of running past the right edge. */
+.field-line .ck.ck-toolbar.ck-toolbar > .ck-toolbar__items {
+    flex-wrap: wrap;
+}
+
+.field-line .ck.ck-editor,
+.field-line .ck-editor-container,
+.field-line > .grow {
+    min-width: 0;
+}
+
+/* Stack the Unfold change-form title and actions on narrow screens. */
+@media (max-width: 767.98px) {
+    .change-form:not(.popup) :has(> #header-inner) {
+        height: auto;
+        min-height: 4rem;
+    }
+
+    .change-form:not(.popup) #header-inner > div {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+    }
+
+    .change-form:not(.popup) #header-inner .admin-header-actions {
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        margin-inline-start: 0;
+    }
+
+    /* The built-in overflow menu must start below the now variable-height row. */
+    .change-form:not(.popup) #header-inner .admin-header-actions > div > ul {
+        top: calc(100% + 0.25rem);
+    }
+
+    /* Let these Unfold fieldsets fit the form instead of their widest widget. */
+    :is(#event_form, #publicationcollection_form, #pdffile_form) fieldset {
+        min-inline-size: 0;
+    }
+
+    /* Shrink the filename display before the adjacent file actions are clipped. */
+    :is(#event_form, #publicationcollection_form, #pdffile_form) .field-line label:has(> input.text-ellipsis[disabled]) {
+        min-inline-size: 0;
+    }
+}
