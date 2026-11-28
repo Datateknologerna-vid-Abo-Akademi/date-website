@@ -504,7 +504,7 @@ msgstr "Gissningar"
 
 #: core/admin_ui.py:188
 msgid "CTF Post-mortems"
-msgstr "CTF-efteranalyser"
+msgstr "CTF-postmortems"
 
 #: core/admin_ui.py:99
 msgid "Booking"
@@ -532,68 +532,64 @@ msgstr "Utrymmen"
 
 #: ctf/admin.py:56 templates/common/ctf/post_mortem_index.html:13
 msgid "Post-mortems"
-msgstr "Efteranalyser"
+msgstr "Post-mortems"
 
 #: ctf/models.py:74
 msgid "Översikt"
 msgstr "Översikt"
 
-#: ctf/models.py:80
+#: ctf/models.py:83
 msgid ""
-"Lämna tomt för att dölja efteranalysen. Välj en framtida tid för schemalagd "
+"Lämna tomt för att dölja post-mortem. Välj en framtida tid för schemalagd "
 "publicering."
 msgstr ""
-"Lämna tomt för att dölja efteranalysen. Välj en framtida tid för schemalagd "
+"Lämna tomt för att dölja post-mortem. Välj en framtida tid för schemalagd "
 "publicering."
 
 #: ctf/models.py:86
 msgid "post-mortem"
-msgstr "efteranalys"
+msgstr "post-mortem"
 
 #: ctf/models.py:87
 msgid "post-mortems"
-msgstr "efteranalyser"
+msgstr "post-mortems"
 
-#: ctf/models.py:112 templates/common/ctf/post_mortem_detail.html:46
+#: ctf/models.py:112 templates/common/ctf/post_mortem_detail.html:39
 msgid "Solution"
 msgstr "Lösning"
 
 #: templates/common/ctf/detail.html:28
 #: templates/common/ctf/post_mortem_detail.html:13
 msgid "Post-mortem"
-msgstr "Efteranalys"
+msgstr "Post-mortem"
 
 #: templates/common/ctf/post_mortem_detail.html:15
-msgid "Data"
-msgstr "Data"
-
-#: templates/common/ctf/post_mortem_detail.html:16
 msgid "Total guesses"
 msgstr "Gissningar totalt"
 
-#: templates/common/ctf/post_mortem_detail.html:19
+#: templates/common/ctf/post_mortem_detail.html:28
 msgid "Number of inputs"
 msgstr "Antal inmatningar"
 
-#: templates/common/ctf/post_mortem_detail.html:22
-msgid "Full logs"
-msgstr "Fullständiga loggar"
-
-#: templates/common/ctf/post_mortem_detail.html:31
+#: templates/common/ctf/post_mortem_detail.html:30
 msgid "Solved by"
 msgstr "Löst av"
 
-#: templates/common/ctf/post_mortem_detail.html:34
+#: templates/common/ctf/post_mortem_detail.html:33
 msgid "Solve time"
 msgstr "Lösningstid"
 
-#: templates/common/ctf/post_mortem_detail.html:41
+#: templates/common/ctf/post_mortem_detail.html:24
 msgid "Unsolved"
 msgstr "Olöst"
 
+#: templates/common/ctf/post_mortem_detail.html:46
+msgid "No solution has been written for this flag yet."
+msgstr "Ingen lösning har skrivits för den här flaggan ännu."
+
 #: templates/common/ctf/post_mortem_index.html:20
 msgid "No post-mortems have been published yet."
-msgstr "Inga efteranalyser har publicerats ännu."
+msgstr "Inga post-mortems har publicerats ännu."
 
 #: events/forms.py:81 events/forms.py:174
 msgid "Leave blank to keep the event hidden."

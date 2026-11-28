@@ -62,6 +62,135 @@
     margin: 1rem 0;
 }
 
+/* Post-mortem challenge cards (templates/common/ctf/post_mortem_detail.html).
+   Each flag gets its own block, so a post-mortem reads as a list of challenges
+   instead of one run of prose, and the solution collapses behind its flag.
+   The card surface is mixed from the inherited text colour on purpose:
+   .content is a dark red card on some associations and a white one on others,
+   and a fixed fill would leave the text unreadable on one of them. */
+
+.ctf-overview {
+    margin-bottom: 1.5rem;
+}
+
+.ctf-content > .ctf-total {
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+}
+
+.ctf-challenge-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    margin: 0 0 2rem;
+    padding: 0;
+    list-style: none;
+}
+
+.ctf-challenge {
+    padding: 1rem 1.25rem;
+    border: 1px solid color-mix(in srgb, currentColor 22%, transparent);
+    border-radius: var(--defaultRadius);
+    background-color: color-mix(in srgb, currentColor 6%, transparent);
+}
+
+.ctf-challenge-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.35rem 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.ctf-challenge-title {
+    margin: 0;
+    font-size: 1.2rem;
+    line-height: 1.25;
+}
+
+.ctf-challenge-status {
+    padding: 0.1rem 0.5rem;
+    border: 1px solid color-mix(in srgb, currentColor 45%, transparent);
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+}
+
+.ctf-challenge-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 1.25rem;
+    margin: 0 0 0.75rem;
+    font-size: 0.9rem;
+}
+
+/* Native disclosure: no JavaScript, and the browser keeps the open/closed
+   state, keyboard handling and screen-reader semantics. */
+
+.ctf-solution {
+    margin-top: 0.75rem;
+    border-top: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+}
+
+.ctf-solution > summary {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.35rem 0.6rem;
+    padding: 0.7rem 0;
+    font-weight: 600;
+    cursor: pointer;
+    list-style: none;
+}
+
+.ctf-solution > summary::-webkit-details-marker {
+    display: none;
+}
+
+.ctf-solution > summary::after {
+    content: '';
+    width: 0.5rem;
+    height: 0.5rem;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: rotate(45deg);
+    transition: transform 0.2s ease;
+}
+
+.ctf-solution[open] > summary::after {
+    transform: rotate(-135deg);
+}
+
+.ctf-solution > summary:focus-visible {
+    outline: 2px solid var(--linkColorLight, currentColor);
+    outline-offset: 3px;
+}
+
+.ctf-flag-value {
+    justify-self: start;
+    padding: 0.15rem 0.45rem;
+    border: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+    border-radius: var(--defaultRadius);
+    background-color: color-mix(in srgb, currentColor 10%, transparent);
+    color: inherit;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.9rem;
+    font-weight: 400;
+    overflow-wrap: anywhere;
+}
+
+.ctf-solution-body > :last-child {
+    margin-bottom: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ctf-solution > summary::after {
+        transition: none;
+    }
+}
+
 /* Guess form */
 
 .ctf-form {

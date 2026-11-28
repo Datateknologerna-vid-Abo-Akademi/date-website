@@ -80,7 +80,7 @@ class PostMortem(models.Model):
         null=True,
         blank=True,
         default=None,
-        help_text=_('Lämna tomt för att dölja efteranalysen. Välj en framtida tid för schemalagd publicering.'),
+        help_text=_('Lämna tomt för att dölja post-mortem. Välj en framtida tid för schemalagd publicering.'),
     )
 
     objects = PostMortemQuerySet.as_manager()
