@@ -337,6 +337,49 @@ PROJECT_NAME=impuls python manage.py import_impuls_static_archive \
 
 The command matches pages and posts by slug. Existing rows are skipped unless `--update-existing` is passed. It writes `impuls/impuls-import-report.json` by default after a non-dry run.
 
+## GDPR Requests
+
+Two management commands support GDPR access and erasure requests, and the same logic is exposed to superusers through the member admin (`/admin/members/member/gdpr/`, see `docs/admin/members.md`). Both resolve a person by email address, case-insensitively, including people who only signed up for events without a member account.
+
+### `manage.py gdpr_export <email>`
+
+Exports the supported data for an email address from the current site database. Prefer the admin download. If using the CLI, write to a new file with `-o` (created with `0600` permissions). Do not print exports in shared terminals, pod or CI logs, or paste them into support tickets:
+
+```bash
+python manage.py gdpr_export user@example.com -o export.json
+```
+
+The export covers the member profile (including account metadata such as groups and last login), subscription payments, event signups with preferences and avec relationships, authored events/news, functionary roles, CTF solves and guesses, poll votes, billing invoices, and alumni token creation dates. Credentials (password hashes, 2FA secrets, raw alumni token values) are not included.
+
+### Handling and delivering an export
+
+1. Verify the requester's identity and select the correct association before exporting.
+2. Keep the JSON on approved encrypted storage with access limited to the people handling the request. Review it before release and redact third-party information as appropriate.
+3. Send it through an approved secure transfer that restricts access to the verified requester. Do not send the raw JSON as a normal email attachment or use a public link.
+4. After delivery, remove working copies, including browser downloads and any copies created during transfer. Retain only the request and delivery record required by the association's policy, not the payload.
+
+### `manage.py gdpr_delete <email>`
+
+Anonymizes or deletes personal data for an email address. Always preview first:
+
+```bash
+python manage.py gdpr_delete user@example.com --dry-run
+python manage.py gdpr_delete user@example.com
+```
+
+Erasure policy:
+
+- The member row is kept but anonymized (username becomes `anonymized_<id>`, email/names/contact fields cleared, account deactivated, password unusable, groups and superuser status removed). It is not deleted because authored content, poll votes, and subscription records reference it.
+- Event attendee rows are kept but anonymized (name, email, and preferences cleared), since billing invoices cascade from them and are accounting records.
+- Functionary names are anonymized; the role/year history is kept.
+- CTF guesses, 2FA devices (including passkeys), and alumni tokens are deleted.
+- Poll votes, authored content, and invoices are retained.
+
+### Data handled separately
+
+- Harassment reports and recipient settings are not queried or changed here. Reports are case records, not member records. Refer requests involving them to the board or designated case handler for a disclosure decision and any necessary third-party redaction. Follow the separate case process for deleting reports once the case is processed.
+- The alumni records and audit history held in Google Sheets are outside this tool. Handle them separately where applicable.
+
 ## Recommended Operator Checklist
 
 ### After splitting apps
