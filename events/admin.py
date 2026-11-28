@@ -148,14 +148,6 @@ class EventRegistrationFormClassicInline(EventRegistrationFormInlineMixin, Order
 
 
 class EventAttendeesForm(ModelForm):
-    # Declared so a bound answers field keeps the widget's dict when the page
-    # is re-rendered after a validation error; the model would build a plain
-    # JSONField, whose bound_data parses the dict as JSON text and raises.
-    preferences = EventAnswersField(
-        required=False,
-        label=EventAttendees._meta.get_field('preferences').verbose_name,
-    )
-
     # Set per request by EventAttendeesFormInline.get_formset so a child event
     # signup is edited with the child's questions, not the parent's.
     default_questions = ()
@@ -164,6 +156,8 @@ class EventAttendeesForm(ModelForm):
     class Meta:
         model = EventAttendees
         fields = ['event', 'attendee_nr', 'user', 'email', 'preferences', 'anonymous', 'avec_for', 'original_event']
+        # Keep the model field's default and hidden initial for change detection.
+        field_classes = {'preferences': EventAnswersField}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
