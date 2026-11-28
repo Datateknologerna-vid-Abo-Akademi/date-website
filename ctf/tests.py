@@ -8,7 +8,8 @@ from django.db import connection
 from django.db.migrations.loader import MigrationLoader
 from django.test import RequestFactory, TestCase, override_settings
 from django.urls import reverse
-from django.utils import timezone
+from django.utils import timezone, translation
+from django.utils.translation import gettext
 from django_ckeditor_5.widgets import CKEditor5Widget
 
 from ctf.admin import FlagInline
@@ -424,6 +425,24 @@ class PostMortemContentTests(TestCase):
 
         self.assertEqual([challenge['flag'] for challenge in response.context['challenges']], [zeta, alpha])
 
+    def test_each_challenge_collapses_its_solution_behind_its_flag(self):
+        first = _make_flag(self.ctf, 'First', 'first', solver=self.solver, solution='First walkthrough.')
+        second = _make_flag(self.ctf, 'Second', 'second', solution='Second walkthrough.')
+
+        response = self.client.get(self.url)
+
+        self.assertContains(response, '<details class="ctf-solution">', count=2)
+        for flag in (first, second):
+            self.assertContains(response, f'<code class="ctf-flag-value">{flag.flag}</code>')
+
+    def test_challenge_without_a_solution_renders_a_placeholder(self):
+        _make_flag(self.ctf, 'No writeup', 'no-writeup')
+        self.client.cookies[settings.LANGUAGE_COOKIE_NAME] = 'en'
+
+        response = self.client.get(self.url)
+
+        self.assertContains(response, 'No solution has been written for this flag yet.')
+
     def test_other_members_wrong_guess_is_not_exposed(self):
         flag = _make_flag(self.ctf, 'Broken cipher', 'broken-cipher', solver=self.solver)
         other = _make_member('wrongguessr')
@@ -451,6 +470,28 @@ class PostMortemContentTests(TestCase):
         self.assertEqual(Guess.objects.filter(ctf=self.ctf).count(), 2)
         self.assertEqual(response.context['total_guesses'], sum(challenge['inputs'] for challenge in challenges))
         self.assertEqual(response.context['total_guesses'], 1)
+
+
+class PostMortemWordingTests(TestCase):
+    """The Swedish UI uses the English term, not "efteranalys"."""
+
+    def test_swedish_catalog_keeps_the_post_mortem_term(self):
+        with translation.override('sv'):
+            self.assertEqual(gettext('post-mortem'), 'post-mortem')
+            self.assertEqual(gettext('post-mortems'), 'post-mortems')
+            self.assertEqual(gettext('Post-mortem'), 'Post-mortem')
+            self.assertEqual(gettext('Post-mortems'), 'Post-mortems')
+            self.assertEqual(gettext('CTF Post-mortems'), 'CTF-postmortems')
+            self.assertEqual(
+                gettext('No post-mortems have been published yet.'),
+                'Inga post-mortems har publicerats ännu.',
+            )
+
+    def test_post_mortem_help_text_does_not_say_efteranalys(self):
+        field = PostMortem._meta.get_field('published_time')
+
+        with translation.override('sv'):
+            self.assertNotIn('efteranalys', str(field.help_text).lower())
 
 
 class PostMortemAdminAccessTests(TestCase):

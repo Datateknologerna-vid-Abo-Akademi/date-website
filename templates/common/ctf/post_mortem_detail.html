@@ -11,42 +11,45 @@
     <div class="ctf-page">
       <div class="content ctf-content">
         <h2 class="ctf-title ctf-centered">{{ ctf.title }} {% trans "Post-mortem" %}</h2>
-        {% if post_mortem.overview %}<div class="ctf-clue">{{ post_mortem.overview | safe }}</div>{% endif %}
-        <h4>{% trans "Data" %}</h4>
-        <p>{% trans "Total guesses" %}: {{ total_guesses }}</p>
-        <ul class="list-unstyled ctf-flags">
+        {% if post_mortem.overview %}<div class="ctf-clue ctf-overview">{{ post_mortem.overview | safe }}</div>{% endif %}
+        <p class="ctf-total">{% trans "Total guesses" %}: {{ total_guesses }}</p>
+        <ol class="ctf-challenge-list">
           {% for challenge in challenges %}
-            <li>FLAG: {{ challenge.flag.title }} - {% trans "Number of inputs" %}: {{ challenge.inputs }}</li>
-          {% endfor %}
-        </ul>
-        <h4>{% trans "Full logs" %}</h4>
-        {% for challenge in challenges %}
-          <div class="m-1">
-            <h5>{{ challenge.flag.title }}</h5>
-            {% if challenge.flag.clues %}<div class="ctf-clue">{{ challenge.flag.clues | safe }}</div>{% endif %}
-            {% if challenge.flag.solver %}
-              <p>
-                <span class="valid">[SOLVED]</span>
-                <br>
-                {% trans "Solved by" %}: {{ challenge.flag.solver.username }}
-                {% if challenge.flag.solved_date %}
-                  <br>
-                  {% trans "Solve time" %}: {{ challenge.flag.solved_date|timeuntil:ctf.start_date }}
+            <li class="ctf-challenge">
+              <div class="ctf-challenge-header">
+                <h3 class="ctf-challenge-title">{{ challenge.flag.title }}</h3>
+                {% if challenge.flag.solver %}
+                  <span class="ctf-challenge-status valid">[SOLVED]</span>
+                {% else %}
+                  <span class="ctf-challenge-status">{% trans "Unsolved" %}</span>
                 {% endif %}
-                <br>
-                {% trans "Flag" %}: {{ challenge.flag.flag }}
+              </div>
+              <p class="ctf-challenge-meta">
+                <span>{% trans "Number of inputs" %}: {{ challenge.inputs }}</span>
+                {% if challenge.flag.solver %}
+                  <span>{% trans "Solved by" %}: {{ challenge.flag.solver.username }}</span>
+                {% endif %}
+                {% if challenge.flag.solved_date %}
+                  <span>{% trans "Solve time" %}: {{ challenge.flag.solved_date|timeuntil:ctf.start_date }}</span>
+                {% endif %}
               </p>
-            {% else %}
-              <p>
-                {% trans "Unsolved" %}
-                <br>
-                {% trans "Flag" %}: {{ challenge.flag.flag }}
-              </p>
-            {% endif %}
-            <h6>{% trans "Solution" %}</h6>
-            <div class="ctf-clue">{{ challenge.flag.solution | safe }}</div>
-          </div>
-        {% endfor %}
+              {% if challenge.flag.clues %}<div class="ctf-clue">{{ challenge.flag.clues | safe }}</div>{% endif %}
+              <details class="ctf-solution">
+                <summary>
+                  <span class="ctf-solution-label">{% trans "Solution" %}</span>
+                  <code class="ctf-flag-value">{{ challenge.flag.flag }}</code>
+                </summary>
+                <div class="ctf-solution-body">
+                  {% if challenge.flag.solution %}
+                    <div class="ctf-clue">{{ challenge.flag.solution | safe }}</div>
+                  {% else %}
+                    <p class="ctf-message">{% trans "No solution has been written for this flag yet." %}</p>
+                  {% endif %}
+                </div>
+              </details>
+            </li>
+          {% endfor %}
+        </ol>
         <p class="ctf-back ctf-centered">
           <a href="{% url 'ctf:post_mortem_index' %}"
              aria-label="Tillbaka till post-mortems">

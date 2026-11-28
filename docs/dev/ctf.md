@@ -14,6 +14,7 @@
 - `CtfAdmin` follows the `events` pattern: a language-tabbed change form plus a `translation_status` coverage column in the changelist (hidden when `ENABLE_LANGUAGE_FEATURES=False`).
 - Rows created before the translated columns existed are copied into the Swedish columns by `ctf/migrations/0006_backfill_ctf_default_translations.py`. Without that backfill the public pages render an empty title and body, because the modeltranslation descriptor only reads the `*_<language>` columns.
 - Public pages read the active language and fall back to Swedish when a translation is missing.
+- The post-mortem wording stays the English term in Swedish: the Swedish catalog reads `Post-mortem` / `Post-mortems` (admin section: `CTF-postmortems`), not `Efteranalys`, and the model help text says `post-mortem` for the same reason. `PostMortemWordingTests` pins the catalog and the help text.
 
 ## Views & Flow
 - `IndexView` (ListView) returns the five newest ctfs.
@@ -45,7 +46,7 @@
 - URLs: `ctf:post_mortem_index` at `/ctf/post-mortem` and `ctf:post_mortem_detail` at `/ctf/post-mortem/<ctf_slug>`. Both omit the trailing slash, matching `ctf:detail` and `ctf:flag_detail`, and both sit behind `login_required`.
 - Route order is load-bearing: `post-mortem` is itself a valid `<slug:slug>`, so the literal patterns must stay above the `<slug:...>` patterns in `ctf/urls.py` or they can never match.
 - Accepted consequence: a CTF whose slug is literally `post-mortem` is unreachable at `ctf:detail`. `PostMortemVisibilityTests.test_literal_post_mortem_route_wins_over_post_mortem_slug` documents this.
-- The page shows authored overview prose, a data block (total guesses plus per-challenge input counts), and one block per challenge with the title, clue, optional `[SOLVED]` marker, solver username, solve duration, flag string and editor-written solution. Wrong-guess text and other members’ usernames are never exposed.
+- The page shows the authored overview, the total guess count, and one card per challenge. A card carries the title, the `[SOLVED]` / `Unsolved` marker, the input count, the solver and the solve duration, then the clue, and finally a native `<details>` disclosure: its `<summary>` shows the challenge flag and its body holds the editor-written solution. Solutions start collapsed, so a long post-mortem reads as a list of challenges instead of one run of prose; a challenge with no solution prose renders a placeholder inside the disclosure. Wrong-guess text and other members’ usernames are never exposed.
 
 ## Presentation
 - The five CTF templates in `templates/common/ctf/` share `static/common/ctf/css/style.css` and the `.ctf-*` classes. Only the `date` settings install the `ctf` app today, but the templates sit in the shared tree, so the layout styles through association CSS variables instead of literal colours.
@@ -55,7 +56,7 @@
 - Clue images arrive as `<figure class="image"><img ...></figure>`. `.ctf-content figure img` keeps them inside the card and raises the height cap to about 60vh for CTF pages only; the global `.content img` 35vh cap stays as it is.
 - `detail` renders the title and description before the flags list. The list still follows `ctf_is_open()`; an ended CTF (`ctf_ended()`) only adds a notice above it, and the published post-mortem link sits between the description and that notice.
 - `flag_detail` covers the states the view can pass: a missing flag (unknown slug) renders a message instead of an empty card, and a CTF that has not opened yet shows the flag title plus a notice instead of clues and form. What is visible outside that state stays keyed on `ctf_is_open()` for every other state, including an ended CTF: `views.flag` still records guesses after `end_date`, so clues, the solved status and the guess form remain available and the ended state only adds a notice.
-- The post-mortem pages render the same clue and solution fields, so they use the same wrappers: the overview, each challenge clue and each solution sit in `.ctf-clue` inside `.ctf-content`.
+- The post-mortem pages render the same clue and solution fields, so they use the same wrappers: the overview, each challenge clue and each solution sit in `.ctf-clue` inside `.ctf-content`. The per-challenge cards (`templates/common/ctf/post_mortem_detail.html`) are styled by the `.ctf-challenge-*` and `.ctf-solution` rules in `static/common/ctf/css/style.css`, whose fill and borders are mixed from `currentColor` instead of a palette value: `.content` is a dark red box on some associations and a white one on others, so a fixed colour would leave the text unreadable on one of them.
 
 ## Extending
 - Add rate limiting to `flag` view to prevent brute force.
