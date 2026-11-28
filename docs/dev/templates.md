@@ -134,7 +134,7 @@ Shared icons so far: `tiktok`, `linktree` (Font Awesome Free 7.3.1, CC BY 4.0). 
 
 ## Social Preview Tags
 
-A link shared to Facebook, WhatsApp, LinkedIn or X is previewed from the Open Graph and Twitter Card tags in the page head. They come from `{% block og_meta %}` in `templates/common/core/base.html`, so every association and every page gets them without a template change; the default is the association name, `og:type` `website` and a `summary` card.
+A link shared to Facebook, WhatsApp, LinkedIn or X is previewed from the Open Graph and Twitter Card tags in the page head. They come from the `{% raw %}{% block og_meta %}{% endraw %}` in `templates/common/core/base.html`, so every association and every page gets them without a template change; the default is the association name, `og:type` `website` and a `summary` card.
 
 A public detail page that knows its own title, teaser and image overrides the block. `events/arsfest_base.html`, `events/detail.html`, `events/baal_detail.html`, `events/kk100_detail.html`, `events/tomtejakt.html`, `events/wappmiddag.html`, `news/article.html`, `staticpages/staticpage.html` and `publications/viewer.html` do this. An association override of those paths inherits the tags, so do not copy the block into `templates/<association>/`. Pages behind a sign-in or a password (archive, exam bank, polls, CTF, lucia) keep the defaults on purpose.
 
