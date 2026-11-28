@@ -138,6 +138,8 @@ A link shared to Facebook, WhatsApp, LinkedIn or X is previewed from the Open Gr
 
 A public detail page that knows its own title, teaser and image overrides the block. `events/arsfest_base.html`, `events/detail.html`, `events/baal_detail.html`, `events/kk100_detail.html`, `events/tomtejakt.html`, `events/wappmiddag.html`, `news/article.html`, `staticpages/staticpage.html` and `publications/viewer.html` do this. An association override of those paths inherits the tags, so do not copy the block into `templates/<association>/`. Pages behind a sign-in or a password (archive, exam bank, polls, CTF, lucia) keep the defaults on purpose.
 
+An override emits the same shared part as the default: `og:site_name` with the association name, `og:type`, a canonical `og:url` built from the request path without the query string, and the Twitter card type. On top of that it carries the page's own `og:title`, `og:description` and, when the page has one, `og:image` with alt text. A page without an image keeps the `summary` card rather than advertising a broken image.
+
 The block relies on two filters in `date/templatetags/og_tags.py`:
 
 - `plaintext_truncate:<length>` strips the editor HTML out of a body field and cuts it to a description length; 160 characters is what the platforms show.

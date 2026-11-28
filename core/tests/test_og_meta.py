@@ -15,6 +15,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from date.templatetags.og_tags import absolute_uri, plaintext_truncate
+from events.models import Event
 from members.models import Member
 from news.models import Post
 from staticpages.models import StaticPage
@@ -84,7 +85,22 @@ class OgMetaRenderTests(TestCase):
         self.assertNotIn(f"http://testserver/{CDN_IMAGE}", html)
         self.assertIn('<meta property="og:title" content="Background page">', html)
         self.assertIn('<meta property="og:description" content="Visible content">', html)
+        self.assertIn('<meta property="og:image:alt" content="Background page">', html)
+        self.assertIn('<meta name="twitter:image:alt" content="Background page">', html)
         self.assertIn('<meta name="twitter:card" content="summary_large_image">', html)
+
+    def test_shared_tags_are_site_name_and_the_canonical_url(self):
+        StaticPage.objects.create(title="Canonical page", slug="og-canonical-page", content="<p>Body</p>")
+        response = self.client.get(
+            reverse("staticpages:page", args=["og-canonical-page"]),
+            {"utm_source": "newsletter", "fbclid": "abc"},
+        )
+
+        html = flatten(response.content.decode())
+        self.assertIn('<meta property="og:site_name" content="Datateknologerna">', html)
+        self.assertIn('<meta property="og:url" content="http://testserver/pages/og-canonical-page/">', html)
+        self.assertNotIn("utm_source", html)
+        self.assertNotIn("fbclid", html)
 
     def test_static_page_without_image_uses_the_summary_card(self):
         StaticPage.objects.create(title="Plain page", slug="og-plain-page", content="<p>Body</p>")
@@ -106,6 +122,31 @@ class OgMetaRenderTests(TestCase):
         html = flatten(response.content.decode())
         self.assertIn('content="http://testserver/media/pages/relative.jpg"', html)
 
+    @override_settings(USE_S3=True)
+    def test_event_page_carries_title_description_and_image(self):
+        author = Member.objects.create(username="og-event-author", password="test")
+        event = Event.objects.create(
+            title="Årsfest",
+            slug="og-arsfest",
+            author_id=author.id,
+            content="<p>Kvällens program.</p>",
+            image="events/background.jpg",
+        )
+        with patch(
+            "django.db.models.fields.files.FieldFile.url",
+            new_callable=PropertyMock,
+            return_value=CDN_IMAGE,
+        ):
+            response = self.client.get(reverse("events:detail", args=[event.slug]))
+
+        self.assertEqual(response.status_code, 200)
+        html = flatten(response.content.decode())
+        self.assertIn('<meta property="og:title" content="Årsfest">', html)
+        self.assertIn('<meta property="og:description" content="Kvällens program.">', html)
+        self.assertIn(f'<meta property="og:image" content="{CDN_IMAGE}">', html)
+        self.assertIn('<meta property="og:image:alt" content="Årsfest">', html)
+        self.assertIn('<meta name="twitter:card" content="summary_large_image">', html)
+
     def test_news_article_carries_its_own_title_and_description(self):
         member = Member.objects.create(username="og-author", password="test")
         post = Post.objects.create(
@@ -122,12 +163,18 @@ class OgMetaRenderTests(TestCase):
         self.assertIn('<meta property="og:title" content="Nyhet">', html)
         self.assertIn('<meta property="og:description" content="Ett meddelande som handlar om saker.">', html)
         self.assertIn('<meta name="twitter:title" content="Nyhet">', html)
+        self.assertIn('<meta property="og:site_name" content="Datateknologerna">', html)
+        self.assertNotIn("og:image", html)
 
     def test_page_without_an_og_meta_override_gets_the_association_default(self):
         response = self.client.get("/")
 
         self.assertEqual(response.status_code, 200)
-        self.assertIn('<meta property="og:title" content="Datateknologerna">', flatten(response.content.decode()))
+        html = flatten(response.content.decode())
+        self.assertIn('<meta property="og:title" content="Datateknologerna">', html)
+        self.assertIn('<meta property="og:site_name" content="Datateknologerna">', html)
+        self.assertIn('<meta property="og:url" content="http://testserver/">', html)
+        self.assertIn('<meta property="og:type" content="website">', html)
 
     def test_og_tags_are_inside_the_document_head(self):
         StaticPage.objects.create(title="Head page", slug="og-head-page", content="<p>Body</p>")

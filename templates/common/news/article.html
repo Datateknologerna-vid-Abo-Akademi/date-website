@@ -6,7 +6,8 @@
 {% block og_meta %}
   <meta property="og:title" content="{{ article.title }}">
   <meta property="og:type" content="article">
-  <meta property="og:url" content="{{ request.build_absolute_uri }}">
+  <meta property="og:site_name" content="{{ ASSOCIATION_NAME }}">
+  {% if request %}<meta property="og:url" content="{{ request.path|absolute_uri:request }}">{% endif %}
   {% if article.content %}
     <meta property="og:description"
           content="{{ article.content|plaintext_truncate:160 }}">

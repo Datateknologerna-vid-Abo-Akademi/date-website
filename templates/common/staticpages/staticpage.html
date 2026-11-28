@@ -6,25 +6,28 @@
 {% block og_meta %}
   <meta property="og:title" content="{{ page.title }}">
   <meta property="og:type" content="article">
-  <meta property="og:url" content="{{ request.build_absolute_uri }}">
+  <meta property="og:site_name" content="{{ ASSOCIATION_NAME }}">
+  {% if request %}<meta property="og:url" content="{{ request.path|absolute_uri:request }}">{% endif %}
   {% if page.content %}
     <meta property="og:description"
           content="{{ page.content|plaintext_truncate:160 }}">
   {% endif %}
-  {% if page.background_image_url %}
+  {% if request and page.background_image_url %}
     <meta property="og:image"
           content="{{ page.background_image_url|absolute_uri:request }}">
+    <meta property="og:image:alt" content="{{ page.title }}">
   {% endif %}
   <meta name="twitter:card"
-        content="{% if page.background_image_url %}summary_large_image{% else %}summary{% endif %}">
+        content="{% if request and page.background_image_url %}summary_large_image{% else %}summary{% endif %}">
   <meta name="twitter:title" content="{{ page.title }}">
   {% if page.content %}
     <meta name="twitter:description"
           content="{{ page.content|plaintext_truncate:160 }}">
   {% endif %}
-  {% if page.background_image_url %}
+  {% if request and page.background_image_url %}
     <meta name="twitter:image"
           content="{{ page.background_image_url|absolute_uri:request }}">
+    <meta name="twitter:image:alt" content="{{ page.title }}">
   {% endif %}
 {% endblock %}
 {% block extra_head %}
