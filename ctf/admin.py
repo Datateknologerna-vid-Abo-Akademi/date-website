@@ -32,6 +32,8 @@ class FlagInline(StackedInline):
     extra = 0
     exclude = ('solved_date',)
     autocomplete_fields = ('solver',)
+    # A CTF collects several flags; collapsed blocks show each flag title.
+    collapsible = True
 
 
 class CtfPublicationFilter(admin.SimpleListFilter):
@@ -168,3 +170,4 @@ class GuessAdmin(ModelAdmin):
     list_select_related = ('ctf', 'flag', 'user')
     ordering = ('-timestamp',)
     date_hierarchy = 'timestamp'
+    show_full_result_count = False

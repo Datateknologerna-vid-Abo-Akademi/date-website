@@ -33,7 +33,7 @@ Create public event pages, manage registration windows, collect attendee data, a
 
 ## Customize the Signup Form
 Each event can have dynamic questions managed inline:
-1. Scroll to the **Anmälningsfält** table (Event registration form inline).
+1. Scroll to **Anmälningsfält**. In Unfold, click a question's name or focus it and press Enter or Space to expand it. In stock admin, questions are displayed in a table.
 2. Click **Add another Event registration form** for each question.
 3. Fields:
    - **#** – ordering token. Values jump by 10 automatically so you can drag to reorder.
@@ -41,7 +41,7 @@ Each event can have dynamic questions managed inline:
    - **Typ** – `Text`, `Multiple choice`, or `Kryssryta`.
    - **Krävd** – mark required answers.
    - **Öppen info** – include responses in the public attendee list.
-   - **Alternativ** - comma-separated choices for multiple-choice fields. Empty or duplicate options are rejected, and surrounding spaces are removed when saving. This field is only editable when **Typ** is `Multiple choice`; it enables/disables automatically as you change **Typ**, including on rows you just added with "Add another". If it stays greyed out after picking `Multiple choice`, that is a bug, not expected behavior.
+   - **Alternativ** - the choices for a multiple-choice field, one input per option with **+ Lägg till alternativ** to add a row and `×` to remove one. An option cannot contain a comma. All options together, including the separators, must fit in 255 characters. Leave unused rows blank, and enter each option only once. Surrounding spaces are removed when saving. The row is hidden unless **Typ** is `Multiple choice`, and appears as soon as you change the select, including on rows you just added with "Add another".
    - **Göm för avec** – hide this field from partner signups.
 4. Save the event to persist form fields.
 
@@ -49,11 +49,13 @@ Each event can have dynamic questions managed inline:
 1. Use the **Deltagare** inline table to review or edit registrations. Columns include order number, name, email, anonymous flag, and timestamps. The **Svar** column shows one input per registration question, so answers are edited as normal values (text, choice or Ja/Nej) instead of JSON.
 2. If a registration question was deleted or renamed after people signed up, its old answer still appears in the row and is marked as no longer matching a field, so it is not lost.
 3. Each inline row has a change link to the participant's own admin page, which shows the same answer fields without the rest of the event.
-4. If **Avec** is active or the event has child instances, extra columns ("Avec till", "Ursprungligt evenemang") appear automatically.
+4. If **Avec** is active or the event has child instances, extra columns ("Avec till", "Ursprungligt evenemang") appear automatically. **Avec till** is a search box: type a name to find an attendee of the same event instead of scrolling a long dropdown.
 5. To export a pretty list, click **Deltagarlista** in the main event row; this opens a printable view of the answers collected for that event.
 6. Bulk deletion: select events in the changelist → choose **Delete all attendees for selected events**. You will get a confirmation screen before anything is removed.
 7. Question names must be unique within an event. Names used by standard signup fields, such as `email`, `user`, and avec fields, are rejected to prevent invalid registrations.
 8. On an Årsfest page the **Anmälda** tab follows the list itself: it appears while the event is recent enough to show the list and the event either takes sign-ups or already holds registrations. Registrations you enter by hand therefore keep the tab, even on an event whose sign-up is turned off.
+
+**Large events:** the Deltagare table shows 50 attendees per page in the Unfold admin. Use the page links below the table to move between pages; saving only changes the rows on the current page. **Avec till** and answers remain editable per row. Drag reordering only exchanges the existing order numbers on the current page, leaving attendees on other pages unchanged. Save newly added attendees before dragging rows. Save before changing pages; unsaved edits on the previous page are not retained. If someone signs up while you are reordering, saving asks you to reload instead of applying the drag; edit without dragging, or reload and drag again.
 
 ## Handling Waiting Lists / Child Events
 - The **Parent** dropdown lets you chain events together. Registrations for child events roll up to the parent so attendee numbers stay consistent.

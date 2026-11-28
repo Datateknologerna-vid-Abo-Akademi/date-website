@@ -16,8 +16,10 @@
   those fields, so the event forms carry no gate of their own and saving with
   the flag off leaves a ticked event's value alone.
 - `EventRegistrationForm` defines dynamic signup fields. `choice_number`
-  controls ordering (auto-incremented by tens). `choice_list` stores
-  comma-separated options for select/checkbox questions.
+  controls ordering (auto-incremented by tens). The admin edits multiple-choice
+  questions as one input per option; `get_choices()` reads the options for the
+  public form and billing. The form field rejects commas in individual options
+  and joins them for the existing 255-character `choice_list` text field.
 - `EventAttendees` persists registrations, including arbitrary `preferences`
   stored as `JSONField`. `attendee_nr` increments by 10 to keep admin-ordering
   drag handles stable. `Event.attendee_nr_counter` atomically reserves those
@@ -108,6 +110,35 @@
   numbers is renumbered from `Event.attendee_nr_counter` (and logged as a
   warning) instead of failing the save, so an admin saving during a signup
   rush cannot 500.
+- The attendee inline is the slowest admin page when an event has many
+  signups, so keep its related lookups bounded. `avec_for` uses
+  `EventScopedAutocompleteSelect`; the widget puts `event_id` in the
+  autocomplete URL and `EventAttendeesAdmin.get_search_results` filters on it,
+  so the field only offers attendees of the event being edited. A plain select
+  made every row query the attendee table and render every attendee as an
+  option (O(n²) on large events). The inline queryset also uses
+  `select_related('original_event')` for the readonly column on parent events.
+  If another FK is added to the inline, use autocomplete or a raw id field and
+  scope it the same way.
+- Unfold displays attendees and registration questions as collapsible blocks.
+  Each title is a disclosure button whose `aria-expanded` state follows Alpine.
+  Expanding it with a click, Enter or Space gives the answers or choices the
+  full width. Drag, change and delete controls remain separate. Stock admin keeps
+  both as tables, with the attendee change link in its own `Ändra` column.
+- The attendee inline uses Unfold's paginated inline formset (50 rows per page)
+  when `USE_UNFOLD` is on; stock admin still renders every row. Its scoped
+  template keeps the management form inside the pagination response target, so
+  navigating to a partial last page replaces both rows and form counts. Native
+  Unfold drag ranks are mapped back to that page's original attendee-number
+  slots, preserving gaps, legacy numbers, and every off-page attendee. When the
+  page changed in the database between the load and the save (a signup arrived,
+  a row was removed), the ranks no longer describe those slots, so a drag is
+  rejected with a reload prompt instead of being applied; an edit without a
+  drag still saves. The formset's
+  band shift and restore writes use `bulk_update`, so a reorder is a bounded
+  number of UPDATE statements instead of one per row. `EventAttendees.time_registered`
+  and `Event.event_date_start` have concurrent index migrations for the
+  changelist ordering and date hierarchy.
 - Custom admin action `delete_participants` prompts for confirmation before
   removing attendee rows.
 - `EventAnswersWidget` (`events/widgets.py`) renders `EventAttendees.preferences`
@@ -120,21 +151,12 @@
   resolves questions from the attendee's `original_event` or `event`.
 - Extra admin URL `/list/` renders `events/list.html` for an event, showing
   the registration answers.
-- `static/common/core/js/eventform.js` (loaded via `EventAdmin.Media`)
-  enables/disables the `choice_list` ("Alternativ") input based on the row's
-  `type` select, and toggles the whole registration-fields section based on
-  `sign_up`. The `type` → `choice_list` handler is delegated
-  (`$(document).on('change', 'select[id$="type"]', ...)`), not bound directly,
-  and there's also a `formset:added` listener that re-applies the
-  enabled/disabled state to a freshly inserted row. Both are required: rows
-  added via the inline's "Add another" control are cloned from the (hidden,
-  already-disabled-by-default) empty-form template, and under the Unfold admin
-  theme that clone uses plain DOM `cloneNode` rather than jQuery's
-  `clone(true)`, so it does not carry over directly-bound jQuery handlers. A
-  non-delegated handler works for pre-existing rows and for classic-admin "Add
-  another" (which clones with jQuery and does carry handlers over), but silently
-  leaves new rows' `choice_list` stuck disabled under Unfold. If you touch this
-  file, keep the delegation and the `formset:added` handler.
+- `static/common/events/js/admin_registration_inline.js` shows the choices only
+  for multiple-choice questions in both themes. A delegated `change` listener
+  handles type changes, and `formset:added` initializes newly cloned rows.
+  `choice_list_widget.js` uses the cloned count input's name to address new
+  options, since stock Django renumbers form elements but not custom data
+  attributes.
 - New or modified registration question names must be non-empty, unique per
   event, and must not collide with built-in signup or avec fields.
   Multiple-choice options are trimmed and must contain at least one unique
@@ -312,7 +334,7 @@
   `sign_up` set and its registration window is open, whether or not a tab points at
   the form, and hiding a tab never disables registration.
 - Any changes to registration fields must keep `Event.make_registration_form()`
-  in sync; inconsistent `choice_list` formatting breaks multiple-choice inputs.
+  in sync. Use `get_choices()` to parse the stored choices.
 - When altering attendee serialization, update both the model and the JS that
   renders real-time updates.
 - Parent/child events rely on consistent `parent` assignments; deleting a parent

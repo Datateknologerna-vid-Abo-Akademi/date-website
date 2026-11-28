@@ -12,7 +12,7 @@ from core.admin import (
     LanguageTabbedTranslationAdmin,
     TranslationCompletionAdminMixin,
 )
-from core.admin_base import ExtraChangeListLinksMixin, ModelAdmin, TabularInline
+from core.admin_base import CompactTabularInline, ExtraChangeListLinksMixin, ModelAdmin
 from core.admin_ui import AdminLink
 
 from .models import Functionary, FunctionaryRole
@@ -57,7 +57,7 @@ else:
     FunctionaryRoleTranslationAdminBase = ModelAdmin  # type: ignore[misc, assignment]
 
 
-class FunctionaryInline(LegacyFunctionaryPermissionMixin, TabularInline):
+class FunctionaryInline(LegacyFunctionaryPermissionMixin, CompactTabularInline):
     legacy_model_name = 'functionary'
     model = Functionary
     fk_name = 'functionary_role'
@@ -65,6 +65,12 @@ class FunctionaryInline(LegacyFunctionaryPermissionMixin, TabularInline):
     autocomplete_fields = ('member',)
     fields = ('member', 'name', 'year')
     ordering = ('-year', 'name')
+
+    if getattr(settings, 'USE_UNFOLD', False):
+        template = 'admin/functionaries_gallery/responsive_inline.html'
+
+        class Media:
+            css = {'all': ('admin/css/assignment-photo-inline.css',)}
 
 
 @admin.register(Functionary)
@@ -149,7 +155,11 @@ class FunctionaryRoleAdmin(
 
     @admin.display(description=_('Funktionärer'))
     def functionary_count(self, obj):
-        count = getattr(obj, 'functionary_total', obj.functionary_set.count())
+        # getattr evaluates its default eagerly; keep the annotated count and
+        # only fall back to a query when the annotation is absent.
+        count = getattr(obj, 'functionary_total', None)
+        if count is None:
+            count = obj.functionary_set.count()
         if not count:
             return '0'
         return format_html(

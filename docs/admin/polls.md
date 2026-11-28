@@ -25,7 +25,7 @@ Run quick votes or questionnaires for members. Each poll ("Fråga") contains mul
 
 ## Add Answer Choices
 1. In the **Choices** inline, click **Add another Choice** for each option.
-2. Enter the visible text. Vote counts are read-only.
+2. Enter the visible text. When translations are enabled, the Unfold editor shows each language above its input on narrow screens and in the column headings on desktop. Vote counts are read-only.
 3. Save when all options have been added.
 
 ## Restrict a Poll to a Meeting

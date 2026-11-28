@@ -7,7 +7,7 @@ from django.forms.models import BaseInlineFormSet
 from django.utils import formats, timezone
 from django.utils.translation import gettext_lazy as _
 
-from core.admin_base import ModelAdmin, TabularInline
+from core.admin_base import TEXTAREA_WIDGET, ModelAdmin, StackedInline
 
 from . import access
 from .models import Booking, BookingSettings, Closure, Room
@@ -113,7 +113,22 @@ class BookingWriteLockMixin:
         return pks
 
 
-class BookingInline(TabularInline):
+class DescriptionTextareaMixin:
+    """Show the free-text description in a textarea, not an 80 pixel input.
+
+    Booking descriptions run to 400 characters and closure ones to 255. A
+    single-line input showed only the first few words, so both inlines render
+    the field as a textarea across the block.
+    """
+
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        formfield = super().formfield_for_dbfield(db_field, request, **kwargs)
+        if db_field.name == 'description' and formfield is not None:
+            formfield.widget = TEXTAREA_WIDGET(attrs={'rows': 3})
+        return formfield
+
+
+class BookingInline(DescriptionTextareaMixin, StackedInline):
     model = Booking
     formset = BookingInlineFormSet
     fk_name = 'room'
@@ -121,6 +136,9 @@ class BookingInline(TabularInline):
     fields = ('title', 'start', 'end', 'author', 'booker_name', 'description')
     autocomplete_fields = ('author',)
     show_change_link = True
+    # Each booking block is tall when open; collapsed they read as the
+    # booking list for the room.
+    collapsible = True
 
     def get_queryset(self, request):
         # A room collects bookings for years, and Django does not paginate
@@ -195,12 +213,13 @@ class BookingOriginFilter(admin.SimpleListFilter):
         return queryset
 
 
-class ClosureInline(TabularInline):
+class ClosureInline(DescriptionTextareaMixin, StackedInline):
     model = Closure
     fk_name = 'room'
     extra = 0
     fields = ('start', 'end', 'description')
     ordering = ('-start',)
+    collapsible = True
 
     def get_queryset(self, request):
         # Same reasoning as the bookings inline: a room collects closures for
@@ -366,7 +385,13 @@ class BookingSettingsAdmin(ModelAdmin):
     )
 
     def has_add_permission(self, request):
-        return not BookingSettings.objects.exists() and super().has_add_permission(request)
+        # The admin asks this several times per page. Remember the singleton
+        # lookup on the request instead of running it again for each call.
+        exists = getattr(request, '_booking_settings_exists', None)
+        if exists is None:
+            exists = BookingSettings.objects.exists()
+            request._booking_settings_exists = exists
+        return not exists and super().has_add_permission(request)
 
     def has_delete_permission(self, request, obj=None):
         return False

@@ -1,11 +1,17 @@
 import logging
 
+from django.conf import settings
 from django.contrib import admin, messages
 from django.db import models
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 
-from core.admin_base import UNFOLD_FORMFIELD_OVERRIDES, ExtraChangeListLinksMixin, ModelAdmin, TabularInline
+from core.admin_base import (
+    UNFOLD_FORMFIELD_OVERRIDES,
+    CompactTabularInline,
+    ExtraChangeListLinksMixin,
+    ModelAdmin,
+)
 from core.admin_ui import AdminLink
 from core.admin_widgets import (
     FLATPICKR_ADMIN_CSS,
@@ -25,7 +31,10 @@ def safe_image_preview(image_field):
     if not image_field:
         return '-'
     try:
-        return format_html('<img src="{}" style="width: auto; height: 80px"/>', image_field.url)
+        return format_html(
+            '<img src="{}" style="width: auto; height: 80px" loading="lazy" decoding="async"/>',
+            image_field.url,
+        )
     except Exception as exc:
         logger.warning("Unable to resolve gallery image URL for %s: %s", image_field.name, exc)
         return image_field.name
@@ -35,7 +44,7 @@ class GalleryAdminMixin(ExtraChangeListLinksMixin):
     changelist_links = (AdminLink(_('Städa upp media'), icon='cleaning_services', url_name='archive:cleanMedia'),)
 
 
-class PhotoInline(TabularInline):
+class PhotoInline(CompactTabularInline):
     model = Photo
     fk_name = 'album'
     can_delete = True
@@ -45,6 +54,12 @@ class PhotoInline(TabularInline):
         **UNFOLD_FORMFIELD_OVERRIDES,
         models.ImageField: {'widget': SafeAdminImageWidget},
     }
+
+    if getattr(settings, 'USE_UNFOLD', False):
+        template = 'admin/functionaries_gallery/responsive_inline.html'
+
+        class Media:
+            css = {'all': ('admin/css/assignment-photo-inline.css',)}
 
     def preview_image(self, obj):
         return safe_image_preview(obj.image)

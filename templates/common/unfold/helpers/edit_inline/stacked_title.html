@@ -1,0 +1,27 @@
+{% load admin_urls i18n unfold %}
+{% comment %}Unfold's stacked title, with a native disclosure button instead of a click-only heading.{% endcomment %}
+{% if inline_admin_formset.opts.show_title or inline_admin_formset.formset.can_delete and inline_admin_formset.has_delete_permission %}
+  <h3 class="group/title border-base-200 flex font-semibold items-center px-3 py-2 text-sm dark:border-base-800 {% if inline_admin_formset.opts.collapsible %}inline-disclosure-heading{% else %}border-b{% endif %}"
+      {% if inline_admin_formset.opts.collapsible %}x-bind:class="openRow ? 'border-b' : ''"{% endif %}>
+    {% include "unfold/helpers/edit_inline/inline_drag.html" with stacked=1 %}
+    <span class="flex items-center font-semibold mr-auto text-font-important-light dark:text-font-important-dark inline-disclosure-title">
+      {% if inline_admin_formset.opts.collapsible %}
+        <button type="button"
+                class="inline-disclosure-toggle"
+                aria-expanded="{% if inline_admin_form.errors %}true{% else %}false{% endif %}"
+                x-bind:aria-expanded="openRow ? 'true' : 'false'"
+                x-on:click="openRow = !openRow">
+      {% endif %}
+      {% if inline_admin_form.original %}
+        {% with inline_title=inline_admin_form.original.get_inline_title|default:inline_admin_form.original %}
+          <strong class="font-semibold select-none">{{ inline_title }}</strong>
+        {% endwith %}
+      {% else %}
+        <strong class="font-semibold select-none">{{ inline_admin_formset.opts.verbose_name|capfirst }}: #<span class="stacked-counter">{{ forloop.counter }}</span></strong>
+      {% endif %}
+      {% if inline_admin_formset.opts.collapsible %}</button>{% endif %}
+      {% include "unfold/helpers/edit_inline/inline_links.html" %}
+    </span>
+    {% include "unfold/helpers/edit_inline/stacked_delete.html" %}
+  </h3>
+{% endif %}

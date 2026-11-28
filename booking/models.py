@@ -158,16 +158,33 @@ class Closure(models.Model):
                 name='closure_end_after_start',
             ),
         ]
+        indexes = [
+            # Overlap lookups and inline filters per room.
+            models.Index(fields=['room', 'start'], name='closure_room_start_idx'),
+            models.Index(fields=['room', 'end'], name='closure_room_end_idx'),
+        ]
 
     def __str__(self):
-        start = timezone.localtime(self.start).strftime('%Y-%m-%d %H:%M') if self.start else '-'
-        end = timezone.localtime(self.end).strftime('%Y-%m-%d %H:%M') if self.end else '-'
-        return f'{self.room.name}: {start} - {end}'
+        return f'{self.room.name}: {self._period_label()}'
 
     def clean(self):
         super().clean()
         if self.start and self.end and self.end <= self.start:
             raise ValidationError({'end': _('Sluttiden måste vara efter starttiden.')})
+
+    def get_inline_title(self):
+        # The room page already names the room, so a collapsed block shows the
+        # period and what the closure is for.
+        period = self._period_label()
+        reason = (self.description or '').strip()
+        if len(reason) > 70:
+            reason = f'{reason[:67]}...'
+        return f'{period} · {reason}' if reason else period
+
+    def _period_label(self):
+        start = timezone.localtime(self.start).strftime('%Y-%m-%d %H:%M') if self.start else '-'
+        end = timezone.localtime(self.end).strftime('%Y-%m-%d %H:%M') if self.end else '-'
+        return f'{start} - {end}'
 
 
 class Booking(models.Model):
@@ -215,11 +232,14 @@ class Booking(models.Model):
                 name='booking_end_after_start',
             ),
         ]
+        indexes = [
+            # Overlap lookups and inline filters per room.
+            models.Index(fields=['room', 'start'], name='booking_room_start_idx'),
+            models.Index(fields=['room', 'end'], name='booking_room_end_idx'),
+        ]
 
     def __str__(self):
-        start = timezone.localtime(self.start).strftime('%Y-%m-%d %H:%M') if self.start else '-'
-        end = timezone.localtime(self.end).strftime('%Y-%m-%d %H:%M') if self.end else '-'
-        return f'{self.room.name}: {start} - {end}'
+        return f'{self.room.name}: {self._period_label()}'
 
     def save(self, *args, **kwargs):
         """Record who booked while the account still exists.
@@ -246,6 +266,19 @@ class Booking(models.Model):
             if update_fields is not None:
                 kwargs['update_fields'] = update_fields | {'booker_name'}
         super().save(*args, **kwargs)
+
+    def get_inline_title(self):
+        # The room page already names the room, so a collapsed block shows the
+        # period and the booking title, falling back to who booked it for rows
+        # that predate the title field.
+        label = (self.title or '').strip() or self.booker_name or (booker_label(self.author) if self.author_id else '')
+        period = self._period_label()
+        return f'{period} · {label}' if label else period
+
+    def _period_label(self):
+        start = timezone.localtime(self.start).strftime('%Y-%m-%d %H:%M') if self.start else '-'
+        end = timezone.localtime(self.end).strftime('%Y-%m-%d %H:%M') if self.end else '-'
+        return f'{start} - {end}'
 
     @property
     def is_external(self):

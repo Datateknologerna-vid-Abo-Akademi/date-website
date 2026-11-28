@@ -3,6 +3,7 @@ import logging
 import tempfile
 import threading
 import time
+from datetime import UTC, datetime
 from io import BytesIO, StringIO
 from types import SimpleNamespace
 from unittest import skipUnless
@@ -32,13 +33,13 @@ from django_ckeditor_5.widgets import CKEditor5Widget
 from PIL import ExifTags, Image, ImageCms
 
 from events.admin import EventAttendeesFormInline, EventRegistrationFormSet
-from events.forms import EventCreationForm, EventEditForm
+from events.forms import ChoiceListField, EventCreationForm, EventEditForm
 from events.images import dominant_color, process_background_image
 from events.models import BackgroundImageLayout, Event, EventAttendees, EventRegistrationForm
 from events.registration import EventSignupError, register_event_signup
 from events.routing import websocket_urlpatterns
 from events.websocket_utils import ws_data, ws_send
-from events.widgets import EventAnswersWidget
+from events.widgets import ChoiceListWidget, EventAnswersWidget
 from members.models import ORDINARY_MEMBER, Member, MembershipType, Subscription, SubscriptionPayment
 from news.models import Category, Post
 from staticpages.models import StaticPage, StaticPageNav, StaticUrl
@@ -823,7 +824,9 @@ class EventAdminTests(TestCase):
         response = self.client.get(reverse("admin:events_event_change", args=[self.event.pk]))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'column-original_event')
+        # The inline is a stacked block, so the field renders as a readonly row
+        # that links to the child event rather than as a table column.
+        self.assertContains(response, reverse('admin:events_event_change', args=[child.pk]))
 
     @patch("modeltranslation.admin.TranslationInlineModelAdmin.get_formset")
     def test_attendees_inline_formset_passes_complete_exclude_list(self, get_formset):
@@ -832,7 +835,7 @@ class EventAdminTests(TestCase):
         Production runs without translation inlines, so the exclude list our
         override passes up reaches Django's InlineModelAdmin.get_formset,
         which applies kwargs after its defaults and would otherwise drop the
-        readonly-field exclusion and leave time_registered required.
+        readonly-field exclusion and leave the readonly display fields required.
         """
         request = RequestFactory().get("/admin/events/event/change/")
         request.user = self.admin_user
@@ -841,7 +844,10 @@ class EventAdminTests(TestCase):
         inline.get_formset(request, obj=self.event)
 
         _, kwargs = get_formset.call_args
-        self.assertCountEqual(kwargs["exclude"], ["time_registered", "avec_for"])
+        expected = ["registered_at", "avec_for"]
+        if settings.USE_UNFOLD:
+            expected.append("open_link")
+        self.assertCountEqual(kwargs["exclude"], expected)
 
     def _attendees_formset(self, rows, initial_forms=None):
         data = {
@@ -1339,7 +1345,7 @@ class EventAdminTests(TestCase):
             event=self.event,
             name="Meal",
             type="select",
-            choice_list="fish,vegetarian",
+            choice_list='fish,vegetarian',
         )
         EventAttendees.objects.create(
             event=self.event,
@@ -1387,12 +1393,137 @@ class EventAdminTests(TestCase):
         else:
             self.assertNotIn("border-base-200", html)
 
+    def test_attendee_inline_displays_duplicate_email_error(self):
+        self.client.force_login(self.admin_user)
+        first, second = [
+            EventAttendees.objects.create(
+                event=self.event, user=f'Test {i}', email=f'test{i}@example.invalid', time_registered=timezone.now()
+            )
+            for i in range(2)
+        ]
+        data = {
+            'title_sv': self.event.title,
+            'slug': self.event.slug,
+            'sign_up': 'on',
+            'eventregistrationform_set-TOTAL_FORMS': 0,
+            'eventregistrationform_set-INITIAL_FORMS': 0,
+            'eventattendees_set-TOTAL_FORMS': 2,
+            'eventattendees_set-INITIAL_FORMS': 2,
+            **self._attendee_row(0, first.pk, first.attendee_nr, first.user, first.email),
+            **self._attendee_row(1, second.pk, second.attendee_nr, second.user, first.email),
+        }
+        response = self.client.post(reverse('admin:events_event_change', args=[self.event.pk]), data)
+        self.assertContains(response, 'Deltagare med samma Event och E-postadress finns redan.')
+
+    def test_attendee_registration_timestamp_uses_active_timezone(self):
+        stamp = datetime(2026, 11, 27, 22, 30, tzinfo=UTC)
+        attendee = EventAttendees(time_registered=stamp)
+        with timezone.override('Europe/Helsinki'):
+            expected = date_format(timezone.localtime(stamp), 'SHORT_DATETIME_FORMAT')
+            inline = EventAttendeesFormInline(Event, admin.site)
+            self.assertIn(expected, inline.registered_at(attendee))
+
+    def test_choice_editor_validates_and_saves_existing_choices(self):
+        self.client.force_login(self.admin_user)
+        question = EventRegistrationForm.objects.create(
+            event=self.event, name='Meal', type='select', choice_list='Fish,, Vegetarian'
+        )
+        url = reverse('admin:events_event_change', args=[self.event.pk])
+        response = self.client.get(url)
+        self.assertContains(response, 'value="Fish"')
+        inline = next(i for i in response.context['inline_admin_formsets'] if i.formset.model is EventRegistrationForm)
+        prefix = inline.formset.prefix
+        data = {
+            'title_sv': self.event.title,
+            'slug': self.event.slug,
+            'sign_up': 'on',
+            'eventregistrationform_set-TOTAL_FORMS': 1,
+            'eventregistrationform_set-INITIAL_FORMS': 1,
+            'eventregistrationform_set-0-id': question.pk,
+            'eventregistrationform_set-0-event': self.event.pk,
+            'eventregistrationform_set-0-name': question.name,
+            'eventregistrationform_set-0-type': question.type,
+            'eventregistrationform_set-0-choice_list__count': 1,
+            'eventregistrationform_set-0-choice_list__choice__0': '',
+            'eventattendees_set-TOTAL_FORMS': 0,
+            'eventattendees_set-INITIAL_FORMS': 0,
+        }
+        self.assertContains(self.client.post(url, data), 'Ange minst ett alternativ.')
+        data[f'{prefix}-0-choice_list__choice__0'] = 'Fish, smoked'
+        response = self.client.post(url, data)
+        self.assertContains(response, 'Ett alternativ får inte innehålla kommatecken.')
+        self.assertContains(response, 'value="Fish, smoked"')
+        question.refresh_from_db()
+        self.assertEqual(question.choice_list, 'Fish,, Vegetarian')
+
+        data.update(
+            {
+                f'{prefix}-0-choice_number': question.choice_number,
+                f'{prefix}-0-name': 'Renamed meal',
+                f'{prefix}-0-choice_list__count': 3,
+                f'{prefix}-0-choice_list__choice__0': 'Fish',
+                f'{prefix}-0-choice_list__choice__1': 'Vegetarian',
+                f'{prefix}-0-choice_list__choice__2': '',
+            }
+        )
+        formset = type(inline.formset)(data, instance=self.event, prefix=prefix)
+        self.assertTrue(formset.is_valid(), formset.errors)
+        self.assertNotIn('choice_list', formset.forms[0].changed_data)
+        formset.save()
+        question.refresh_from_db()
+        self.assertEqual(question.name, 'Renamed meal')
+        self.assertEqual(question.choice_list, 'Fish,, Vegetarian')
+
+        data.update(
+            {
+                f'{prefix}-0-choice_list__count': 2,
+                f'{prefix}-0-choice_list__choice__0': ' Soup ',
+                f'{prefix}-0-choice_list__choice__1': 'Salad',
+            }
+        )
+        formset = type(inline.formset)(data, instance=self.event, prefix=prefix)
+        self.assertTrue(formset.is_valid(), formset.errors)
+        formset.save()
+        question.refresh_from_db()
+        self.assertEqual(question.choice_list, 'Soup,Salad')
+
+    def test_choice_list_widget_renders_an_input_per_option(self):
+        html = ChoiceListWidget().render("choice_list", "fish,vegetarian", {"id": "id_choice_list"})
+
+        self.assertIn('name="choice_list__choice__0"', html)
+        self.assertIn('value="fish"', html)
+        self.assertIn('name="choice_list__choice__2"', html)
+        self.assertIn('name="choice_list__count"', html)
+        self.assertIn('aria-label="Alternativ"', html)
+
+    def test_choice_list_widget_collects_rows_and_skips_gaps(self):
+        value = ChoiceListWidget().value_from_datadict(
+            {
+                "choice_list__count": "3",
+                "choice_list__choice__0": "fish",
+                "choice_list__choice__2": " water ",
+            },
+            {},
+            "choice_list",
+        )
+
+        self.assertEqual(value, ["fish", "water"])
+
+    def test_choice_list_widget_accepts_a_single_posted_value(self):
+        widget = ChoiceListWidget()
+
+        self.assertEqual(
+            widget.value_from_datadict({"choice_list": "fish,vegetarian,water"}, {}, "choice_list"),
+            "fish,vegetarian,water",
+        )
+        self.assertIsNone(widget.value_from_datadict({}, {}, "choice_list"))
+
     def test_attendee_answers_are_saved_from_question_fields(self):
         EventRegistrationForm.objects.create(
             event=self.event,
             name="Meal",
             type="select",
-            choice_list="fish,vegetarian",
+            choice_list='fish,vegetarian',
         )
         attendee = EventAttendees.objects.create(
             event=self.event,
@@ -1589,11 +1720,18 @@ class EventRegistrationFormValidationTests(TestCase):
         question.full_clean()
         question.save()
 
-        self.assertEqual(question.choice_list, 'fish,vegetarian')
+        self.assertEqual(question.get_choices(), ['fish', 'vegetarian'])
         self.assertEqual(
             list(self.event.make_registration_form().base_fields['Meal'].choices),
             [('fish', 'fish'), ('vegetarian', 'vegetarian')],
         )
+
+    def test_choice_list_field_counts_separators_toward_length_limit(self):
+        field = ChoiceListField(max_length=255)
+        self.assertEqual(len(field.clean(['a' * 127, 'b' * 127])), 255)
+        with self.assertRaises(ValidationError) as error:
+            field.clean(['a' * 127, 'b' * 128])
+        self.assertEqual(error.exception.error_list[0].code, 'max_length')
 
     def test_multiple_choice_requires_unique_nonempty_options(self):
         for choices in ('', 'fish,fish'):
@@ -2746,7 +2884,7 @@ class EventFormBuilderTests(TestCase):
             event=self.event,
             name="meal",
             type="select",
-            choice_list="fish,veg",
+            choice_list='fish,veg',
             required=True,
             choice_number=10,
         )

@@ -143,6 +143,8 @@ class Event(models.Model):  # type: ignore[django-manager-missing]
         indexes = [
             # Homepage/listing filters: published events by end date.
             models.Index(fields=['published_time', 'event_date_end'], name='event_pub_end_idx'),
+            # Admin changelist default ordering and date hierarchy.
+            models.Index(fields=['event_date_start'], name='event_date_start_idx'),
         ]
 
     def __str__(self):
@@ -555,11 +557,16 @@ class EventRegistrationForm(models.Model):  # type: ignore[django-manager-missin
     def __str__(self):
         return str(self.name)
 
+    def get_inline_title(self):
+        # The collapsed block on the event page is the field name.
+        return str(self.name) or f'#{self.choice_number}'
+
     def get_choices(self):
         return [choice.strip() for choice in str(self.choice_list).split(',') if choice.strip()]
 
     def clean(self):
         super().clean()
+        stored = None
         if self.pk:
             stored = EventRegistrationForm.objects.filter(pk=self.pk).values('name', 'type', 'choice_list').first()
             if stored and all(stored[field] == getattr(self, field) for field in stored):
@@ -577,7 +584,8 @@ class EventRegistrationForm(models.Model):  # type: ignore[django-manager-missin
                 raise ValidationError({'choice_list': _('Ange minst ett alternativ.')})
             if len(set(choices)) != len(choices):
                 raise ValidationError({'choice_list': _('Alternativen måste vara unika.')})
-            self.choice_list = ','.join(choices)
+            if not stored or self.choice_list != stored['choice_list']:
+                self.choice_list = ','.join(choices)
         else:
             self.choice_list = ''
 
@@ -630,9 +638,24 @@ class EventAttendees(models.Model):  # type: ignore[django-manager-missing]
                 name='unique_attendee_nr_per_event',
             ),
         ]
+        indexes = [
+            # Admin changelist ordering, date hierarchy and time_registered filter.
+            models.Index(fields=['time_registered'], name='attendee_time_registered_idx'),
+        ]
 
     def __str__(self):
         return str(self.user)
+
+    def get_inline_title(self):
+        # The collapsed attendee block has to identify the person at a glance:
+        # name, email, and a marker for an anonymous signup.
+        parts = [str(self.user or '-')]
+        if self.email:
+            parts.append(self.email)
+        title = ' · '.join(parts)
+        if self.anonymous:
+            title = f'{title} (anonym)'
+        return title
 
     @register.filter
     def get_preference(self, key):

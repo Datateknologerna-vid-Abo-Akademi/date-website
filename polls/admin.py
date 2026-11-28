@@ -9,7 +9,7 @@ from core.admin import (
     LanguageTabbedTranslationAdmin,
     TranslationCompletionAdminMixin,
 )
-from core.admin_base import ModelAdmin, TabularInline
+from core.admin_base import CompactTabularInline, ModelAdmin, TabularInline
 from core.admin_widgets import (
     FLATPICKR_ADMIN_CSS,
     FLATPICKR_ADMIN_JS,
@@ -43,7 +43,7 @@ if ATTENDANCE_INSTALLED:
     # module is imported for every association and only DaTe installs attendance.
     from attendance.models import AttendancePoll
 
-    class AttendancePollInline(TabularInline):
+    class AttendancePollInline(CompactTabularInline):
         """Pick the meeting whose room a voter has to be in.
 
         The poll itself is the inline's parent, so Django fills that side in and
@@ -69,16 +69,50 @@ if ATTENDANCE_INSTALLED:
             return self.has_add_permission(request, obj) or self.has_change_permission(request, obj)
 
 
+if settings.USE_UNFOLD and settings.ENABLE_LANGUAGE_FEATURES:
+    from django.utils.translation import get_language_info
+    from unfold.widgets import UnfoldAdminTextInputWidget
+
+    class ChoiceTextInput(UnfoldAdminTextInputWidget):
+        template_name = 'polls/widgets/choice_text.html'
+        language_code: str | None = None
+
+        def get_context(self, name, value, attrs):
+            context = super().get_context(name, value, attrs)
+            if self.language_code:
+                label = get_language_info(self.language_code)['name_local'].capitalize()
+                context['choice_language_label'] = label
+                # Unfold hides the row labels at the desktop breakpoint.
+                context['widget']['attrs']['aria-label'] = label
+            return context
+
+
 class ChoiceInline(PollTranslationInlineBase):
     model = Choice
     extra = 0
     readonly_fields = ['votes']
+    show_title = False
+
+    if settings.USE_UNFOLD and settings.ENABLE_LANGUAGE_FEATURES:
+
+        def formfield_for_dbfield(self, db_field, request, **kwargs):
+            # Modeltranslation copies the base field's widget to each language.
+            if db_field.name == 'choice_text':
+                kwargs['widget'] = ChoiceTextInput
+            field = super().formfield_for_dbfield(db_field, request, **kwargs)
+            if field and isinstance(field.widget, ChoiceTextInput):
+                field.widget.language_code = getattr(db_field, 'language', None)
+            return field
 
 
-class VoteInline(TabularInline):
+class VoteInline(CompactTabularInline):
     model = Vote
     extra = 0
     readonly_fields = ['user']
+
+    def get_queryset(self, request):
+        # The read-only user column renders the related member for every vote.
+        return super().get_queryset(request).select_related('user')
 
     def has_add_permission(self, request, obj=None):
         return False

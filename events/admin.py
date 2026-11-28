@@ -4,6 +4,7 @@ import logging
 from admin_ordering.admin import OrderableAdmin
 from django.conf import settings
 from django.contrib import admin, messages
+from django.contrib.admin.widgets import AutocompleteSelect
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db.models import Count, IntegerField, Max, OuterRef, Subquery, TextField, Value
 from django.db.models.functions import Coalesce
@@ -13,8 +14,9 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.template.response import TemplateResponse
 from django.urls import re_path, reverse
+from django.utils import formats
 from django.utils.html import format_html
-from django.utils.timezone import now
+from django.utils.timezone import now, template_localtime
 from django.utils.translation import gettext_lazy as _
 from django_ckeditor_5.widgets import CKEditor5Widget
 
@@ -23,28 +25,45 @@ from core.admin import (
     LanguageTabbedTranslationAdmin,
     TranslationCompletionAdminMixin,
 )
-from core.admin_base import UNFOLD_FORMFIELD_OVERRIDES, ModelAdmin, PublicUrlAdminMixin, TabularInline
+from core.admin_base import UNFOLD_FORMFIELD_OVERRIDES, ModelAdmin, PublicUrlAdminMixin, StackedInline, TabularInline
 from core.admin_widgets import FLATPICKR_ADMIN_CSS, FLATPICKR_ADMIN_JS
 from events import forms
 from events.models import Event, EventAttendees, EventRegistrationForm, registration_terms_feature_enabled
 
-from .widgets import EventAnswersField, EventAnswersWidget
+from .widgets import ChoiceListWidget, EventAnswersField, EventAnswersWidget
 
 logger = logging.getLogger('date')
 
 if settings.ENABLE_LANGUAGE_FEATURES:  # type: ignore[misc]
-    from modeltranslation.admin import TranslationTabularInline
+    from modeltranslation.admin import TranslationStackedInline, TranslationTabularInline
 
     # MRO when USE_UNFOLD=True: Mixin → Translation → unfold.TabularInline → admin.TabularInline
     # unfold sits between modeltranslation and Django's base so both layers get their super() calls.
     class EventTranslationInlineBase(ActiveLanguageTranslationAdminMixin, TranslationTabularInline, TabularInline):
         pass
 
+    class EventStackedInlineBase(ActiveLanguageTranslationAdminMixin, TranslationStackedInline, StackedInline):
+        pass
+
     class EventTranslationAdminBase(ActiveLanguageTranslationAdminMixin, LanguageTabbedTranslationAdmin, ModelAdmin):
         pass
 else:
     EventTranslationInlineBase = TabularInline  # type: ignore[misc, assignment]
+    EventStackedInlineBase = StackedInline  # type: ignore[misc, assignment]
     EventTranslationAdminBase = ModelAdmin  # type: ignore[misc, assignment]
+
+
+if settings.USE_UNFOLD:  # type: ignore[misc]
+    from unfold.forms import PaginationInlineFormSet
+
+    # Unfold paginates an inline through this formset: it reads the page from
+    # the request and exposes the page object to its inline template. Without
+    # it every attendee of the event is rendered as its own editable row.
+    class EventAttendeesInlineFormSetBase(PaginationInlineFormSet):  # type: ignore[misc, valid-type]
+        pass
+
+else:
+    EventAttendeesInlineFormSetBase = BaseInlineFormSet  # type: ignore[misc, assignment]
 
 
 class AvecAwareMixin:
@@ -69,9 +88,17 @@ class EventRegistrationFormSet(BaseInlineFormSet):
                 raise ValidationError(_('Fältnamnen måste vara unika inom evenemanget.'))
 
 
-class EventRegistrationFormInline(AvecAwareMixin, OrderableAdmin, EventTranslationInlineBase):
+class EventRegistrationFormInlineMixin(AvecAwareMixin):
+    """Behaviour shared by the registration-field inline in both themes."""
+
     line_numbering = 0
+
+    class Media:
+        css = {'all': ('events/css/admin_registration_inline.css',)}
+        js = ('events/js/admin_registration_inline.js',)
+
     model = EventRegistrationForm
+    form = forms.EventRegistrationChoiceForm
     formset = EventRegistrationFormSet
     fk_name = 'event'
     extra = 0
@@ -90,6 +117,11 @@ class EventRegistrationFormInline(AvecAwareMixin, OrderableAdmin, EventTranslati
     def get_fieldsets(self, request, event=None):
         return [(None, {'fields': self.get_fields(request, event)})]
 
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        if db_field.name == 'choice_list':
+            kwargs.update(form_class=forms.ChoiceListField, widget=ChoiceListWidget)
+        return super().formfield_for_dbfield(db_field, request, **kwargs)
+
     def get_formset(self, request, obj=None, **kwargs):
         if not self._event_uses_avec(obj):
             kwargs.setdefault('exclude', [])
@@ -97,15 +129,25 @@ class EventRegistrationFormInline(AvecAwareMixin, OrderableAdmin, EventTranslati
         return super().get_formset(request, obj, **kwargs)
 
 
-class EventAttendeesForm(ModelForm):
-    # Declared so a bound answers field keeps the widget's dict when the page
-    # is re-rendered after a validation error; the model would build a plain
-    # JSONField, whose bound_data parses the dict as JSON text and raises.
-    preferences = EventAnswersField(
-        required=False,
-        label=EventAttendees._meta.get_field('preferences').verbose_name,
-    )
+class EventRegistrationFormInline(  # noqa: N801 - name kept for existing imports
+    EventRegistrationFormInlineMixin, OrderableAdmin, EventStackedInlineBase
+):
+    """Registration fields as collapsible blocks (Unfold admin)."""
 
+    collapsible = True
+
+
+class EventRegistrationFormClassicInline(EventRegistrationFormInlineMixin, OrderableAdmin, EventTranslationInlineBase):
+    """Registration fields as a table (stock admin).
+
+    The stock admin has no collapsible inline, and a field row is short, so the
+    table stays the compact choice there.
+    """
+
+    show_title = False
+
+
+class EventAttendeesForm(ModelForm):
     # Set per request by EventAttendeesFormInline.get_formset so a child event
     # signup is edited with the child's questions, not the parent's.
     default_questions = ()
@@ -114,6 +156,8 @@ class EventAttendeesForm(ModelForm):
     class Meta:
         model = EventAttendees
         fields = ['event', 'attendee_nr', 'user', 'email', 'preferences', 'anonymous', 'avec_for', 'original_event']
+        # Keep the model field's default and hidden initial for change detection.
+        field_classes = {'preferences': EventAnswersField}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -154,7 +198,59 @@ class EventAttendeesForm(ModelForm):
         return exclude
 
 
-class EventAttendeesInlineFormSet(BaseInlineFormSet):
+class EventAttendeesInlineFormSet(EventAttendeesInlineFormSetBase):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # ModelForm cleaning mutates these instances. Keep the page's original
+        # slots before constructing forms so Unfold's local ranks can be mapped
+        # back to global numbers, including gaps and legacy non-step-10 values.
+        self._page_attendee_nrs = (
+            {row.pk: row.attendee_nr for row in self.get_queryset()} if getattr(self, 'per_page', None) else {}
+        )
+
+    def clean(self):
+        super().clean()
+        if not self._page_attendee_nrs or any(self.errors):
+            return
+        initial_forms = self.initial_forms
+        ranks = [form.cleaned_data.get('attendee_nr') for form in initial_forms]
+        # A native drag submits exactly the ranks 0..n-1 for the rows on screen.
+        # If the page changed in the database since it was rendered (a signup
+        # arrived, a row was removed), those ranks no longer describe this
+        # page's slots, and mapping them would move the rows to the front of
+        # the event. Refuse the drag instead of guessing.
+        looks_like_drag = bool(initial_forms) and set(ranks) == set(range(len(initial_forms)))
+        stale_page = len(initial_forms) != len(self._page_attendee_nrs) or any(
+            form.instance.pk not in self._page_attendee_nrs for form in initial_forms
+        )
+        if looks_like_drag and stale_page:
+            raise ValidationError(_('Deltagarlistan ändrades medan sidan var öppen. Ladda om sidan och försök igen.'))
+        if self.extra_forms and any('attendee_nr' in form.changed_data for form in initial_forms):
+            all_ranks = [form.cleaned_data.get('attendee_nr') for form in self.forms]
+            if set(all_ranks) == set(range(len(self.forms))):
+                # A new row has no existing global slot. Do not let its native
+                # rank turn into a low attendee number or displace another page.
+                raise ValidationError(_('Spara nya deltagare innan du ändrar ordningen.'))
+        if not looks_like_drag or stale_page:
+            return
+        # Unfold's native sortRecords sends zero-based ranks for this page,
+        # not global attendee numbers. Only permute this page's existing slots;
+        # otherwise a later page would claim numbers belonging to earlier rows.
+        slots = sorted(self._page_attendee_nrs.values())
+        for form, rank in zip(initial_forms, ranks, strict=True):
+            nr = slots[rank]
+            form.cleaned_data['attendee_nr'] = nr
+            form.instance.attendee_nr = nr
+            # changed_data may already be cached against the submitted rank.
+            # Django must save according to the mapped number instead, even if
+            # a legacy number happened to equal that row's temporary rank.
+            changed = form.changed_data
+            if nr == self._page_attendee_nrs[form.instance.pk]:
+                if 'attendee_nr' in changed:
+                    changed.remove('attendee_nr')
+            elif 'attendee_nr' not in changed:
+                changed.append('attendee_nr')
+
     def save(self, commit=True):
         # The admin_ordering drag reorder writes the final attendee_nr values
         # (10, 20, ...) into the forms in original row order, so a drag can
@@ -210,8 +306,12 @@ class EventAttendeesInlineFormSet(BaseInlineFormSet):
         )
         self._original_nrs = {pk: nr for pk, nr in rows}
         base = self._band_base()
-        for index, (pk, _nr) in enumerate(rows):
-            EventAttendees.objects.filter(pk=pk).update(attendee_nr=base + index * 10)
+        # One UPDATE ... CASE for the whole formset instead of one UPDATE per
+        # row. The band values are unique and above every current number, so
+        # the single statement cannot violate unique_attendee_nr_per_event
+        # while it runs.
+        shifted = [EventAttendees(pk=pk, attendee_nr=base + index * 10) for index, (pk, _nr) in enumerate(rows)]
+        EventAttendees.objects.bulk_update(shifted, ['attendee_nr'])
         self._shifted = True
 
     def _band_base(self):
@@ -275,12 +375,39 @@ class EventAttendeesInlineFormSet(BaseInlineFormSet):
 
     def _restore_unchanged_attendee_nrs(self):
         saved_pks = {obj.pk for obj, _changed_data in self.changed_objects}
-        for pk, nr in self._original_nrs.items():
-            if pk not in saved_pks:
-                EventAttendees.objects.filter(pk=pk).update(attendee_nr=nr)
+        restored = [
+            EventAttendees(pk=pk, attendee_nr=nr) for pk, nr in self._original_nrs.items() if pk not in saved_pks
+        ]
+        # One statement for the whole formset, as in _shift_attendee_nrs. The
+        # original numbers are unique, and _resolve_attendee_nr_conflicts kept
+        # every saved row off them, so the restore cannot collide.
+        EventAttendees.objects.bulk_update(restored, ['attendee_nr'])
 
 
-class EventAttendeesFormInline(AvecAwareMixin, OrderableAdmin, EventTranslationInlineBase):
+class EventScopedAutocompleteSelect(AutocompleteSelect):
+    """Autocomplete that only offers attendees of the event being edited.
+
+    The inline's ``avec_for`` field is an FK back to EventAttendees. A plain
+    select renders every attendee of the event for every row, which is both
+    one query per row and O(n^2) option HTML. The admin autocomplete widget
+    renders an input instead; this subclass adds the event id to its search
+    URL so the results stay scoped to the same event the old queryset used.
+    """
+
+    def __init__(self, *args, event_id=None, **kwargs):
+        self.event_id = event_id
+        super().__init__(*args, **kwargs)
+
+    def get_url(self):
+        url = super().get_url()
+        if self.event_id:
+            url = f'{url}?event_id={self.event_id}'
+        return url
+
+
+class EventAttendeesInlineMixin(AvecAwareMixin):
+    """Behaviour shared by the attendee inline in both admin themes."""
+
     ordering_field = 'attendee_nr'
     ordering_field_hide_input = True
     model = EventAttendees
@@ -294,9 +421,46 @@ class EventAttendeesFormInline(AvecAwareMixin, OrderableAdmin, EventTranslationI
     }
     can_delete = True
     ordering = ['attendee_nr']
+    autocomplete_fields = ('avec_for',)
+
+    class Media:
+        css = {'all': ('events/css/admin_attendee_inline.css',)}
+
+    def get_queryset(self, request):
+        # Rows can show the original event when the event has child events.
+        # Without select_related that is one query per attendee row.
+        return super().get_queryset(request).select_related('original_event')
+
+    @admin.display(description=_('Registrerad'))
+    def registered_at(self, obj):
+        # The short admin format keeps the column on one line; the model field
+        # itself is still in the form exclusion list, this only displays it.
+        if not obj or not obj.time_registered:
+            return '-'
+        return format_html(
+            '<span style="white-space: nowrap">{}</span>',
+            formats.date_format(template_localtime(obj.time_registered), 'SHORT_DATETIME_FORMAT'),
+        )
+
+    @admin.display(description='')
+    def open_link(self, obj):
+        # The per-row change link Unfold rendered in the removed title row.
+        if not obj or not obj.pk:
+            return ''
+        return format_html(
+            '<a href="{}" title="{}" style="white-space: nowrap">{}</a>',
+            reverse('admin:events_eventattendees_change', args=[obj.pk]),
+            _('Open the attendee page'),
+            _('Ändra'),
+        )
 
     def get_fields(self, request, event):
-        fields = ['attendee_nr', 'user', 'email', 'anonymous', 'preferences', 'time_registered']
+        # Classic admin renders the change link in its own row title, so the
+        # Unfold-only link column would be a duplicate there.
+        fields = ['attendee_nr']
+        if settings.USE_UNFOLD:  # type: ignore[misc]
+            fields.append('open_link')
+        fields += ['user', 'email', 'anonymous', 'preferences', 'registered_at']
         if event and event.children.exists():
             fields.append('original_event')
         if self._event_uses_avec(event):
@@ -307,7 +471,9 @@ class EventAttendeesFormInline(AvecAwareMixin, OrderableAdmin, EventTranslationI
         return [(None, {'fields': self.get_fields(request, event)})]
 
     def get_readonly_fields(self, request, event=None):
-        readonly_fields = ['time_registered']
+        readonly_fields = ['registered_at']
+        if settings.USE_UNFOLD:  # type: ignore[misc]
+            readonly_fields.append('open_link')
         if event and event.children.exists():
             readonly_fields.append('original_event')
         return readonly_fields
@@ -337,7 +503,33 @@ class EventAttendeesFormInline(AvecAwareMixin, OrderableAdmin, EventTranslationI
         event_id = request.resolver_match.kwargs.get('object_id')
         if db_field.name == "avec_for":
             kwargs["queryset"] = EventAttendees.objects.filter(event=event_id)
+            if event_id:
+                kwargs["widget"] = EventScopedAutocompleteSelect(
+                    db_field,
+                    self.admin_site,
+                    event_id=event_id,
+                )
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+
+class EventAttendeesFormInline(  # noqa: N801 - name kept for existing imports
+    EventAttendeesInlineMixin, OrderableAdmin, EventStackedInlineBase
+):
+    """Attendee list as one collapsible block per person (Unfold admin)."""
+
+    # Unfold renders one form row per attendee otherwise; the formset is a
+    # PaginationInlineFormSet only when USE_UNFOLD is on.
+    per_page = 50
+    template = 'admin/events/attendees_stacked.html'
+    collapsible = True
+
+
+class EventAttendeesClassicInline(EventAttendeesInlineMixin, OrderableAdmin, EventTranslationInlineBase):
+    """Attendee list as a table (stock admin).
+
+    The stock admin has no collapsible inline, so a block per attendee would
+    render every form expanded down the page.
+    """
 
 
 @admin.register(EventAttendees)
@@ -362,6 +554,18 @@ class EventAttendeesAdmin(ModelAdmin):
     formfield_overrides = {
         **UNFOLD_FORMFIELD_OVERRIDES,
     }
+    # The attendee table grows with every signup; counting the whole filtered
+    # set on each changelist page is a full scan nobody reads. The filtered
+    # result count stays visible.
+    show_full_result_count = False
+
+    def get_search_results(self, request, queryset, search_term):
+        # EventScopedAutocompleteSelect puts the event id in the autocomplete
+        # URL so the inline only offers attendees of the event being edited.
+        event_id = request.GET.get('event_id')
+        if event_id and event_id.isdigit():
+            queryset = queryset.filter(event_id=event_id)
+        return super().get_search_results(request, queryset, search_term)
 
 
 class EventPublicationFilter(admin.SimpleListFilter):
@@ -392,6 +596,9 @@ class EventPublicationFilter(admin.SimpleListFilter):
 @admin.register(Event)
 class EventAdmin(PublicUrlAdminMixin, TranslationCompletionAdminMixin, EventTranslationAdminBase):
     save_on_top = True
+    # Counting the whole filtered event set on every changelist page is a full
+    # scan nobody reads. The filtered result count stays visible.
+    show_full_result_count = False
     formfield_overrides = {
         **UNFOLD_FORMFIELD_OVERRIDES,
         TextField: {'widget': CKEditor5Widget},
@@ -418,7 +625,10 @@ class EventAdmin(PublicUrlAdminMixin, TranslationCompletionAdminMixin, EventTran
 
     form = forms.EventCreationForm
 
-    inlines = [EventRegistrationFormInline, EventAttendeesFormInline]
+    inlines = [
+        EventRegistrationFormInline if settings.USE_UNFOLD else EventRegistrationFormClassicInline,
+        EventAttendeesFormInline if settings.USE_UNFOLD else EventAttendeesClassicInline,
+    ]
 
     def get_list_display(self, request):
         list_display = list(super().get_list_display(request))

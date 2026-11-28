@@ -167,6 +167,12 @@ class PDFFile(models.Model):
         verbose_name = _('PDF File')
         verbose_name_plural = _('PDF Files')
         ordering = ['-uploaded_at']
+        indexes = [
+            # Changelist default ordering and the public list ordering.
+            models.Index(fields=['uploaded_at'], name='pdffile_uploaded_idx'),
+            # Admin date hierarchy.
+            models.Index(fields=['publication_date'], name='pdffile_pubdate_idx'),
+        ]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -191,6 +197,10 @@ class PDFFile(models.Model):
         if collection:
             return reverse('publications:pdf_view', args=[collection.slug, self.slug])
         return reverse('publications:collection_detail', args=[self.slug])
+
+    def get_inline_title(self):
+        # The collapsed block on the collection page is the publication title.
+        return self.title or str(self.slug)
 
     def clean(self):
         super().clean()

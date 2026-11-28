@@ -1,6 +1,7 @@
 import logging
 
 from django import forms
+from django.conf import settings
 from django.contrib import admin
 from django.core.exceptions import PermissionDenied
 from django.db import models
@@ -18,7 +19,7 @@ from core.admin_base import (
     ExtraChangeListLinksMixin,
     ModelAdmin,
     PublicUrlAdminMixin,
-    TabularInline,
+    StackedInline,
     UnfoldFormMixin,
 )
 from core.admin_ui import AdminLink
@@ -141,7 +142,7 @@ class PublicationCollectionAdmin(PublicUrlAdminMixin, ExtraChangeListLinksMixin,
             },
         ),
     )
-    inlines: list[type[TabularInline]] = []
+    inlines: list[type[StackedInline]] = []
 
     def get_list_display(self, request):
         list_display = list(super().get_list_display(request))
@@ -168,7 +169,7 @@ class PublicationCollectionAdmin(PublicUrlAdminMixin, ExtraChangeListLinksMixin,
     def get_inlines(self, request, obj):
         if obj is None:
             return []
-        return [PublicationInline]
+        return [PublicationInline if settings.USE_UNFOLD else PublicationClassicInline]
 
     @admin.display(description=_('Access'))
     def access_summary(self, obj):
@@ -217,10 +218,15 @@ class PublicationCollectionAdmin(PublicUrlAdminMixin, ExtraChangeListLinksMixin,
         return self.manage_publications(obj)
 
 
-class PublicationInline(TabularInline):
+class PublicationInlineMixin:
+    """Behaviour shared by the publication inline in both admin themes."""
+
     model = PDFFile
     fk_name = 'collection'
-    extra = 1
+    # No blank row: the model's date default renders in it, so an untouched
+    # row counts as changed and the page refuses to save without a title.
+    # "Add another" still inserts a blank publication block.
+    extra = 0
     show_change_link = True
     fields = (
         'title',
@@ -237,6 +243,10 @@ class PublicationInline(TabularInline):
         models.FileField: {'widget': SafeAdminFileWidget},
         models.ImageField: {'widget': SafeAdminImageWidget},
     }
+
+    def get_queryset(self, request):
+        # The public-page column reads the collection for every row.
+        return super().get_queryset(request).select_related('collection')
 
     def get_formset(self, request, obj=None, **kwargs):
         formset = super().get_formset(request, obj, **kwargs)
@@ -263,6 +273,27 @@ class PublicationInline(TabularInline):
             obj.get_absolute_url(),
             _('Open'),
         )
+
+
+class PublicationInline(PublicationInlineMixin, StackedInline):
+    """Publications as collapsible blocks (Unfold admin).
+
+    Seven fields, a file picker and a long title do not fit a table row, so the
+    collapsed block reads as the publication title and the block gives every
+    field the full width.
+    """
+
+    collapsible = True
+
+
+class PublicationClassicInline(PublicationInlineMixin, StackedInline):
+    """Publications as stacked blocks (stock admin).
+
+    A table would need more width than the change form has: a stored filename
+    and the redirect URL alone pushed the access checkboxes and the delete
+    control out of view, and squeezing the columns left the title input too
+    narrow to read. A block gives every field its own line.
+    """
 
 
 class PublicationAdminMixin(ExtraChangeListLinksMixin):
@@ -316,6 +347,7 @@ class PDFFileAdmin(PublicUrlAdminMixin, PublicationAdminMixin, ModelAdmin):
     search_fields = ('title', 'slug', 'description', 'file', 'redirect_url', 'collection__title')
     ordering = ('-uploaded_at',)
     date_hierarchy = 'publication_date'
+    show_full_result_count = False
     prepopulated_fields = {'slug': ('title',)}
     readonly_fields = ('collection_access_details', 'uploaded_at', 'updated_at')
     fieldsets = (

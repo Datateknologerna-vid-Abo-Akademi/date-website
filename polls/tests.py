@@ -708,6 +708,36 @@ class PollPageAttendancePromptTests(TestCase):
                     self.assertContains(vote, ERROR_MESSAGES['not_present'])
 
 
+class QuestionAdminChoiceLabelTests(TestCase):
+    def test_translated_choices_have_unfold_labels_for_existing_and_new_rows(self):
+        editor = Member.objects.create_user(username='choice-editor', password='pwd', is_superuser=True)
+        question = Question.objects.create(question_text='Example question')
+        Choice.objects.create(question=question, choice_text='Example choice')
+        self.client.force_login(editor)
+
+        response = self.client.get(reverse('admin:polls_question_change', args=[question.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        widget_template = 'polls/widgets/choice_text.html'
+        if not settings.USE_UNFOLD:
+            self.assertTemplateNotUsed(response, widget_template)
+            return
+
+        self.assertTemplateUsed(response, widget_template)
+        for index in ('0', '__prefix__'):
+            for code, label in (('sv', 'Svenska'), ('en', 'English'), ('fi', 'Suomi')):
+                with self.subTest(index=index, language=code):
+                    field_id = f'id_choice_set-{index}-choice_text_{code}'
+                    self.assertInHTML(
+                        f'<label class="mb-1 block text-xs font-medium lg:hidden" for="{field_id}">{label}</label>',
+                        response.content.decode(),
+                        count=1,
+                    )
+                    self.assertRegex(
+                        response.content.decode(), rf'<input\b[^>]*id="{field_id}"[^>]*aria-label="{label}"'
+                    )
+
+
 @unittest.skipUnless(ATTENDANCE_INSTALLED, "the attendance app is not installed in this settings module")
 class QuestionAdminAttendanceTests(TestCase):
     """The meeting column and the inline, on the poll page an editor works from."""

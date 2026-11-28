@@ -6,7 +6,12 @@ from django.db import models
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 
-from core.admin_base import UNFOLD_FORMFIELD_OVERRIDES, ExtraChangeListLinksMixin, ModelAdmin, TabularInline
+from core.admin_base import (
+    UNFOLD_FORMFIELD_OVERRIDES,
+    CompactTabularInline,
+    ExtraChangeListLinksMixin,
+    ModelAdmin,
+)
 from core.admin_ui import AdminLink
 from core.admin_widgets import (
     FLATPICKR_ADMIN_CSS,
@@ -50,14 +55,14 @@ class SafeFileInlineMixin:
     }
 
 
-class DocumentInline(SafeFileInlineMixin, TabularInline):
+class DocumentInline(SafeFileInlineMixin, CompactTabularInline):
     model = Document
     fk_name = 'collection'
     can_delete = True
     extra = 1
 
 
-class PublicFileInline(SafeFileInlineMixin, TabularInline):
+class PublicFileInline(SafeFileInlineMixin, CompactTabularInline):
     model = PublicFile
     fk_name = 'collection'
     can_delete = True

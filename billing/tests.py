@@ -177,6 +177,13 @@ class GetSelectionPriceTests(BillingBaseTestCase):
         )
         self.assertEqual(price, 10.0)
 
+    def test_legacy_blank_choice_does_not_shift_prices(self):
+        EventRegistrationForm.objects.create(event=self.event, name='Drink', type='select', choice_list='Tea,,Cocoa')
+
+        price = get_selection_price(self.event, '2,7,12', 'Drink', {'Drink': 'Cocoa'})
+
+        self.assertEqual(price, 12.0)
+
     def test_falls_back_to_flat_price_when_selector_missing(self):
         price = get_selection_price(
             self.event,
