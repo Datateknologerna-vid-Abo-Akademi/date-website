@@ -2,12 +2,13 @@ import json
 from io import StringIO
 
 from django.contrib.auth.models import Group, Permission
-from django.core.management import call_command
+from django.core.management import CommandError, call_command
 from django.test import Client, TestCase
 from django.urls import reverse
 from django.utils import timezone
 from django_otp import DEVICE_ID_SESSION_KEY
 from django_otp.plugins.otp_totp.models import TOTPDevice
+from django_otp_webauthn.models import WebAuthnCredential
 
 from members.gdpr import anonymize_personal_data, collect_personal_data
 from members.models import ORDINARY_MEMBER, Member, MembershipType
@@ -107,6 +108,18 @@ class GDPRExportTests(GDRPTestBase):
                 data = json.loads(fh.read())
             self.assertEqual(len(data['members']), 1)
 
+    def test_export_refuses_to_overwrite_existing_file(self):
+        from pathlib import Path
+        from tempfile import TemporaryDirectory
+
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / 'export.json'
+            path.write_text('existing content', encoding='utf-8')
+            path.chmod(0o644)
+            with self.assertRaisesMessage(CommandError, 'Export destination already exists'):
+                call_command('gdpr_export', 'gdpr@example.com', output=path)
+            self.assertEqual(path.read_text(encoding='utf-8'), 'existing content')
+
 
 class GDPRDeleteTests(GDRPTestBase):
     def test_dry_run_makes_no_changes(self):
@@ -201,18 +214,30 @@ class GDPRDeleteTests(GDRPTestBase):
         self.assertFalse(Guess.objects.filter(user=self.member).exists())
         self.assertFalse(AlumniUpdateToken.objects.filter(email='gdpr@example.com').exists())
 
-    def test_delete_anonymizes_harassment_email_keeps_message(self):
-        from harassment.models import Harassment
+    def test_harassment_data_stays_outside_automated_requests(self):
+        from harassment.models import Harassment, HarassmentEmailRecipient
 
-        report = Harassment.objects.create(
-            email='gdpr@example.com',
-            message='Incident description that must be kept',
-        )
+        report = Harassment.objects.create(email='gdpr@example.com', message='Sensitive case details')
+        recipient = HarassmentEmailRecipient.objects.create(recipient_email='gdpr@example.com')
+        data = collect_personal_data('gdpr@example.com')
+        self.assertNotIn('harassment_reports', data)
+        self.assertNotIn('harassment_recipient_lists', data)
+        self.assertNotIn(report.message, json.dumps(data, default=str))
 
         call_command('gdpr_delete', 'gdpr@example.com')
         report.refresh_from_db()
-        self.assertIsNone(report.email)
-        self.assertEqual(report.message, 'Incident description that must be kept')
+        self.assertEqual(report.email, 'gdpr@example.com')
+        self.assertEqual(report.message, 'Sensitive case details')
+        self.assertTrue(HarassmentEmailRecipient.objects.filter(pk=recipient.pk).exists())
+
+    def test_erase_counts_and_removes_passkeys(self):
+        passkey = WebAuthnCredential.objects.create(
+            user=self.member, name='Laptop', credential_id=b'credential', public_key=b'public-key', confirmed=True
+        )
+        self.assertEqual(anonymize_personal_data('gdpr@example.com')['devices_deleted'], 1)
+        self.assertTrue(WebAuthnCredential.objects.filter(pk=passkey.pk).exists())
+        self.assertEqual(anonymize_personal_data('gdpr@example.com', dry_run=False)['devices_deleted'], 1)
+        self.assertFalse(WebAuthnCredential.objects.filter(pk=passkey.pk).exists())
 
     def test_delete_without_member_still_handles_attendees(self):
         from events.models import Event, EventAttendees
@@ -417,9 +442,10 @@ class GDPRAdminViewTests(GDRPTestBase):
         self.assertFalse(self.member.is_active)
 
     def test_gdpr_export_download(self):
-        response = self.client.get(reverse('admin:members_gdpr_export'), {'email': 'gdpr@example.com'})
+        response = self.client.post(reverse('admin:members_gdpr'), {'email': 'gdpr@example.com', 'action': 'export'})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response['Content-Type'], 'application/json')
+        self.assertIn('no-store', response['Cache-Control'])
         self.assertIn('attachment', response['Content-Disposition'])
         self.assertEqual(response['Content-Disposition'], 'attachment; filename="gdpr-export.json"')
         data = json.loads(response.content)
@@ -430,12 +456,21 @@ class GDPRAdminViewTests(GDRPTestBase):
         self.client.logout()
         staff = self._staff_user('gdpr-staff2')
         self._login(staff)
-        response = self.client.get(reverse('admin:members_gdpr_export'), {'email': 'gdpr@example.com'})
+        response = self.client.post(reverse('admin:members_gdpr'), {'email': 'gdpr@example.com', 'action': 'export'})
         self.assertEqual(response.status_code, 403)
+
+    def test_gdpr_get_does_not_use_email_query_for_export(self):
+        response = self.client.get(reverse('admin:members_gdpr'), {'email': 'gdpr@example.com', 'action': 'export'})
+        self.assertNotIn('Content-Disposition', response)
+        self.assertEqual(response.context['email'], '')
+
+    def test_member_link_prefills_by_id(self):
+        response = self.client.get(reverse('admin:members_gdpr_member', args=[self.member.pk]))
+        self.assertEqual(response.context['email'], self.member.email)
 
     def test_gdpr_link_only_for_superusers(self):
         self.member.refresh_from_db()
-        gdpr_url = reverse('admin:members_gdpr')
+        gdpr_url = reverse('admin:members_gdpr_member', args=[self.member.pk])
         response = self.client.get(reverse('admin:members_member_changelist'))
         self.assertContains(response, gdpr_url)
         self.client.logout()
@@ -444,26 +479,19 @@ class GDPRAdminViewTests(GDRPTestBase):
         response = self.client.get(reverse('admin:members_member_changelist'))
         self.assertNotContains(response, gdpr_url)
 
-    def test_export_includes_recipient_lists(self):
+    def test_export_includes_alumni_recipients(self):
         from alumni.models import AlumniEmailRecipient
-        from harassment.models import HarassmentEmailRecipient
 
         AlumniEmailRecipient.objects.create(recipient_email='gdpr@example.com')
-        HarassmentEmailRecipient.objects.create(recipient_email='gdpr@example.com')
 
         data = collect_personal_data('gdpr@example.com')
         self.assertEqual(len(data['alumni_recipient_lists']), 1)
-        self.assertEqual(len(data['harassment_recipient_lists']), 1)
 
-    def test_delete_removes_from_recipient_lists(self):
+    def test_delete_removes_from_alumni_recipients(self):
         from alumni.models import AlumniEmailRecipient
-        from harassment.models import HarassmentEmailRecipient
 
         AlumniEmailRecipient.objects.create(recipient_email='gdpr@example.com')
-        HarassmentEmailRecipient.objects.create(recipient_email='gdpr@example.com')
 
         summary = anonymize_personal_data('gdpr@example.com', dry_run=False)
         self.assertEqual(summary['alumni_recipients_removed'], 1)
-        self.assertEqual(summary['harassment_recipients_removed'], 1)
         self.assertFalse(AlumniEmailRecipient.objects.filter(recipient_email='gdpr@example.com').exists())
-        self.assertFalse(HarassmentEmailRecipient.objects.filter(recipient_email='gdpr@example.com').exists())

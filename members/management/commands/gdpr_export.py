@@ -2,13 +2,13 @@ import json
 import os
 import stat
 
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 
 from members.gdpr import collect_personal_data
 
 
 class Command(BaseCommand):
-    help = "Export all personal data held for an email address (GDPR access request)."
+    help = "Export supported site data for an email address (GDPR access request)."
 
     def add_arguments(self, parser):
         parser.add_argument('email', help="Email address to look up.")
@@ -17,7 +17,7 @@ class Command(BaseCommand):
             '-o',
             dest='output',
             default=None,
-            help="Write the JSON export to this file instead of stdout.",
+            help="Write the JSON export to a new file instead of stdout.",
         )
 
     def handle(self, *args, **options):
@@ -30,17 +30,17 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(f"Wrote export to {options['output']}"))
         else:
             self.stderr.write(
-                self.style.WARNING(
-                    "Warning: the export contains personal data and may include sensitive "
-                    "content such as harassment reports. Prefer --output with a protected file."
-                )
+                self.style.WARNING("Warning: the export contains personal data. Prefer --output with a protected file.")
             )
             self.stdout.write(payload)
 
     def _write_file(self, path, payload):
         """Write the export with owner-only permissions (0600)."""
-        flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC
-        fd = os.open(path, flags, stat.S_IRUSR | stat.S_IWUSR)
+        flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
+        try:
+            fd = os.open(path, flags, stat.S_IRUSR | stat.S_IWUSR)
+        except FileExistsError as exc:
+            raise CommandError("Export destination already exists. Use a new file.") from exc
         try:
             with os.fdopen(fd, 'w', encoding='utf-8') as fh:
                 fh.write(payload)

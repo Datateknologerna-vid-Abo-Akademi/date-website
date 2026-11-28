@@ -37,10 +37,10 @@
 
 `members/gdpr.py` holds the shared logic behind two management commands:
 
-- `manage.py gdpr_export <email>`: collect all personal data for an email (GDPR access request).
+- `manage.py gdpr_export <email>`: collect supported site data for an email (GDPR access request).
 - `manage.py gdpr_delete <email>`: anonymize/delete personal data (GDPR erasure), with `--dry-run` preview.
 
-The helpers resolve models through `apps.get_model`, so commands work across association variants even when some apps are not installed. Lookups are case-insensitive and match event attendees, alumni tokens, and harassment reports by their stored email, not just the member FK. See `docs/dev/operations.md` for the full erasure policy.
+The helpers resolve models through `apps.get_model`, so commands work across association variants even when some apps are not installed. Lookups are case-insensitive and match event attendees and alumni tokens by their stored email, not just the member FK. See [GDPR Requests](operations.md#gdpr-requests) for data scope, secure delivery and cleanup instructions, and erasure policy.
 
 ## Admin Customizations
 - Admin-created members require a password of at least eight characters. Changing a payment to a non-expiring subscription clears any expiry date left by the previous subscription.

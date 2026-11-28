@@ -5,7 +5,7 @@ from members.gdpr import anonymize_personal_data
 
 class Command(BaseCommand):
     help = (
-        "Anonymize or delete all personal data held for an email address "
+        "Anonymize or delete supported site data for an email address "
         "(GDPR erasure request). Use --dry-run to preview what would change."
     )
 
@@ -28,7 +28,6 @@ class Command(BaseCommand):
             ("members", 'members'),
             ("event attendee rows", 'attendees'),
             ("functionary names anonymized", 'functionaries_anonymized'),
-            ("harassment reports (email)", 'harassment_anonymized'),
         ):
             self.stdout.write(f"  {label}: {summary[key]}")
         for label, key in (

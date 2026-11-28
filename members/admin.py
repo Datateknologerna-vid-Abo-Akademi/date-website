@@ -1,6 +1,5 @@
 import logging
 from functools import reduce
-from urllib.parse import urlencode
 
 from django.conf import settings
 from django.contrib import admin
@@ -174,7 +173,7 @@ class UserAdmin(GDPRAdminMixin, _UserAdminBase):
     def gdpr_link(self, obj):
         if not obj.email:
             return "-"
-        url = reverse('admin:members_gdpr') + '?' + urlencode({'email': obj.email})
+        url = reverse('admin:members_gdpr_member', args=[obj.pk])
         return format_html('<a class="button" href="{}">GDPR</a>', url)
 
     def get_queryset(self, request):

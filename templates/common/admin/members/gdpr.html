@@ -6,7 +6,7 @@
     <div class="p-4">
       <h1 class="font-semibold mb-2 text-font-important-light text-lg dark:text-font-important-dark">GDPR</h1>
       <p class="leading-relaxed text-font-default-light dark:text-font-default-dark">
-        {% trans "Exportera eller radera all data som finns sparat för en e-postadress. Endast för superanvändare." %}
+        {% trans "Exportera eller radera uppgifter som webbplatsens GDPR-verktyg omfattar. Endast för superanvändare." %}
       </p>
     </div>
     <div class="border-base-200 border-t p-4 dark:border-base-800">
@@ -64,10 +64,6 @@
             <tr>
               <td class="py-1 pr-4">{% trans "Funktionärsnamn" %}</td>
               <td>{{ dry_run_summary.functionaries_anonymized }}</td>
-            </tr>
-            <tr>
-              <td class="py-1 pr-4">{% trans "Trakasserianmälningar (e-post)" %}</td>
-              <td>{{ dry_run_summary.harassment_anonymized }}</td>
             </tr>
             <tr>
               <td class="py-1 pr-4">{% trans "CTF-gissningar" %}</td>

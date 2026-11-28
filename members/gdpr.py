@@ -23,10 +23,11 @@ def _model(app_label, model_name):
         return None
 
 
-def _device_model(app_label):
-    """Return the 2FA device model for an otp plugin app label."""
-    model_name = 'TOTPDevice' if app_label == 'otp_totp' else 'StaticDevice'
-    return _model(app_label, model_name)
+_DEVICE_MODELS = (
+    ('otp_totp', 'TOTPDevice'),
+    ('otp_static', 'StaticDevice'),
+    ('django_otp_webauthn', 'WebAuthnCredential'),
+)
 
 
 def _empty_queryset() -> QuerySet:
@@ -45,13 +46,6 @@ def find_attendees_by_email(email: str) -> QuerySet:
     if EventAttendees is None:
         return _empty_queryset()
     return EventAttendees.objects.filter(email__iexact=email.strip())
-
-
-def find_harassment_by_email(email: str) -> QuerySet:
-    Harassment = _model('harassment', 'Harassment')
-    if Harassment is None:
-        return _empty_queryset()
-    return Harassment.objects.filter(email__iexact=email.strip())
 
 
 def find_alumni_tokens_by_email(email: str) -> QuerySet:
@@ -83,7 +77,7 @@ def _member_summary(member) -> dict:
 
 
 def collect_personal_data(email: str) -> dict[str, Any]:
-    """Collect all personal data held for an email address, as a dict."""
+    """Collect supported site data for an email address, as a dict."""
     data: dict[str, Any] = {
         'query_email': email.strip(),
         'members': [],
@@ -98,8 +92,6 @@ def collect_personal_data(email: str) -> dict[str, Any]:
         'billing_invoices': [],
         'alumni_tokens': [],
         'alumni_recipient_lists': [],
-        'harassment_reports': [],
-        'harassment_recipient_lists': [],
     }
 
     for member in find_members_by_email(email):
@@ -207,14 +199,6 @@ def collect_personal_data(email: str) -> dict[str, Any]:
         for recipient in AlumniEmailRecipient.objects.filter(recipient_email__iexact=email):
             data['alumni_recipient_lists'].append({'email': recipient.recipient_email})
 
-    for report in find_harassment_by_email(email):
-        data['harassment_reports'].append({'email': report.email, 'message': report.message})
-
-    HarassmentEmailRecipient = _model('harassment', 'HarassmentEmailRecipient')
-    if HarassmentEmailRecipient is not None:
-        for recipient in HarassmentEmailRecipient.objects.filter(recipient_email__iexact=email):
-            data['harassment_recipient_lists'].append({'email': recipient.recipient_email})
-
     return data
 
 
@@ -227,7 +211,6 @@ def anonymize_personal_data(email: str, dry_run: bool = True) -> dict:
     - Event attendee rows are kept but anonymized, since billing invoices
       cascade from them and are accounting records.
     - CTF guesses, 2FA devices and alumni tokens are deleted.
-    - Harassment report emails are anonymized, messages are kept.
     - Poll votes, authored content, functionary history and invoices are kept.
     """
     email = email.strip()
@@ -240,8 +223,6 @@ def anonymize_personal_data(email: str, dry_run: bool = True) -> dict:
         'devices_deleted': 0,
         'tokens_deleted': 0,
         'alumni_recipients_removed': 0,
-        'harassment_anonymized': 0,
-        'harassment_recipients_removed': 0,
         'functionaries_anonymized': 0,
     }
 
@@ -249,8 +230,8 @@ def anonymize_personal_data(email: str, dry_run: bool = True) -> dict:
         for member in find_members_by_email(email):
             summary['members'] += 1
 
-            for device_model in ('otp_totp', 'otp_static'):
-                Device = _device_model(device_model)
+            for app_label, model_name in _DEVICE_MODELS:
+                Device = _model(app_label, model_name)
                 if Device is not None:
                     summary['devices_deleted'] += Device.objects.filter(user=member).count()
 
@@ -277,8 +258,8 @@ def anonymize_personal_data(email: str, dry_run: bool = True) -> dict:
                 member.user_permissions.clear()
                 member.save()
 
-                for device_model in ('otp_totp', 'otp_static'):
-                    Device = _device_model(device_model)
+                for app_label, model_name in _DEVICE_MODELS:
+                    Device = _model(app_label, model_name)
                     if Device is not None:
                         Device.objects.filter(user=member).delete()
 
@@ -313,20 +294,6 @@ def anonymize_personal_data(email: str, dry_run: bool = True) -> dict:
             ).count()
             if not dry_run:
                 AlumniEmailRecipient.objects.filter(recipient_email__iexact=email).delete()
-
-        for report in find_harassment_by_email(email):
-            summary['harassment_anonymized'] += 1
-            if not dry_run:
-                report.email = None
-                report.save()
-
-        HarassmentEmailRecipient = _model('harassment', 'HarassmentEmailRecipient')
-        if HarassmentEmailRecipient is not None:
-            summary['harassment_recipients_removed'] = HarassmentEmailRecipient.objects.filter(
-                recipient_email__iexact=email
-            ).count()
-            if not dry_run:
-                HarassmentEmailRecipient.objects.filter(recipient_email__iexact=email).delete()
 
     return summary
 

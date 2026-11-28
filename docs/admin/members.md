@@ -53,11 +53,11 @@ Functionary roles and assignments are managed by the `functionaries` app. See th
 ## GDPR
 GDPR export and erasure live under **Members › Members**, accessible via the **GDPR** button in the member list or directly at `/admin/members/member/gdpr/`. These pages are superuser-only.
 
-- **Export data (JSON)**: enter an email address to download all stored personal data for that person (member profile, signups with preferences, CTF, votes, invoices, harassment reports, and more).
+- **Export data (JSON)**: enter an email address to download the supported data for that person (member profile, signups with preferences, CTF, votes, invoices, and more). Harassment reports are handled separately.
 - **Förhandsgranska radering**: shows what would be anonymized or deleted without changing anything.
 - **Bekräfta och radera data**: applies the erasure. Only appears after a preview was shown. The member row is anonymized (not deleted), attendee rows are anonymized, and CTF guesses/2FA devices/alumni tokens are deleted.
 
-See `docs/dev/operations.md` → GDPR Requests for the full erasure policy.
+Verify the requester's identity, review the export for third-party data, use a secure transfer restricted to the requester, and delete working copies after delivery. See [GDPR Requests](../dev/operations.md#gdpr-requests) for the detailed procedure and erasure policy.
 
 ## Front-Facing Pages
 - `/members/login/`: custom auth view using the `Member` model.

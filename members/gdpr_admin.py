@@ -1,12 +1,11 @@
 import json
-from urllib.parse import urlencode
 
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.validators import validate_email
 from django.http import HttpResponse, HttpResponseRedirect
 from django.template.response import TemplateResponse
-from django.urls import re_path, reverse
+from django.urls import path
 from django.utils.http import content_disposition_header
 from django.utils.translation import gettext as _
 
@@ -18,8 +17,8 @@ _PREVIEW_SESSION_KEY = 'gdpr_preview_email'
 class GDPRAdminMixin:
     """Adds GDPR export and erasure views to a ModelAdmin.
 
-    The views are superuser-only. Export returns a JSON download of all
-    personal data held for an email address; erasure runs the shared
+    The views are superuser-only. Export returns a JSON download of
+    supported site data for an email address; erasure runs the shared
     anonymization policy from ``members.gdpr``. Erasure is only accepted
     after a server-side preview was shown for the same email in this
     session.
@@ -28,12 +27,8 @@ class GDPRAdminMixin:
     def get_urls(self):
         urls = super().get_urls()
         custom_urls = [
-            re_path(r'^gdpr/$', self.admin_site.admin_view(self.gdpr_view), name="members_gdpr"),
-            re_path(
-                r'^gdpr/export/$',
-                self.admin_site.admin_view(self.gdpr_export_view),
-                name="members_gdpr_export",
-            ),
+            path('gdpr/', self.admin_site.admin_view(self.gdpr_view), name='members_gdpr'),
+            path('gdpr/<int:member_id>/', self.admin_site.admin_view(self.gdpr_view), name='members_gdpr_member'),
         ]
         return custom_urls + urls
 
@@ -51,14 +46,15 @@ class GDPRAdminMixin:
             return None
         return email
 
-    def gdpr_view(self, request):
+    def gdpr_view(self, request, member_id=None):
         self._require_superuser(request)
+        member = self.get_object(request, str(member_id)) if member_id is not None else None
         context = self.admin_site.each_context(request)
         context.update(
             {
                 'opts': self.model._meta,
                 'title': 'GDPR',
-                'email': request.GET.get('email', '').strip(),
+                'email': (member.email or '') if member else '',
                 'dry_run_summary': None,
                 'confirm_erase': False,
             }
@@ -77,7 +73,7 @@ class GDPRAdminMixin:
         elif not email:
             messages.error(request, _('Ange en e-postadress.'))
         elif action == 'export':
-            return HttpResponseRedirect(reverse('admin:members_gdpr_export') + '?' + urlencode({'email': email}))
+            return self._export_response(email)
         elif action == 'erase':
             previewed = request.session.get(_PREVIEW_SESSION_KEY)
             if request.POST.get('confirm') == '1' and previewed == email:
@@ -106,11 +102,7 @@ class GDPRAdminMixin:
             messages.info(request, _('Förhandsgranskning: inget har ändrats ännu.'))
         return TemplateResponse(request, 'admin/members/gdpr.html', context)
 
-    def gdpr_export_view(self, request):
-        self._require_superuser(request)
-        email = self._clean_email(request.GET.get('email'))
-        if not email:
-            return HttpResponseRedirect(reverse('admin:members_gdpr'))
+    def _export_response(self, email):
         data = collect_personal_data(email)
         payload = json.dumps(data, indent=2, ensure_ascii=False, default=str)
         response = HttpResponse(payload, content_type='application/json')
