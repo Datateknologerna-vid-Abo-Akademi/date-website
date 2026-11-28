@@ -1,0 +1,74 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-17 00:47+0300\n"
+"PO-Revision-Date: 2026-05-09 15:28+0300\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: sv\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Poedit 3.8\n"
+
+#: static/common/attendance/js/detail.js:46
+msgid "Ingen kamera hittades"
+msgstr "Ingen kamera hittades"
+
+#: static/common/attendance/js/detail.js:49
+msgid "Ett oväntat fel uppstod medan QR-skannern startades"
+msgstr "Ett oväntat fel uppstod medan QR-skannern startades"
+
+#: static/common/attendance/js/detail.js:81
+msgid "QR-koden innehöll ingen kod"
+msgstr "QR-koden innehöll ingen kod"
+
+#: static/common/attendance/js/detail.js:113
+msgid "QR-skannern kunde inte laddas"
+msgstr "QR-skannern kunde inte laddas"
+
+#: static/common/attendance/js/overview.js:73
+msgid "Ny kod om %(seconds)s s"
+msgstr "Ny kod om %(seconds)s s"
+
+#: static/common/attendance/js/overview.js:76
+msgid "Hämtar en ny kod..."
+msgstr "Hämtar en ny kod..."
+
+#: static/common/attendance/js/overview.js:78
+#: static/common/attendance/js/overview.js:113
+msgid "Koden uppdateras inte. Kontrollera anslutningen."
+msgstr "Koden uppdateras inte. Kontrollera anslutningen."
+
+#: static/common/attendance/js/overview.js:278
+msgid "Ansluter till servern..."
+msgstr "Ansluter till servern..."
+
+#: static/common/attendance/js/overview.js:289
+#: static/common/attendance/js/overview.js:314
+msgid "Anslutningen till servern bröts"
+msgstr "Anslutningen till servern bröts"
+
+#: static/common/attendance/js/overview.js:309
+msgid "Sidan kan inte längre uppdateras. Ladda om sidan."
+msgstr "Sidan kan inte längre uppdateras. Ladda om sidan."
+
+#: static/common/attendance/js/overview.js
+msgid "Anlände"
+msgstr "Anlände"
+
+#: static/common/attendance/js/overview.js
+msgid "Lämnade"
+msgstr "Lämnade"
+
+#: static/common/attendance/js/overview.js
+msgid "QR-kod som leder till incheckningssidan"
+msgstr "QR-kod som leder till incheckningssidan"

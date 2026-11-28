@@ -14,10 +14,21 @@ class AdminLink:
     permission: str = ''
     any_permissions: tuple[str, ...] = ()
 
+    @staticmethod
+    def _has_permission(user, permission):
+        if user.has_perm(permission):
+            return True
+        app_label, codename = permission.split('.', 1)
+        if codename.startswith('view_'):
+            return user.has_perm(f'{app_label}.change_{codename.removeprefix("view_")}')
+        return False
+
     def resolve(self, request):
-        if self.permission and not request.user.has_perm(self.permission):
+        if self.permission and not self._has_permission(request.user, self.permission):
             return None
-        if self.any_permissions and not any(request.user.has_perm(permission) for permission in self.any_permissions):
+        if self.any_permissions and not any(
+            self._has_permission(request.user, permission) for permission in self.any_permissions
+        ):
             return None
 
         href = self.url
@@ -37,24 +48,8 @@ class AdminLink:
         }
 
 
-TOPBAR_QUICK_CREATE_LINKS = (
-    AdminLink(_('Event'), icon='event', url_name='admin:events_event_add', permission='events.add_event'),
-    AdminLink(_('News'), icon='article', url_name='admin:news_post_add', permission='news.add_post'),
-    AdminLink(
-        _('Static Page'),
-        icon='web',
-        url_name='admin:staticpages_staticpage_add',
-        permission='staticpages.add_staticpage',
-    ),
-)
-
-
 def resolve_admin_links(items, request):
     return [link for item in items if (link := item.resolve(request)) is not None]
-
-
-def get_topbar_quick_create_links(request):
-    return resolve_admin_links(TOPBAR_QUICK_CREATE_LINKS, request)
 
 
 @dataclass(frozen=True)
@@ -97,6 +92,58 @@ SIDEBAR_NAVIGATION = (
             ),
         ),
     ),
+    # Only appears for a user who holds one of the booking permissions, and only
+    # on an association that installs the app: an unresolvable permission or URL
+    # name drops the link.
+    AdminSidebarGroup(
+        _('Booking'),
+        (
+            AdminLink(
+                _('Bookings'),
+                icon='event_available',
+                url_name='admin:booking_booking_changelist',
+                permission='booking.view_booking',
+            ),
+            AdminLink(
+                _('Rooms'),
+                icon='meeting_room',
+                url_name='admin:booking_room_changelist',
+                permission='booking.view_room',
+            ),
+            AdminLink(
+                _('Closed periods'),
+                icon='event_busy',
+                url_name='admin:booking_closure_changelist',
+                permission='booking.view_closure',
+            ),
+            AdminLink(
+                _('Booking settings'),
+                icon='key',
+                url_name='admin:booking_bookingsettings_changelist',
+                permission='booking.view_bookingsettings',
+            ),
+        ),
+    ),
+    # The same rule as the booking group: a link whose permission or URL name
+    # does not resolve drops out, so the group is absent on an association that
+    # does not install the app.
+    AdminSidebarGroup(
+        _('Attendance'),
+        (
+            AdminLink(
+                _('Attendance events'),
+                icon='how_to_reg',
+                url_name='admin:attendance_attendanceevent_changelist',
+                permission='attendance.view_attendanceevent',
+            ),
+            AdminLink(
+                _('Icke-medlemmar'),
+                icon='person',
+                url_name='admin:attendance_nonmemberattendee_changelist',
+                permission='attendance.view_nonmemberattendee',
+            ),
+        ),
+    ),
     AdminSidebarGroup(
         _('Members'),
         (
@@ -125,7 +172,7 @@ SIDEBAR_NAVIGATION = (
                 _('Functionary Roles'),
                 icon='work',
                 url_name='admin:functionaries_functionaryrole_changelist',
-                permission='functionaries.view_functionaryrole',
+                any_permissions=('functionaries.view_functionaryrole', 'members.view_functionaryrole'),
             ),
         ),
     ),
@@ -190,6 +237,12 @@ SIDEBAR_NAVIGATION = (
         (
             AdminLink(_('CTF'), icon='military_tech', url_name='admin:ctf_ctf_changelist', permission='ctf.view_ctf'),
             AdminLink(
+                _('CTF Post-mortems'),
+                icon='flag',
+                url_name='admin:ctf_postmortem_changelist',
+                any_permissions=('ctf.add_ctf', 'ctf.change_ctf', 'ctf.add_flag', 'ctf.change_flag'),
+            ),
+            AdminLink(
                 _('Lucia'), icon='stars', url_name='admin:lucia_candidate_changelist', permission='lucia.view_candidate'
             ),
         ),
@@ -207,19 +260,40 @@ SIDEBAR_NAVIGATION = (
                 _('Instagram URLs'),
                 icon='photo_camera',
                 url_name='admin:instagram_igurl_changelist',
-                permission='instagram.view_igurl',
+                any_permissions=('instagram.view_igurl', 'social.view_igurl'),
             ),
             AdminLink(
                 _('Harassment Reports'),
                 icon='report',
                 url_name='admin:harassment_harassment_changelist',
-                permission='harassment.view_harassment',
+                any_permissions=('harassment.view_harassment', 'social.view_harassment'),
             ),
             AdminLink(
                 _('Report Recipients'),
                 icon='mail',
                 url_name='admin:harassment_harassmentemailrecipient_changelist',
-                permission='harassment.view_harassmentemailrecipient',
+                any_permissions=(
+                    'harassment.view_harassmentemailrecipient',
+                    'social.view_harassmentemailrecipient',
+                ),
+            ),
+            AdminLink(
+                _('Feedback'),
+                icon='forum',
+                url_name='admin:feedback_feedbacksubmission_changelist',
+                permission='feedback.view_feedbacksubmission',
+            ),
+            AdminLink(
+                _('Feedback Recipients'),
+                icon='mail',
+                url_name='admin:feedback_feedbackemailrecipient_changelist',
+                permission='feedback.view_feedbackemailrecipient',
+            ),
+            AdminLink(
+                _('Feedback Settings'),
+                icon='edit_note',
+                url_name='admin:feedback_feedbackformsettings_changelist',
+                permission='feedback.view_feedbackformsettings',
             ),
         ),
     ),

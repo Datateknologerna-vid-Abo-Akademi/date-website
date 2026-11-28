@@ -1,0 +1,95 @@
+/*
+  Shared core of the per-association core/css/base.css sheets.
+
+  Each association ships its own core/css/base.css, and these rules and
+  declarations are identical in all of them, so they live here once.
+  templates/common/core/base.html links this sheet immediately before the
+  per-association core/css/base.css, so the association sheet loads second and
+  its own declarations still win wherever the association diverges.
+*/
+
+html {
+    scroll-behavior: smooth;
+}
+
+html body {
+    background-color: var(--primaryColor);
+    font-family: 'Josefin Sans', sans-serif;
+}
+
+.content img {
+    max-width: 100%;
+    border-radius: var(--defaultRadius);
+}
+
+div a {
+    display: inline-block;
+    text-decoration: none;
+}
+
+div a:hover {
+    transition: 0.3s;
+}
+
+.break-words {
+    word-break: break-all;
+    word-break: break-word;
+    hyphens: auto;
+}
+
+.help-text {
+    color: var(--helpText);
+}
+
+.warning {
+    color: var(--warning);
+}
+
+.container-margin-top {
+    margin-top: 12vh;
+}
+
+.container-size {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.content {
+    margin: 20px 2vw;
+    padding: var(--defaultPadding);
+    border-radius: var(--defaultRadius);
+}
+
+.theme-button {
+    border: none;
+    padding: 10px 20px;
+    text-align: center;
+    font-size: 16px;
+    border-radius: 5px;
+    font-family: 'Josefin Sans', sans-serif;
+    cursor: pointer;
+    transition: background-color 0.3s, color 0.3s;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.theme-button:active {
+    transform: scale(0.95);
+}
+
+.theme-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.theme-button.alt:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+}
+
+.theme-button .fa-chevron-right {
+    transition: .3s;
+}
+
+.theme-button:hover .fa-chevron-right {
+    transform: translateX(10px);
+}

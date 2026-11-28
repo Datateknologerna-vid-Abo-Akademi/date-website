@@ -1,0 +1,207 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% load i18n %}
+{% block title %}{{ ASSOCIATION_NAME_SHORT }} - {% blocktrans with title=object.title %}Närvaro för {{title}}{% endblocktrans %}{% endblock %}
+{% block extra_head %}
+  {{ block.super }}
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qr-scanner/1.4.2/qr-scanner.umd.min.js"
+          integrity="sha512-a/IwksuXdv0Q60tVkQpwMk5qY+6cJ0FJgi33lrrIddoFItTRiRfSdU1qogP3uYjgHfrGY7+AC+4LU4J+b9HcgQ=="
+          crossorigin="anonymous"
+          referrerpolicy="no-referrer"></script>
+  <link rel="stylesheet" href="{% static 'attendance/css/attendance.css' %}">
+  {# Without JavaScript the pagers cannot reveal the rows they are hiding, so both lists would stop at their first page. #}
+  <noscript>
+    <style>
+      #present-roster li[hidden] { display: list-item !important; }
+      #roster-more { display: none !important; }
+      #change-log tr[hidden] { display: table-row !important; }
+      #log-more { display: none !important; }
+      #log-end[hidden] { display: block !important; }
+    </style>
+  </noscript>
+  <script src="{% url 'javascript-catalog' %}"></script>
+  <script src="{% static 'attendance/js/changes-table.js' %}" defer></script>
+  <script src="{% static 'attendance/js/detail.js' %}" defer></script>
+{% endblock %}
+{% block content %}
+  <div class="container-md min-vh-100 container-margin-top d-flex justify-content-center">
+    <div class="container-size">
+      <div class="content attendance-page" style="width: fit-content">
+        {% if can_see_attendance %}
+          <div class="mb-2">
+            <a href="{% url 'attendance-event-overview' object.slug %}">{% trans "Till översiktsvyn" %}</a>
+          </div>
+        {% endif %}
+        <div class="attendance-head">
+          <h1>{{ object.title }}</h1>
+          <p class="h5">{{ object.description }}</p>
+          <p>
+            {% blocktrans trimmed with start=object.start_datetime %}
+              Börjar: {{ start }}
+            {% endblocktrans %}
+          </p>
+          <p>
+            {% blocktrans trimmed with end=object.end_datetime|default:"-" %}
+              Slutar: {{ end }}
+            {% endblocktrans %}
+          </p>
+        </div>
+        {% if is_present is not None %}
+          <p class="attendance-presence">
+            {% trans "Du är" %}
+            {% if is_present %}
+              <span class="text-success">{% trans "närvarande" %}</span>
+            {% else %}
+              <span class="text-warning">{% trans "inte närvarande" %}</span>
+            {% endif %}
+          </p>
+        {% endif %}
+        <div>
+          {% if generic_error %}
+            <p class="warning">{{ generic_error }}</p>
+          {% endif %}
+          {% if lockout_error %}
+            <p class="warning">{{ lockout_error }}</p>
+          {% endif %}
+          <form method="post">
+            {% csrf_token %}
+            {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+            {% if not user.is_authenticated %}
+              <div class="mb-3">
+                <label for="non_member_name" class="visually-hidden">{% trans "Namn" %}</label>
+                <p id="non-member-name-help">
+                  {% trans "Du är inte inloggad. Fyll i ditt namn nedan om du inte har ett konto. Om du har ett konto var vänlig och logga in." %}
+                </p>
+                <div class="input-group">
+                  <input type="text"
+                         class="form-control {% if non_member_name_error %} is-invalid {% endif %}"
+                         id="non_member_name"
+                         name="non_member_name"
+                         value="{{ prefilled_name }}"
+                         placeholder="{% trans "Namn" %}"
+                         aria-describedby="non-member-name-help{% if non_member_name_error %} non-member-name-error{% endif %}"
+                         required>
+                  {% if non_member_name_error %}
+                    <div class="invalid-feedback" id="non-member-name-error" role="alert">{{ non_member_name_error }}</div>
+                  {% endif %}
+                </div>
+              </div>
+            {% endif %}
+            <div class="mb-3">
+              <label for="code" class="visually-hidden">{% trans "Kod" %}</label>
+              <div class="input-group">
+                <input type="text"
+                       inputmode="numeric"
+                       class="form-control {% if code_error %} is-invalid {% endif %}"
+                       name="code"
+                       id="code"
+                       placeholder="{% trans "Kod" %}"
+                       value="{{ prefilled_code }}"
+                       {% if code_error %}aria-describedby="code-error"{% endif %}
+                       required>
+                <button class="btn btn-secondary" id="qr-scan" type="button" disabled>
+                  <i class="bi bi-camera" aria-hidden="true"></i> {% trans "Skanna QR-kod" %}
+                </button>
+                <button class="btn btn-danger" id="qr-scan-stop" type="button" hidden>
+                  <i class="bi bi-stop" aria-hidden="true"></i> {% trans "Sluta skanna" %}
+                </button>
+                {% if code_error %}
+                  <div class="invalid-feedback" id="code-error" role="alert">{{ code_error }}</div>
+                {% endif %}
+              </div>
+              <noscript>
+                <div class="form-text">{% trans "Tillåt JavaScript för att skanna QR-koder" %}</div>
+              </noscript>
+            </div>
+            <div id="qr-reader-div" hidden>
+              <video class="w-100" id="qr-reader">
+              </video>
+            </div>
+            <div id="qr-reader-error" hidden aria-live="polite"></div>
+            <div class="attendance-actions mb-2">
+              <button type="submit"
+                      class="btn btn-success"
+                      name="type"
+                      value="0"
+                      {% if is_present %} disabled {% endif %}>{% trans "Gå in" %}</button>
+              <button type="submit"
+                      class="btn btn-warning"
+                      name="type"
+                      value="1"
+                      {% if is_present is not None and not is_present %} disabled {% endif %}>
+                {% trans "Gå ut" %}
+              </button>
+            </div>
+            <p class="attendance-hint">
+              {% trans "Koden visas i mötesrummet. Välj Gå in när du kommer och Gå ut när du lämnar mötet." %}
+            </p>
+          </form>
+        </div>
+        <section class="attendance-section">
+          <h2>{% trans "Närvarande" %}: <span id="present-count">{{ present_attendees|length }}</span></h2>
+          {# The number is the room's size and costs nobody anything. The names are a list of who is in the room, so they follow the same permission as the log below. #}
+          {% if can_see_attendance %}
+            <ul class="attendance-list" id="present-roster">
+              {% for a in present_attendees %}
+                <li{% if forloop.counter > roster_visible %} hidden{% endif %}>{{ a.get_full_name }}</li>
+              {% endfor %}
+            </ul>
+            {% if present_attendees|length > roster_visible %}
+              <button type="button"
+                      class="attendance-list__more"
+                      id="roster-more"
+                      data-page-size="{{ roster_page_size }}">
+                {% trans "Visa fler" %} <i class="bi bi-chevron-down" aria-hidden="true"></i>
+              </button>
+            {% endif %}
+          {% endif %}
+        </section>
+        {% if can_see_attendance %}
+          <section class="attendance-section">
+            <h2 id="changes-heading">{% trans "Närvaroändringar" %}</h2>
+            <p class="attendance-changes__hint">{% trans "Nyaste först. Listan uppdateras när sidan laddas om." %}</p>
+            <div class="attendance-changes-wrap">
+              <table class="attendance-changes" aria-labelledby="changes-heading">
+                <thead>
+                  <tr>
+                    <th scope="col">{% trans "Tid" %}</th>
+                    <th scope="col">{% trans "Deltagare" %}</th>
+                    <th scope="col">{% trans "Ändring" %}</th>
+                  </tr>
+                </thead>
+                <tbody id="change-log">
+                  {% for change in changes %}
+                    <tr class="attendance-changes__row--{{ change.type_name|lower }}"
+                        {% if forloop.counter > changes_visible %}hidden{% endif %}>
+                      <td class="attendance-changes__time">{{ change.timestamp|date:"SHORT_DATE_FORMAT" }} {{ change.timestamp|time }}</td>
+                      <td class="attendance-changes__name">{{ change.attendee_name }}</td>
+                      <td class="attendance-changes__action attendance-changes__action--{{ change.type_name|lower }}">
+                        {% trans change.get_type_display context "left/entered in general" %}
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            {% if changes|length > changes_visible %}
+              <button type="button"
+                      class="attendance-changes__more"
+                      id="log-more"
+                      data-page-size="{{ changes_page_size }}">
+                {% trans "Visa fler" %} <i class="bi bi-chevron-down" aria-hidden="true"></i>
+              </button>
+            {% endif %}
+            {% if can_see_report %}
+              <p id="log-end"
+                 class="attendance-changes__end"
+                 {% if changes|length > changes_visible %}hidden{% endif %}>
+                {% trans "Hela loggen finns i rapporten." %}
+                <a href="{% url 'admin:attendance_event_report' object.pk %}">{% trans "Öppna rapporten" %}</a>
+              </p>
+            {% endif %}
+          </section>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+{% endblock %}

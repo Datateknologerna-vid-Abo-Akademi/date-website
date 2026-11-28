@@ -20,6 +20,7 @@ class PostCreationForm(forms.ModelForm):
         model = Post
         fields = (
             'title',
+            'title_shine',
             'category',
             'content',
             'published_time',
@@ -55,6 +56,7 @@ class PostEditForm(forms.ModelForm):
         model = Post
         fields = (
             'title',
+            'title_shine',
             'category',
             'content',
             'published_time',

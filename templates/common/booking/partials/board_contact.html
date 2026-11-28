@@ -1,0 +1,8 @@
+{% load i18n %}
+{% if ASSOCIATION_EMAIL %}
+  <p class="booking-help booking-contact">
+    {% blocktrans %}Har du frågor om en bokning, kontakta styrelsen via {{ ASSOCIATION_EMAIL }}.{% endblocktrans %}
+  </p>
+{% else %}
+  <p class="booking-help booking-contact">{% trans "Har du frågor om en bokning, kontakta styrelsen." %}</p>
+{% endif %}

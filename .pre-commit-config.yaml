@@ -3,6 +3,9 @@ repos:
     rev: v5.0.0
     hooks:
       - id: check-yaml
+        # Helm templates contain Go template directives and are not valid YAML
+        # until rendered; `helm lint` covers them.
+        exclude: ^charts/[^/]+/templates/
       - id: check-toml
       - id: check-merge-conflict
       - id: debug-statements

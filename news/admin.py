@@ -27,6 +27,14 @@ class CategoryAdmin(PublicUrlAdminMixin, TranslationCompletionAdminMixin, NewsTr
     list_display = ('name', 'translation_status')
     search_fields = ('name', 'slug')
     ordering = ('name',)
+    prepopulated_fields = {'slug': ('name',)}
+
+    def get_prepopulated_fields(self, request, obj=None):
+        # Only offer the slug suggestion on creation; an existing public URL
+        # must not change just because the name was edited.
+        if obj is None:
+            return self.prepopulated_fields
+        return {}
 
 
 class PostPublicationFilter(admin.SimpleListFilter):
@@ -58,8 +66,28 @@ class PostAdmin(PublicUrlAdminMixin, TranslationCompletionAdminMixin, NewsTransl
     }
 
     fieldsets = [
-        (None, {'fields': ['title', 'category', 'content', 'published_time', 'slug']}),
+        (None, {'fields': ['title', 'title_shine', 'category', 'content', 'published_time', 'slug']}),
     ]
+
+    def get_fieldsets(self, request, obj=None):
+        # The checkbox does nothing without the association's .title-shine styles.
+        fieldsets = super().get_fieldsets(request, obj)
+        if settings.TITLE_SHINE_ENABLED:
+            return fieldsets
+        return [
+            (name, {**options, 'fields': [f for f in options['fields'] if f != 'title_shine']})
+            for name, options in fieldsets
+        ]
+
+    prepopulated_fields = {'slug': ('title',)}
+
+    def get_prepopulated_fields(self, request, obj=None):
+        # Only suggest a slug while creating; editing the title of an existing
+        # post must not change its already published URL.
+        if obj is None:
+            return self.prepopulated_fields
+        return {}
+
     list_display = (
         'title',
         'translation_status',
@@ -85,6 +113,7 @@ class PostAdmin(PublicUrlAdminMixin, TranslationCompletionAdminMixin, NewsTransl
     list_select_related = ('author', 'category')
     ordering = ('-created_time',)
     date_hierarchy = 'created_time'
+    show_full_result_count = False
 
     def get_form(self, request, obj=None, change=False, **kwargs):
         if obj is None:

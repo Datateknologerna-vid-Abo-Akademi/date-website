@@ -1,9 +1,12 @@
-from django.test import Client, TestCase
+from datetime import timedelta
+
+from django.core.cache import cache
+from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
 from members.models import Member
-from news.models import Post
+from news.models import Category, Post
 
 
 class NewsTestCase(TestCase):
@@ -13,7 +16,7 @@ class NewsTestCase(TestCase):
             title='Test news',
             slug='test',
             author_id=self.member.id,
-            published_time=timezone.now() - timezone.timedelta(seconds=1),
+            published_time=timezone.now() - timedelta(seconds=1),
         )
         self.assertIsNotNone(self.post)
         self.assertTrue(self.post.published)
@@ -42,3 +45,247 @@ class NewsTestCase(TestCase):
         c = Client()
         response = c.get(reverse('news:detail', args=[self.post.slug]))
         self.assertEqual(response.status_code, 200)
+
+    def test_index_orders_equal_publication_times_by_descending_pk(self):
+        self.post.unpublish()
+        published_time = timezone.now() - timezone.timedelta(minutes=1)
+        posts = Post.objects.bulk_create(
+            [
+                Post(
+                    title=f'Post {number}',
+                    slug=f'post-{number}',
+                    author=self.member,
+                    published_time=published_time,
+                )
+                for number in range(11)
+            ]
+        )
+
+        response = self.client.get(reverse('news:index'))
+
+        listed_posts = list(response.context['latest_news_items'])
+        self.assertEqual(listed_posts, list(reversed(posts))[:10])
+
+    def test_index_renders_windowed_pagination(self):
+        published_time = timezone.now() - timezone.timedelta(minutes=1)
+        Post.objects.bulk_create(
+            [
+                Post(
+                    title=f'Pagination post {number}',
+                    slug=f'pagination-post-{number}',
+                    author=self.member,
+                    published_time=published_time,
+                )
+                for number in range(90)
+            ]
+        )
+
+        response = self.client.get(reverse('news:index'), {'page': 5})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['latest_news_items'].number, 5)
+        self.assertContains(response, '<a href="?page=1">1</a>', html=True)
+        self.assertContains(response, '<a class="disabled">…</a>', count=2, html=True)
+        for page_number in range(3, 8):
+            if page_number == 5:
+                self.assertContains(response, '<a class="active">5</a>', html=True)
+            else:
+                self.assertContains(response, f'<a href="?page={page_number}">{page_number}</a>', html=True)
+        self.assertContains(response, '<a href="?page=10">10</a>', html=True)
+
+
+class PageWindowTestCase(TestCase):
+    def test_page_window(self):
+        from news.views import _page_window
+
+        cases = [
+            # (current, total, window, expected dict)
+            (
+                1,
+                1,
+                2,
+                {
+                    'page_range_window': range(1, 2),
+                    'show_first_page': False,
+                    'show_last_page': False,
+                    'show_first_ellipsis': False,
+                    'show_last_ellipsis': False,
+                },
+            ),
+            (
+                1,
+                5,
+                2,
+                {
+                    'page_range_window': range(1, 4),
+                    'show_first_page': False,
+                    'show_last_page': True,
+                    'show_first_ellipsis': False,
+                    'show_last_ellipsis': True,
+                },
+            ),
+            (
+                2,
+                5,
+                2,
+                {
+                    'page_range_window': range(1, 5),
+                    'show_first_page': False,
+                    'show_last_page': True,
+                    'show_first_ellipsis': False,
+                    'show_last_ellipsis': False,
+                },
+            ),
+            (
+                3,
+                5,
+                2,
+                {
+                    'page_range_window': range(1, 6),
+                    'show_first_page': False,
+                    'show_last_page': False,
+                    'show_first_ellipsis': False,
+                    'show_last_ellipsis': False,
+                },
+            ),
+            (
+                4,
+                5,
+                2,
+                {
+                    'page_range_window': range(2, 6),
+                    'show_first_page': True,
+                    'show_last_page': False,
+                    'show_first_ellipsis': False,
+                    'show_last_ellipsis': False,
+                },
+            ),
+            (
+                5,
+                5,
+                2,
+                {
+                    'page_range_window': range(3, 6),
+                    'show_first_page': True,
+                    'show_last_page': False,
+                    'show_first_ellipsis': True,
+                    'show_last_ellipsis': False,
+                },
+            ),
+            (
+                5,
+                20,
+                2,
+                {
+                    'page_range_window': range(3, 8),
+                    'show_first_page': True,
+                    'show_last_page': True,
+                    'show_first_ellipsis': True,
+                    'show_last_ellipsis': True,
+                },
+            ),
+            (
+                3,
+                5,
+                0,
+                {
+                    'page_range_window': range(3, 4),
+                    'show_first_page': True,
+                    'show_last_page': True,
+                    'show_first_ellipsis': True,
+                    'show_last_ellipsis': True,
+                },
+            ),
+        ]
+
+        for current, total, window, expected in cases:
+            with self.subTest(current=current, total=total, window=window):
+                page_obj = _fake_page(current, total)
+                result = _page_window(page_obj, window=window)
+                self.assertEqual(result, expected)
+
+
+def _fake_page(number, total):
+    paginator = type('FakePaginator', (), {'num_pages': total})()
+    return type('FakePage', (), {'number': number, 'paginator': paginator})()
+
+
+class AlbinsAngelsBadgeTests(TestCase):
+    """The badge is an opt-in block override, and the snippet gates on the name.
+
+    DaTe and Pulterit show it by overriding the block in the shared article and
+    index templates, so the shared templates render nothing for associations that
+    do not ask for it. The dev database has no post in this category, which is why
+    this is asserted here rather than in a capture.
+    """
+
+    def make_post(self, *, category_name: str, slug: str) -> Post:
+        author = Member.objects.create(username=f"author-{slug}", password="test")
+        category = Category.objects.create(name=category_name, slug=f"{slug}-category")
+        return Post.objects.create(
+            title=f"Post {slug}",
+            slug=slug,
+            author=author,
+            category=category,
+            published_time=timezone.now() - timedelta(seconds=1),
+        )
+
+    def test_the_article_page_shows_the_badge_for_that_category(self):
+        post = self.make_post(category_name="Albins Angels", slug="aa-post")
+
+        response = self.client.get(post.get_absolute_url())
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "aa-img")
+
+    def test_another_category_renders_no_badge(self):
+        post = self.make_post(category_name="Nyheter", slug="plain-post")
+
+        response = self.client.get(post.get_absolute_url())
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "aa-img")
+
+
+class TitleShineTests(TestCase):
+    """The title_shine checkbox adds the title-shine class on the list and article."""
+
+    def setUp(self):
+        cache.clear()  # /news/ caches its list for 60 seconds
+        self.admin = Member.objects.create_superuser(username='shine-admin', password='pwd', email='a@example.com')
+        published = timezone.now() - timedelta(seconds=1)
+        self.shiny = Post.objects.create(
+            title='Shiny', slug='shiny', author=self.admin, published_time=published, title_shine=True
+        )
+        self.plain = Post.objects.create(title='Plain', slug='plain', author=self.admin, published_time=published)
+
+    def test_new_posts_do_not_shine_by_default(self):
+        self.assertFalse(self.plain.title_shine)
+
+    def test_index_marks_only_ticked_posts(self):
+        response = self.client.get(reverse('news:index'))
+
+        self.assertContains(response, '<h2 class="title-shine">Shiny</h2>', html=True)
+        self.assertContains(response, '<h2>Plain</h2>', html=True)
+
+    def test_article_title_shines_when_ticked(self):
+        self.assertContains(self.client.get(self.shiny.get_absolute_url()), 'class="title-shine"')
+        self.assertNotContains(self.client.get(self.plain.get_absolute_url()), 'class="title-shine"')
+
+    @override_settings(TITLE_SHINE_ENABLED=True)
+    def test_admin_shows_the_checkbox_when_enabled(self):
+        self.client.force_login(self.admin)
+
+        self.assertContains(self.client.get(reverse('admin:news_post_add')), 'name="title_shine"')
+        self.assertContains(
+            self.client.get(reverse('admin:news_post_change', args=[self.plain.pk])), 'name="title_shine"'
+        )
+
+    @override_settings(TITLE_SHINE_ENABLED=False)
+    def test_admin_hides_the_checkbox_when_disabled(self):
+        self.client.force_login(self.admin)
+
+        self.assertNotContains(self.client.get(reverse('admin:news_post_add')), 'name="title_shine"')
+        self.assertNotContains(
+            self.client.get(reverse('admin:news_post_change', args=[self.plain.pk])), 'name="title_shine"'
+        )

@@ -29,3 +29,9 @@ backups:
   objectStorage:
     bucketName: "pulterit-website-backups"
     prefix: "pulterit-website/postgresql"
+
+# The published image is built with PROJECT_NAME=date, so non-date variants
+# re-collect static at pod startup with their own asset dirs. Build per-site
+# images (--build-arg PROJECT_NAME=pulterit) to drop this and disable the flag.
+web:
+  collectstaticOnStartup: true

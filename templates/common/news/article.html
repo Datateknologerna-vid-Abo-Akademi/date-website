@@ -7,10 +7,16 @@
   <meta property="og:title" content="{{ article.title }}">
   <meta property="og:type" content="article">
   <meta property="og:url" content="{{ request.build_absolute_uri }}">
-  {% if article.content %}<meta property="og:description" content="{{ article.content|plaintext_truncate:160 }}">{% endif %}
+  {% if article.content %}
+    <meta property="og:description"
+          content="{{ article.content|plaintext_truncate:160 }}">
+  {% endif %}
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="{{ article.title }}">
-  {% if article.content %}<meta name="twitter:description" content="{{ article.content|plaintext_truncate:160 }}">{% endif %}
+  {% if article.content %}
+    <meta name="twitter:description"
+          content="{{ article.content|plaintext_truncate:160 }}">
+  {% endif %}
 {% endblock %}
 {% block extra_head %}
   {{ block.super }}
@@ -20,8 +26,9 @@
 {% block content %}
   <div class="container-md container-margin-top min-vh-100 p-1">
     <div class="container-size break-words">
+      {% block article_badge %}{% endblock %}
       <div class="content overflow-auto">
-        <h2>{{ article.title }}</h2>
+        <h2{% if article.title_shine %} class="title-shine"{% endif %}>{{ article.title }}</h2>
         <h4 class="author">
           {% blocktranslate with published_time=article.published_time trimmed %}
             Skriven {{ published_time }} av

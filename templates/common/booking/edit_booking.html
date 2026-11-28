@@ -1,0 +1,31 @@
+{% extends 'core/base.html' %}
+{% load booking_dates %}
+{% load static %}
+{% load i18n %}
+{% block title %}
+  {% trans "Ändra bokningen" %}
+{% endblock %}
+{% block extra_head %}
+  {{ block.super }}
+  <link rel="stylesheet"
+        href="{% static 'booking/css/booking.css' %}"
+        type="text/css">
+  <script src="{% static 'booking/js/booking-time-range.js' %}" defer></script>
+{% endblock %}
+{% block content %}
+  <div class="container-md min-vh-100 container-margin-top">
+    <div class="container-size break-words">
+      <div class="content">
+        <h1 class="booking-heading">{% trans "Ändra bokningen" %}</h1>
+        <ul class="booking-list">
+          <li class="booking-list-item">{% include 'booking/partials/booking_row.html' with show_room=True %}</li>
+        </ul>
+        {% include 'booking/partials/edit_booking_form.html' %}
+        <p class="booking-help booking-back">
+          <a href="{% url 'booking:my_bookings' %}">{% trans "Tillbaka till mina bokningar" %}</a>
+        </p>
+        {% include 'booking/partials/board_contact.html' %}
+      </div>
+    </div>
+  </div>
+{% endblock %}

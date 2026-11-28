@@ -1,15 +1,19 @@
+import functools
 import logging
 import secrets
-from itertools import chain
+import time
+import zlib
 from urllib.parse import urlsplit, urlunsplit
 
+from django.apps import apps
 from django.conf import settings
 from django.core.cache import cache
-from django.db import connection
+from django.db import close_old_connections, connection, transaction
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils import timezone, translation
+from django.utils.translation import get_language
 
 from ads.models import AdUrl
 from events.models import Event
@@ -17,8 +21,11 @@ from instagram.models import IgUrl
 from news.models import Post
 
 from .language_utils import resolve_language, strip_language_prefix
+from .lunch import student_lunch_link
 
 logger = logging.getLogger(__name__)
+ALBINS_ANGELS_CATEGORY_NAME = "Albins Angels"
+RECENT_ALBINS_ANGELS_DAYS = 10
 
 
 def should_check_cache_readiness():
@@ -48,7 +55,7 @@ def readyz(request):
 
 def get_homepage_template_name():
     """Return the homepage template for the active association."""
-    if settings.PROJECT_NAME != 'kk':
+    if not settings.APRIL_HOMEPAGE_ENABLED:
         return 'date/start.html'
 
     today = timezone.localdate()
@@ -59,58 +66,158 @@ def get_homepage_template_name():
     return 'date/start.html'
 
 
-def index(request):
-    events_old_events_included = (
-        Event.objects.published()
-        .filter(
-            event_date_end__gte=(timezone.now() - timezone.timedelta(days=31)),
+def get_recent_albins_angels_post(now=None):
+    now = now or timezone.now()
+    cutoff = now - timezone.timedelta(days=RECENT_ALBINS_ANGELS_DAYS)
+    return (
+        Post.objects.filter(
+            category__name=ALBINS_ANGELS_CATEGORY_NAME,
+            published_time__lte=now,
+            published_time__gt=cutoff,
         )
+        .select_related('category')
+        .order_by('-published_time')
+        .first()
+    )
+
+
+def format_calendar_events(all_events):
+    """Return event metadata keyed by YYYY-MM-DD for the front-end calendar.
+
+    A day may hold several events, so each key maps to a list of events.
+    """
+    calendar_events = {}
+    for event in all_events:
+        event_url = reverse("events:detail", kwargs={"slug": event.slug})
+        key = event.event_date_start.strftime("%Y-%m-%d")
+        calendar_events.setdefault(key, []).append(
+            {
+                "link": event_url,
+                "eventFullDate": event.event_date_start,
+                "eventTitle": event.title,
+                "titleShine": event.title_shine,
+            }
+        )
+    return calendar_events
+
+
+# The TTL is only a backstop: every Event/Post/AdUrl/IgUrl save or delete
+# bumps HOMEPAGE_VERSION_KEY (see date/apps.py), so admin edits invalidate
+# cached anonymous homepages immediately. Development uses the dummy cache,
+# so caching is off there.
+HOMEPAGE_CACHE_TTL = 300
+
+
+def _homepage_version_key():
+    return f"homepage-version:{settings.PROJECT_NAME}"
+
+
+def _homepage_version():
+    version = cache.get(_homepage_version_key())
+    if version is not None:
+        return version
+    # Initialize atomically and without expiry, with a nanosecond-time value:
+    # an evicted key must never restart at a generation whose cached entries
+    # may still exist (second-granularity time would collide within the same
+    # second), or stale homepages would be served again.
+    cache.add(_homepage_version_key(), time.time_ns(), timeout=None)
+    # Another process may have initialized a different value in the meantime.
+    return cache.get(_homepage_version_key()) or 1
+
+
+def bump_homepage_version(**kwargs):
+    """Invalidate cached anonymous homepages after the transaction commits."""
+
+    def _bump():
+        try:
+            cache.incr(_homepage_version_key())
+        except ValueError:
+            # Evicted (or never set): start a fresh generation that cannot
+            # collide with any still-live entry (see _homepage_version).
+            cache.add(_homepage_version_key(), time.time_ns(), timeout=None)
+
+    transaction.on_commit(_bump)
+
+
+@functools.cache
+def _homepage_schema():
+    """Fingerprint of the model fields the cached homepage context pickles.
+
+    Blue-green releases share the cache. An instance pickled by a release that
+    lacks a field unpickles without it, and every template access to that field
+    then costs a deferred-field query. Keying on the fields keeps releases with
+    different models on separate cache entries. crc32, not hash(), so every
+    process agrees on the value.
+    """
+    models = [Event, Post, AdUrl, IgUrl]
+    if apps.is_installed('booking'):
+        models += [apps.get_model('booking', 'Booking'), apps.get_model('booking', 'Room')]
+    fields = ",".join(
+        f"{model._meta.label}.{field.attname}" for model in models for field in model._meta.concrete_fields
+    )
+    return format(zlib.crc32(fields.encode()), "08x")
+
+
+def _homepage_context(now=None):
+    now = now or timezone.now()
+    # Evaluate each queryset exactly once; derive upcoming events in Python.
+    recent_events = list(
+        Event.objects.published()
+        .filter(event_date_end__gte=now - timezone.timedelta(days=31))
         .exclude(slug="")
         .exclude(slug__isnull=True)
         .order_by('event_date_start')
     )
-    events = events_old_events_included.filter(event_date_end__gte=timezone.now())
-    news = Post.objects.published().filter(category__isnull=True).reverse()[:3]
+    upcoming_events = [event for event in recent_events if event.event_date_end >= now]
+    news = list(Post.objects.published().filter(category__isnull=True).reverse()[:3])
 
-    # Show Albins Angels logo if new post in last 10 days
-    aa_posts = (
-        Post.objects.published().filter(category__name="Albins Angels").order_by('published_time').reverse()[:1]
-    )  # TODO Remove this hardcoding or move to different function/file
-    time_since = timezone.now() - timezone.timedelta(days=10)
-    aa_post = ''
-    if aa_posts and aa_posts[0].published_time > time_since:
-        aa_post = aa_posts[0]
+    bookings = []
+    if getattr(settings, 'BOOKING_ENABLED', False) and apps.is_installed('booking'):
+        # Imported lazily on purpose: core/urls/common.py imports this module
+        # for every association and only DaTe installs the booking app.
+        from booking.models import Booking
 
-    def calendar_format(all_events):
-        """Format events into a dictionary where keys (dates)
-        are mapped to data used by the calendar on the frontend"""
-        calendar_events_dict = {}
-        for event in all_events:
-            event_url = reverse("events:detail", kwargs={"slug": event.slug})
-            # The rest of the "html" field is set on the client side
-            # since it includes a time that gets localized on the client-side
-            event_dict = {
-                event.event_date_start.strftime("%Y-%m-%d"): {
-                    "link": event_url,
-                    "modifier": "calendar-eventday",
-                    "eventFullDate": event.event_date_start,
-                    "eventTitle": event.title,
-                }
-            }
-            calendar_events_dict.update(event_dict)
-        return calendar_events_dict
+        bookings = list(
+            Booking.objects.filter(
+                start__gte=now,
+                start__lte=now + timezone.timedelta(days=7),
+            )
+            .select_related('room')
+            .order_by('start')[:5]
+        )
 
-    context = {
-        'calendar_events': calendar_format(events_old_events_included),
-        'events': events,
+    return {
+        'calendar_events': format_calendar_events(recent_events),
+        'events': upcoming_events,
         'news': news,
-        'news_events': list(chain(events, news)),
-        'ads': AdUrl.objects.all(),
-        'posts': IgUrl.objects.all(),
-        'aa_post': aa_post,  # TODO Remove or rename
+        'ads': list(AdUrl.objects.all()),
+        'posts': list(IgUrl.objects.all()),
+        'aa_post': get_recent_albins_angels_post(now=now),
+        'bookings': bookings,
     }
 
+
+def index(request):
+    cache_key = None
+    if not request.user.is_authenticated:
+        cache_key = (
+            f"homepage:{settings.PROJECT_NAME}:{_homepage_schema()}:{get_language()}:"
+            f"{getattr(settings, 'APRIL_HOMEPAGE_ENABLED', False)}:{_homepage_version()}"
+        )
+        cached = cache.get(cache_key)
+        if cached is not None:
+            return render(request, get_homepage_template_name(), cached)
+
+    context = _homepage_context()
+    if cache_key is not None:
+        cache.set(cache_key, context, HOMEPAGE_CACHE_TTL)
     return render(request, get_homepage_template_name(), context)
+
+
+def lunch(request):
+    """Keep DaTe's old lunch links working without hosting a separate page."""
+    url, _ = student_lunch_link()
+    return redirect(url)
 
 
 def set_language(request):
@@ -132,12 +239,17 @@ def set_language(request):
 
 
 def handler404(request, *args, **argv):
+    # The ASGI error path can reuse a connection that died on a previous
+    # request on this thread; close obsolete/poisoned connections before
+    # rendering (healthy young connections are kept, so no extra setup).
+    close_old_connections()
     response = render(request, 'core/404.html', {})
     response.status_code = 404
     return response
 
 
 def handler500(request, *args, **argv):
+    close_old_connections()
     response = render(request, 'core/500.html', {})
     response.status_code = 500
     return response

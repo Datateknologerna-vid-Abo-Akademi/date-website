@@ -1,0 +1,17 @@
+{% comment %}
+The arsfest background rule, shared by every association that hardcodes its artwork
+instead of setting `event.background_image_url`. The caller passes `url`.
+{% endcomment %}
+.background-img {
+background: url("{{ url }}") no-repeat center center;
+background-attachment: fixed;
+-webkit-background-size: cover;
+-moz-background-size: cover;
+-o-background-size: cover;
+background-size: cover;
+}
+@media (max-width: 768px) {
+.background-img {
+background-attachment: scroll;
+}
+}

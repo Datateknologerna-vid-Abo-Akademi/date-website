@@ -1,15 +1,38 @@
-import re
 import time
 from contextlib import ExitStack
 
 from django.conf import settings
-from django.db import connections
+from django.db import close_old_connections, connections
 from django.shortcuts import render
 from django.utils import translation
 from django.utils.deprecation import MiddlewareMixin
 from django.utils.translation import get_language_from_request
 
 from .language_utils import resolve_language
+
+
+class ConnectionLifecycleMiddleware:
+    """Enforce Django's DB connection lifecycle on the request's own thread.
+
+    This middleware runs on the same thread-sensitive executor thread as
+    the sync middleware and views, and runs Django's normal lifecycle
+    there before and after the request. Normal Django ASGI request signals
+    also perform cleanup, but this outer layer protects exceptional
+    disconnect/error paths. Django 6 destroys the executor after each ASGI
+    request, so web deployments use CONN_MAX_AGE=0 rather than attempt to
+    persist its thread-local connection.
+    """
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        close_old_connections()
+        try:
+            response = self.get_response(request)
+        finally:
+            close_old_connections()
+        return response
 
 
 class LanguageStateMiddleware(MiddlewareMixin):
@@ -83,46 +106,4 @@ class ServerTimingMiddleware:
             f"app;dur={total_duration:.1f}, "
             f'db;dur={db_timing['duration']:.1f};desc="{db_timing['count']} {query_label}"'
         )
-        return response
-
-
-class CDNRewriteMiddleware:
-    """
-    Middleware to rewrite URLs for static and media files to use a CDN if configured.
-    """
-
-    URL_BYTES_PATTERN = rb'[^"\'\s<>()]+'
-    PRESIGNED_S3_MARKERS = (b"X-Amz-Algorithm=", b"X-Amz-Signature=")
-
-    def __init__(self, get_response):
-        self.get_response = get_response
-        self.cdn_url_transformations = getattr(settings, "CDN_URL_TRANSFORMATIONS", [])
-        self._cdn_patterns = []
-        for original, new in self.cdn_url_transformations:
-            if original and new:
-                self._cdn_patterns.append(
-                    (
-                        original.encode("utf-8"),
-                        new.encode("utf-8"),
-                        re.compile(re.escape(original.encode("utf-8")) + self.URL_BYTES_PATTERN),
-                    )
-                )
-
-    def __call__(self, request):
-        response = self.get_response(request)
-
-        if not getattr(response, "streaming", False):
-            for original, new, pattern in self._cdn_patterns:
-                # Keep presigned private-media URLs on their original host, since
-                # their signatures cover the request host and break if rewritten.
-                response.content = pattern.sub(
-                    lambda match, orig=original, repl=new: (
-                        match.group(0)
-                        if any(marker in match.group(0) for marker in self.PRESIGNED_S3_MARKERS)
-                        else match.group(0).replace(orig, repl, 1)
-                    ),
-                    response.content,
-                )
-        # Streaming responses do not expose a mutable `.content` buffer here.
-
         return response

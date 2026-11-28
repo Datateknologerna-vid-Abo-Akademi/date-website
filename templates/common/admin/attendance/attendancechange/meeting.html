@@ -1,0 +1,6 @@
+{% load i18n %}
+{# Unfold's changelist header is built from the model, so the meeting this list belongs to is named here, right above its rows. Under the classic admin the same fact is in the page title. #}
+<p class="mb-4 text-sm">
+  {% trans "Närvaroevenemang" %}:
+  <a href="{{ attendance_event_change_url }}">{{ attendance_event.title }}</a>
+</p>

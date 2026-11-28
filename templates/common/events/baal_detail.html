@@ -9,12 +9,25 @@
   <meta property="og:title" content="{{ event.title }}">
   <meta property="og:type" content="article">
   <meta property="og:url" content="{{ request.build_absolute_uri }}">
-  {% if event.content %}<meta property="og:description" content="{{ event.content|plaintext_truncate:160 }}">{% endif %}
-  {% if event.background_image_url %}<meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ event.background_image_url }}">{% endif %}
-  <meta name="twitter:card" content="{% if event.background_image_url %}summary_large_image{% else %}summary{% endif %}">
+  {% if event.content %}
+    <meta property="og:description"
+          content="{{ event.content|plaintext_truncate:160 }}">
+  {% endif %}
+  {% if event.background_image_url %}
+    <meta property="og:image"
+          content="{{ event.background_image_url|absolute_uri:request }}">
+  {% endif %}
+  <meta name="twitter:card"
+        content="{% if event.background_image_url %}summary_large_image{% else %}summary{% endif %}">
   <meta name="twitter:title" content="{{ event.title }}">
-  {% if event.content %}<meta name="twitter:description" content="{{ event.content|plaintext_truncate:160 }}">{% endif %}
-  {% if event.background_image_url %}<meta name="twitter:image" content="{{ request.scheme }}://{{ request.get_host }}{{ event.background_image_url }}">{% endif %}
+  {% if event.content %}
+    <meta name="twitter:description"
+          content="{{ event.content|plaintext_truncate:160 }}">
+  {% endif %}
+  {% if event.background_image_url %}
+    <meta name="twitter:image"
+          content="{{ event.background_image_url|absolute_uri:request }}">
+  {% endif %}
 {% endblock %}
 {% block extra_head %}
   {{ block.super }}
@@ -22,8 +35,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/reconnecting-websocket/1.0.0/reconnecting-websocket.min.js"
           integrity="sha384-FtJyC+/3fgtPbqlacLHdGwBrmPjKoYBsiqNF5/BEprsnIXB4xtXLCJRx7Xx+TWKP"
           crossorigin="anonymous"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.slim.min.js"
-          integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.slim.min.js"
+          integrity="sha384-5AkRS45j4ukf+JbWAfHL8P4onPA9p0KwwP7pUdjSQA3ss9edbJUJc/XcYAiheSSz"
           crossorigin="anonymous"></script>
   <script src="{% static 'core/js/live-attendee-list.js' %}"></script>
   <style>
@@ -42,7 +55,7 @@
       <div class="container-size">
         <div class="content header-box">
           <img class="header-logo" src="{% static 'core/images/HQKK_2.png' %}">
-          <h1 class="baal-header">CII Kemistbaal</h1>
+          <h1 class="baal-header">Kemistbaal</h1>
           <div class="baal-nav">
             <a class="baal-link"
                onclick="showPage(this)"

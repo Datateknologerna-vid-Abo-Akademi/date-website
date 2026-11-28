@@ -1,49 +1,70 @@
+/* Shared event card, used by every association that does not keep a sheet of its
+   own. Colours come from the tokens each association's date/css/date-root.css
+   defines, so the card layout lives in one file.
+
+   The card colour needs one rule per element kind, because the same class means
+   two element kinds. The events index uses a `div` card, which declares no colour
+   of its own and keeps inheriting from the `.card-group event-card text-light`
+   wrapper. The archive index uses an `a` card, whose colour would otherwise come
+   from `div a` in the association's core/css/base.css. `a.card` (0,1,1) wins over
+   `div a` (0,0,2), and `.card:not(a)` leaves the anchor alone, so the two cases
+   each get their own token. */
 .card {
     border-radius: var(--defaultRadius);
-  }
-  
-.card .fa-chevron-right{
+}
+
+.card:not(a) {
+    color: var(--event-card-fg, inherit);
+}
+
+a.card {
+    color: var(--event-card-anchor-fg);
+}
+
+.card .fa-chevron-right {
     transition: .3s;
-  }
-  
-.card a:hover .fa-chevron-right{
+}
+
+.card a:hover .fa-chevron-right {
     transform: translateX(10px);
-  }
-  
+}
+
 .event-card > .card .list-inline-item {
     color: var(--helpText);
     font-size: 14px;
-  }
-  
-.event-card > .card .badge {
-    background: var(--helpText);
-  }
-  
-.event-card > .card {
-    background: var(--primaryColorLight);
-  }
-  
-.card-body a{
-    color: var(--linkColorLight);
-    border-color: var(--linkColorLight);
-  }
-  
-.card-body a:active{
-    color: var(--linkColorLight);
-  }
-  
-.card-body a:hover{
-    background-color: inherit;
-    color: var(--linkColorLightHover);
-    border-color: var(--linkColorLightHover);
-  }
-  
-.card-body a:focus{
-    background-color: inherit;
-    box-shadow: none;
-  }
-
-.event-date-txt{
-  white-space: nowrap;
 }
 
+.event-card > .card .badge {
+    background: var(--event-card-badge-bg);
+    color: var(--event-card-badge-fg);
+}
+
+.event-card > .card {
+    background: var(--event-card-bg);
+}
+
+.card-body a {
+    color: var(--event-card-link);
+    border-color: var(--event-card-link);
+}
+
+/* No separate active token: every association that loads this sheet gives
+   `a:active` the same colour as the plain link. */
+.card-body a:active {
+    color: var(--event-card-link);
+}
+
+.card-body a:hover {
+    background-color: inherit;
+    color: var(--event-card-link-hover);
+    border-color: var(--event-card-link-hover);
+}
+
+.card-body a:focus {
+    background-color: inherit;
+    box-shadow: none;
+}
+
+.event-date-txt {
+    white-space: nowrap;
+}

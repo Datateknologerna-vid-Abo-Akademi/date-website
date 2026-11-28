@@ -2,7 +2,7 @@
     /* See publications.css for the rationale behind this semantic palette
        — keep the two definitions in sync. */
     --pub-surface:         var(--pubChromeBg,    var(--primaryColorLight));
-    --pub-surface-pill:    var(--pubChromePill,  var(--primaryColorLighte));
+    --pub-surface-pill:    var(--pubChromePill,  var(--primaryColorMid));
     --pub-surface-hover:   var(--pubChromeHover, var(--primaryColorLighter));
     --pub-chrome-fg:       var(--pubChromeFg,    var(--textColorLightish));
     --pub-chrome-fg-soft:  var(--pubChromeFgSoft, var(--helpText));

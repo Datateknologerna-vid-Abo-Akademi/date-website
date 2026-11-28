@@ -1,0 +1,30 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% load i18n %}
+{% block title %}{{ ASSOCIATION_NAME_SHORT }} - {% trans "Närvaro" %}{% endblock %}
+{% block extra_head %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'attendance/css/attendance.css' %}">
+{% endblock %}
+{% block content %}
+  <div class="container-md min-vh-100 container-margin-top d-flex justify-content-center">
+    <div class="container-size text-center">
+      <div class="content attendance-page" style="width: fit-content">
+        <h1>{% trans "Närvaroevenemang" %} <i class="fas fa-users" aria-hidden="true"></i></h1>
+        <ul class="attendance-events">
+          {% for e in object_list %}
+            <li>
+              <a class="attendance-event-link"
+                 href="{% url 'attendance-event-view' e.slug %}">
+                <span class="attendance-event-link__title">{{ e }}</span>
+                <span class="attendance-event-link__when">{{ e.start_datetime|date }} {{ e.start_datetime|time }}</span>
+              </a>
+            </li>
+          {% empty %}
+            <li>{% trans "Inga evenemang" %}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+{% endblock %}

@@ -42,12 +42,12 @@
 }
 
 #accept-cookies {
-    background-color: #0d6efd;
-    color: white;
+    background-color: var(--cookie-accept-bg, #0d6efd);
+    color: var(--cookie-accept-fg, white);
 }
 
 #accept-cookies:hover {
-    background-color: #0b5ed7;
+    background-color: var(--cookie-accept-bg-hover, #0b5ed7);
 }
 
 #decline-cookies {

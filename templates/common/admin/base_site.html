@@ -1,5 +1,13 @@
 {% extends "admin/base.html" %}
-{% load i18n %}
+{% load i18n static %}
+{% block extrastyle %}
+  {{ block.super }}
+  {% if stock_admin and inline_admin_formsets %}
+    <link rel="stylesheet"
+          href="{% static 'core/css/stock_admin_inlines.css' %}"
+          {% csp_nonce_attr %}>
+  {% endif %}
+{% endblock %}
 {% block title %}
   {% if subtitle %}{{ subtitle }} |{% endif %}
   {{ title }} | {{ site_title|default:_("Django site admin") }}
@@ -50,5 +58,14 @@
         {% include "admin/color_theme_toggle.html" %}
       {% endblock %}
     </div>
+  {% endif %}
+{% endblock %}
+{% block extrahead %}
+  {{ block.super }}
+  {% include "admin/x_cloak_fallback.html" %}
+  {% if stock_admin and inline_admin_formsets %}
+    <script defer
+            src="{% static 'core/js/stock_admin_inlines.js' %}"
+            {% csp_nonce_attr %}></script>
   {% endif %}
 {% endblock %}

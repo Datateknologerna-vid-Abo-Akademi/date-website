@@ -1,21 +1,8 @@
+import os
+
 from .common import *  # noqa
 
-TEMPLATES = [
-    {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [
-            'templates/impuls',
-            'templates/date',
-            *COMMON_TEMPLATE_DIRS,
-        ],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                *COMMON_CONTEXT_PROCESSORS,
-            ],
-        },
-    },
-]
+TEMPLATES = build_templates('impuls', parent_variants=('date',))
 
 INSTALLED_APPS = get_installed_apps(
     [
@@ -30,6 +17,7 @@ INSTALLED_APPS = get_installed_apps(
         'harassment',
         'social',
         'staticpages',
+        'feedback',
         'publications',
         'alumni',
         'billing',
@@ -50,15 +38,12 @@ LANGUAGES = (
 
 STAFF_GROUPS = get_staff_groups(['styrelse', 'admin', 'fotograf', 'rösträknare'])
 
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static/impuls'),
-    os.path.join(BASE_DIR, 'static/common'),
-]
+STATICFILES_DIRS = build_static_dirs('impuls')
 
 CONTENT_VARIABLES = {
     "SITE_URL": "https://example.com",
     "ASSOCIATION_NAME": "Impuls",
-    "ASSOCIATION_NAME_FULL": "Impuls",
+    "ASSOCIATION_NAME_FULL": "Impuls r.f.",
     "ASSOCIATION_NAME_SHORT": "Impuls",
     "EVENT_TEMPLATE_LOGO": "core/images/impuls-logo.png",
     "ASSOCIATION_EMAIL": "impuls@abo.fi",
@@ -68,6 +53,8 @@ CONTENT_VARIABLES = {
     "SOCIAL_BUTTONS": [
         ["fa-facebook-f", "https://www.facebook.com/Impulsrf/"],
         ["fa-instagram", "https://www.instagram.com/impulsrf/"],
+        ["tiktok", "https://www.tiktok.com/@impulsrf"],
+        ["linktree", "https://linktr.ee/impulsrf"],
     ],
     # Alumni
     "ALUMNI_ASSOCIATION_NAME": "",
@@ -76,3 +63,9 @@ CONTENT_VARIABLES = {
     # Events
     "INTERNATIONAL_EVENT_SLUGS": [],
 }
+
+# Lunch widget fallback coordinates for the association kansli (Arken, Fabriksgatan 2).
+LUNCH_KANSLI_LATITUDE = 60.4565176
+LUNCH_KANSLI_LONGITUDE = 22.2796885
+LUNCH_LAT = env('LUNCH_LAT', float, LUNCH_KANSLI_LATITUDE) if os.environ.get('LUNCH_LAT') else LUNCH_KANSLI_LATITUDE
+LUNCH_LNG = env('LUNCH_LNG', float, LUNCH_KANSLI_LONGITUDE) if os.environ.get('LUNCH_LNG') else LUNCH_KANSLI_LONGITUDE

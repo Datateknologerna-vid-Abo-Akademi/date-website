@@ -1,4 +1,4 @@
-{% load static i18n localized_urls %}
+{% load static i18n %}
 <aside class="logo-container partner-sidebar"
        aria-labelledby="partner-heading">
   <h3 id="partner-heading" class="header-border-bottom">{% trans "Samarbetspartners" %}</h3>
@@ -23,6 +23,4 @@
       {% endif %}
     {% endfor %}
   </div>
-  <a class="partner-cta"
-     href="{{ '/pages/foretagssamarbete/'|localized_url }}">{% trans "Vill du samarbeta med SF-klubben?" %}</a>
 </aside>

@@ -1,21 +1,8 @@
+import os
+
 from .common import *  # noqa
 
-TEMPLATES = [
-    {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [
-            'templates/kk',
-            *COMMON_TEMPLATE_DIRS,
-        ],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                *COMMON_CONTEXT_PROCESSORS,
-                # Add project context processors here
-            ],
-        },
-    },
-]
+TEMPLATES = build_templates('kk')
 
 INSTALLED_APPS = get_installed_apps(
     [
@@ -30,6 +17,7 @@ INSTALLED_APPS = get_installed_apps(
         'harassment',
         'social',
         'staticpages',
+        'feedback',
         'lucia',
         'publications',
         'alumni',
@@ -43,11 +31,7 @@ USE_ACCEPT_LANGUAGE_HEADER = False
 STAFF_GROUPS = get_staff_groups(['styrelse', 'admin', 'fotograf', 'rösträknare'])
 
 
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static/kk'),
-    os.path.join(BASE_DIR, 'static/common'),
-]
-
+STATICFILES_DIRS = build_static_dirs('kk')
 
 CONTENT_VARIABLES = {
     "SITE_URL": "https://kemistklubben.org",
@@ -70,3 +54,14 @@ CONTENT_VARIABLES = {
     "ALUMNI_ASSOCIATION_NAME_SHORT": "ASG",
     "ALUMNI_ASSOCIATION_EMAIL": "asg@kemistklubben.org",
 }
+
+# Association capabilities
+APRIL_HOMEPAGE_ENABLED = True
+KK_EVENT_TEMPLATES_ENABLED = True
+INSTAGRAM_USERNAME = 'kemistklubben'
+
+# Lunch widget fallback coordinates for the association kansli (Aurum, Henriksgatan 2).
+LUNCH_KANSLI_LATITUDE = 60.4548174
+LUNCH_KANSLI_LONGITUDE = 22.2828608
+LUNCH_LAT = env('LUNCH_LAT', float, LUNCH_KANSLI_LATITUDE) if os.environ.get('LUNCH_LAT') else LUNCH_KANSLI_LATITUDE
+LUNCH_LNG = env('LUNCH_LNG', float, LUNCH_KANSLI_LONGITUDE) if os.environ.get('LUNCH_LNG') else LUNCH_KANSLI_LONGITUDE

@@ -7,22 +7,39 @@
   <meta property="og:title" content="{{ pdf_file.title }}">
   <meta property="og:type" content="article">
   <meta property="og:url" content="{{ request.build_absolute_uri }}">
-  {% if pdf_file.description %}<meta property="og:description" content="{{ pdf_file.description|plaintext_truncate:160 }}">{% endif %}
-  {% if pdf_file.cover_image %}<meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ pdf_file.cover_image.url }}">{% endif %}
-  <meta name="twitter:card" content="{% if pdf_file.cover_image %}summary_large_image{% else %}summary{% endif %}">
+  {% if pdf_file.description %}
+    <meta property="og:description"
+          content="{{ pdf_file.description|plaintext_truncate:160 }}">
+  {% endif %}
+  {% if pdf_file.cover_image %}
+    <meta property="og:image"
+          content="{{ pdf_file.get_safe_cover_url|absolute_uri:request }}">
+  {% endif %}
+  <meta name="twitter:card"
+        content="{% if pdf_file.cover_image %}summary_large_image{% else %}summary{% endif %}">
   <meta name="twitter:title" content="{{ pdf_file.title }}">
-  {% if pdf_file.description %}<meta name="twitter:description" content="{{ pdf_file.description|plaintext_truncate:160 }}">{% endif %}
-  {% if pdf_file.cover_image %}<meta name="twitter:image" content="{{ request.scheme }}://{{ request.get_host }}{{ pdf_file.cover_image.url }}">{% endif %}
+  {% if pdf_file.description %}
+    <meta name="twitter:description"
+          content="{{ pdf_file.description|plaintext_truncate:160 }}">
+  {% endif %}
+  {% if pdf_file.cover_image %}
+    <meta name="twitter:image"
+          content="{{ pdf_file.get_safe_cover_url|absolute_uri:request }}">
+  {% endif %}
 {% endblock %}
 {% block extra_head %}
   {{ block.super }}
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.5.136/pdf_viewer.min.css">
+        href="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.5.136/pdf_viewer.min.css"
+        integrity="sha384-bylNeOy03UuenqAz7pe0mStM3YvEcDADmnOuoZ69e395Ft9pm56PKzh4JOg2uziu"
+        crossorigin="anonymous">
   <link rel="stylesheet"
         href="{% static 'publications/css/publications.css' %}">
   <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/line-awesome/1.3.0/line-awesome/css/line-awesome.min.css">
+        href="https://cdnjs.cloudflare.com/ajax/libs/line-awesome/1.3.0/line-awesome/css/line-awesome.min.css"
+        integrity="sha384-h0HFp1r+Vq/1x7modzqZaqvMelro9pikGIVdLDs045XCE8IfHpIQDcGPiBNslfXT"
+        crossorigin="anonymous">
   <script src="{% static 'publications/js/main.js' %}" type="module"></script>
 {% endblock %}
 {% block content %}

@@ -1,4 +1,6 @@
+from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group, Permission
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -54,6 +56,19 @@ class AdminUxLinkTests(TestCase):
         self.assertContains(response, reverse("admin:billing_eventinvoice_changelist"))
         self.assertContains(response, "All invoices")
         self.assertContains(response, "1 invoice")
+        self.assertContains(response, "admin-inline-action")
+
+    def test_event_changelist_action_uses_shared_admin_style(self):
+        Event.objects.create(
+            title="Registration Event",
+            slug="registration-event",
+            author=self.admin_user,
+        )
+
+        response = self.client.get(reverse("admin:events_event_changelist"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "admin-inline-action")
 
     def test_functionary_role_page_includes_assignments_inline(self):
         role = FunctionaryRole.objects.create(title="Treasurer", board=True)
@@ -95,6 +110,55 @@ class AdminUxLinkTests(TestCase):
         self.assertContains(response, reverse("admin:ctf_guess_changelist"))
         self.assertContains(response, "All guesses")
 
+    def test_ctf_changelist_links_post_mortem_list_for_ctf_editor(self):
+        Ctf.objects.create(title="Spring CTF", slug="spring-ctf-post-mortem")
+        editor = get_user_model().objects.create_user(
+            username="ctf-pm-editor",
+            password="pass",
+            email="ctf-pm-editor@example.com",
+        )
+        staff_group, _ = Group.objects.get_or_create(name=settings.STAFF_GROUPS[0])
+        editor.groups.add(staff_group)
+        editor.user_permissions.add(Permission.objects.get(content_type__app_label="ctf", codename="change_ctf"))
+        self.client.force_login(editor, backend="members.backends.AuthBackend")
+
+        response = self.client.get(reverse("admin:ctf_ctf_changelist"))
+
+        # Only a holder who can open this changelist can see the shortcut at all,
+        # so the page-level case is exercised with change_ctf; the full
+        # permission matrix is asserted at the link level in ctf/tests.py.
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, reverse("admin:ctf_postmortem_changelist"))
+
+    def test_ctf_changelist_hides_post_mortem_list_from_view_only_staff(self):
+        Ctf.objects.create(title="Spring CTF", slug="spring-ctf-post-mortem-view")
+        viewer = get_user_model().objects.create_user(
+            username="ctf-pm-viewer",
+            password="pass",
+            email="ctf-pm-viewer@example.com",
+        )
+        staff_group, _ = Group.objects.get_or_create(name=settings.STAFF_GROUPS[0])
+        viewer.groups.add(staff_group)
+        viewer.user_permissions.add(Permission.objects.get(content_type__app_label="ctf", codename="view_ctf"))
+        self.client.force_login(viewer, backend="members.backends.AuthBackend")
+
+        response = self.client.get(reverse("admin:ctf_ctf_changelist"))
+
+        self.assertEqual(response.status_code, 200)
+        # A view-only CTF permission cannot open the post-mortem admin, so the
+        # shortcut must not be offered either.
+        self.assertNotContains(response, reverse("admin:ctf_postmortem_changelist"))
+
+    def test_extra_changelist_links_use_theme_appropriate_markup(self):
+        response = self.client.get(reverse("admin:archive_documentcollection_changelist"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Städa upp media")
+        if settings.USE_UNFOLD:
+            self.assertContains(response, "cleaning_services")
+        else:
+            self.assertNotContains(response, "cleaning_services")
+
     def test_static_pages_admin_exposes_public_and_navigation_links(self):
         page = StaticPage.objects.create(title="About", slug="about")
         nav = StaticPageNav.objects.create(
@@ -113,7 +177,7 @@ class AdminUxLinkTests(TestCase):
         self.assertContains(page_response, "/pages/about/")
         self.assertContains(page_response, "sv: 1/2; en: 0/2; fi: 0/2")
         self.assertEqual(page_change_response.status_code, 200)
-        self.assertContains(page_change_response, "common/js/admin_translation_tabs.js")
+        self.assertContains(page_change_response, "js/admin_translation_tabs.js")
         self.assertNotContains(page_change_response, "ajax.googleapis.com/ajax/libs/jqueryui")
         self.assertEqual(nav_response.status_code, 200)
         self.assertContains(nav_response, "About page")

@@ -14,7 +14,8 @@ from .tables import DocumentTable
 def user_type(user):
     if not user.is_authenticated:
         return False
-    return user.membership_type.permission_profile != 3
+    membership_type = getattr(user, 'membership_type', None)
+    return bool(membership_type and membership_type.permission_profile != 3)
 
 
 class FilteredDocumentsListView(UserPassesTestMixin, SingleTableMixin, FilterView):
@@ -39,8 +40,7 @@ class FilteredDocumentsListView(UserPassesTestMixin, SingleTableMixin, FilterVie
             return Document.objects.filter(collection__type='Documents')
 
     def test_func(self):
-        # TODO: get a member object and check user.is_authenticated
-        return self.request.user.membership_type.permission_profile != 3
+        return user_type(self.request.user)
 
 
 def clean_media(request):

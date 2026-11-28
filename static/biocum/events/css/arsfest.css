@@ -9,7 +9,7 @@
   --mainArsfestTextColor: var(--textColorLightish);
   --mainArsfestButtonHoverColor: var(--primaryColorLight);
   --arsfest-dark-green: var(--primaryColor);
-  --arsfest-dark-green-hover: var(--primaryColorLighte);
+  --arsfest-dark-green-hover: var(--primaryColorMid);
   --arsfest-font: "Josefin Sans", sans-serif;
   z-index: inherit;
 }
@@ -163,8 +163,6 @@
 }
 
 .periodic-table-square {
-  --text-glow-base-color: #ff7833;
-  --text-glow-color: white;
   width: 420px !important;
   height: 420px !important;
   display: flex;

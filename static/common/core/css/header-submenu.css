@@ -1,0 +1,44 @@
+/* Nested header links (a StaticUrl with a parent), rendered by
+   core/header_nav_items.html for every association. Linked after
+   core/css/header.css so it applies whichever copy of that sheet an
+   association uses. The list is not a Bootstrap .dropdown-menu, so it resets
+   its own list styles. */
+.navbar-nav .dropdown-submenu-list {
+    display: none;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+/* data-open is set by core/js/nav-submenus.js when a URL-less parent is
+   clicked or tapped, which is the only way to open it without hover. */
+.navbar-nav .dropdown-submenu:hover > .dropdown-submenu-list,
+.navbar-nav .dropdown-submenu:focus-within > .dropdown-submenu-list,
+.navbar-nav .dropdown-submenu[data-open] > .dropdown-submenu-list {
+    display: block;
+}
+
+.dropdown-submenu-toggle {
+    text-align: left;
+}
+
+/* Child links sit a step back from their parent until hovered or focused.
+   Opacity rather than colour: every header sheet pins .dropdown-item colour
+   with !important, and the hover background comes from those sheets too. */
+.navbar-nav .dropdown-submenu-list .dropdown-item {
+    padding-left: 2rem;
+    opacity: 0.88;
+}
+
+.navbar-nav .dropdown-submenu-list .dropdown-item:hover,
+.navbar-nav .dropdown-submenu-list .dropdown-item:focus {
+    opacity: 1;
+}
+
+/* The collapsed navbar has no hover to open a submenu, so list every child link. */
+@media (max-width: 991.98px) {
+    .navbar-nav .dropdown-submenu-list {
+        display: block;
+        margin-left: 0.5rem;
+    }
+}

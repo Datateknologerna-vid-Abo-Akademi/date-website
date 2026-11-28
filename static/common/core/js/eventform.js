@@ -13,14 +13,6 @@
             });
             $('#eventattendees_set-empty').parents('fieldset.module').hide();
         }
-        $('select[id$="type"]').change( function() {
-            var rowEdit = $($(this).parents('tr')).find('input[id$="choice_list"]');
-            if( this.value == "select") {
-                rowEdit.prop('disabled', false);
-            } else {
-                rowEdit.prop('disabled', true);
-            }
-        });
         $('#id_sign_up').change( function() {
             toggleSignupAdminFields($(this).is(':checked'));
             $('fieldset.module').find('h2').each((index, element) => {

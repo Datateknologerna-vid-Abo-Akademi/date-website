@@ -5,8 +5,8 @@
 - Publication is controlled by `published_time` (same pattern as events/news): `NULL` is hidden, future is scheduled, past is public. Use `Candidate.objects.published()` or the `Candidate.published` property.
 
 ## Views & URLs
-- `lucia.views.index` and `lucia.views.candidates` both load `Candidate.objects.all()` and render different templates (`lucia/index.html`, `lucia/candidates.html`).
-- `lucia.views.candidate` fetches a single candidate from `Candidate.objects.published()` by slug and renders `lucia/candidate.html`. Attempting to view an unpublished slug raises `DoesNotExist` and triggers a 500, so publication state doubles as public visibility control.
+- `lucia.views.index` and `lucia.views.candidates` both load `Candidate.objects.published()` and render different templates (`lucia/index.html`, `lucia/candidates.html`). Hidden and future-dated candidates never reach either listing.
+- `lucia.views.candidate` resolves the slug against `Candidate.objects.published()` with `get_object_or_404` and renders `lucia/candidate.html`. An unknown or unpublished slug answers 404, so publication state doubles as public visibility control without a 500.
 
 ## Admin
 - Default admin registration (`admin.site.register(Candidate)`) means there is no custom form logic. Slugs must be managed manually or via Django’s "slug" suggestions.

@@ -16,12 +16,13 @@
 
 ## Utility Functions
 - `generate_reference_number()` implements the 7-3-1 checksum common in Finnish reference numbers.
-- `get_selection_price()` reads `EventRegistrationForm.choice_list` to map answers to prices; mismatches raise `ValueError`.
+- `get_selection_price()` reads `EventRegistrationForm.get_choices()` to map answers to prices; mismatches raise `ValueError`.
 - Email templates live in `templates/billing/`. Context merges `BILLING_CONTEXT` and `CONTENT_VARIABLES` from settings.
 
 ## Admin
 - `EventBillingConfigurationAdmin` adds a custom URL (`/ref_numbers/`) to export invoice data as CSV. `ref_export` renders a button on each row, the changelist links to the configured event plus that event's generated invoices, and an **All invoices** tool link exposes the full invoice audit list without making invoices a separate sidebar entry.
 - `EventInvoiceAdmin` shows the related event as a link, supports event/currency filters, and uses attendee/event `select_related` for the list.
+- Reference-number CSV exports require view access to both billing configurations and invoices. Invalid configuration URLs return 404.
 
 ## Extending
 - Support additional integrations (e.g., Stripe) by adding new members to `BillingIntegrations` and branching in `handle_event_billing`.

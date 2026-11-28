@@ -1,28 +1,30 @@
+import logging
 from functools import reduce
 
 from django.conf import settings
 from django.contrib import admin
+from django.contrib.admin.models import LogEntry
 from django.contrib.auth import admin as auth_admin
-from django.contrib.auth.models import Permission
+from django.contrib.auth.models import Group, Permission
 from django.db.models import CharField, Exists, F, OuterRef, Q, Value
 from django.db.models.functions import Lower, Replace
+from django.utils.text import smart_split, unescape_string_literal
 from django.utils.translation import gettext_lazy as _
 from django_otp.plugins.otp_static.models import StaticDevice
 from django_otp.plugins.otp_totp.models import TOTPDevice
+from django_otp_webauthn.models import WebAuthnCredential
 
-from core.admin_base import ModelAdmin, TabularInline
-from members.forms import (
-    AdminMemberUpdateForm,
-    MemberCreationForm,
-    SubscriptionPaymentChoiceField,
-    SubscriptionPaymentForm,
-)
+from core.admin_base import CompactTabularInline, ModelAdmin
+from members.forms import AdminMemberUpdateForm, MemberCreationForm, SubscriptionPaymentForm
 from members.models import Member, MembershipType, Subscription, SubscriptionPayment
+
+logger = logging.getLogger('date')
 
 
 @admin.register(Permission)
 class PermissionAdmin(ModelAdmin):
     list_display = ('name', 'content_type', 'codename')
+    list_select_related = ('content_type',)
     search_fields = ('name', 'codename', 'content_type__app_label', 'content_type__model')
     list_filter = ('content_type__app_label',)
     ordering = ('content_type__app_label', 'content_type__model', 'codename')
@@ -36,7 +38,7 @@ class SubscriptionAdmin(ModelAdmin):
     ordering = ('name',)
 
 
-class TOTPDeviceInline(TabularInline):
+class TOTPDeviceInline(CompactTabularInline):
     model = TOTPDevice
     extra = 0
     max_num = 0
@@ -47,7 +49,19 @@ class TOTPDeviceInline(TabularInline):
     verbose_name_plural = "2FA devices"
 
 
-class StaticDeviceInline(TabularInline):
+class WebAuthnCredentialInline(CompactTabularInline):
+    model = WebAuthnCredential
+    extra = 0
+    max_num = 0
+    # Removal goes through the guarded, logged "Inaktivera 2FA" action instead.
+    can_delete = False
+    fields = ('name', 'created_at', 'last_used_at')
+    readonly_fields = ('name', 'created_at', 'last_used_at')
+    verbose_name = "Passkey"
+    verbose_name_plural = "Passkeys"
+
+
+class StaticDeviceInline(CompactTabularInline):
     model = StaticDevice
     extra = 0
     max_num = 0
@@ -72,7 +86,7 @@ SENIOR_MEMBER = 4
 
 
 # Direct `class UserAdmin(ModelAdmin, auth_admin.UserAdmin)` would fail when
-# USE_UNFOLD=False because ModelAdmin then IS admin.ModelAdmin — placing it before
+# USE_UNFOLD=False because ModelAdmin then IS admin.ModelAdmin. Placing it before
 # its own subclass (auth_admin.UserAdmin) violates C3 MRO. The shim is only
 # introduced when Unfold's ModelAdmin is a distinct class that sits above both.
 if getattr(settings, 'USE_UNFOLD', False):
@@ -85,11 +99,22 @@ else:
 
 @admin.register(Member)
 class UserAdmin(_UserAdminBase):
-    fieldsets = ((None, {'fields': AdminMemberUpdateForm.Meta.fields}),)
-    add_fieldsets = ((None, {'fields': MemberCreationForm.Meta.fields}),)
-
     form = AdminMemberUpdateForm
     add_form = MemberCreationForm
+
+    def get_fieldsets(self, request, obj=None):
+        # The archive eligibility ("Gulispass") checkbox only exists on
+        # associations that gate archive access on it; keep it out of both
+        # add and change fieldsets everywhere else, or the rendered admin
+        # form would look up a field the form no longer carries.
+        if obj is None:
+            fields = MemberCreationForm.Meta.fields
+        else:
+            fields = AdminMemberUpdateForm.Meta.fields
+        if not getattr(settings, 'ARCHIVE_ACCESS_REQUIRES_ELIGIBILITY', False):
+            fields = tuple(name for name in fields if name != 'archive_access_eligible')
+        return ((None, {'fields': fields}),)
+
     list_display = (
         'username',
         'first_name',
@@ -114,40 +139,105 @@ class UserAdmin(_UserAdminBase):
         'city',
         'country',
         'membership_type__name',
-        'groups__name',
-        'subscriptionpayment__subscription__name',
     )
     search_help_text = _(
         'Search by name, username, email, phone, address, postal code, city, '
         'membership type, group, subscription, admission year, member ID, or GitHub ID.'
     )
+    show_full_result_count = False
     ordering = [
         Lower('username'),
     ]
     readonly_fields = ('last_login', 'has_two_factor')
-    inlines = [TOTPDeviceInline, StaticDeviceInline]
+    inlines = [TOTPDeviceInline, WebAuthnCredentialInline, StaticDeviceInline]
     actions = ['activate_user', 'deactivate_user', 'disable_two_factor']
 
     @admin.display(boolean=True)
     def is_staff(self, obj):
-        return obj.is_staff
+        annotated = getattr(obj, '_is_staff', None)
+        if annotated is None:
+            return obj.is_staff
+        return obj.is_superuser or annotated
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
-        confirmed_devices = TOTPDevice.objects.filter(user=OuterRef('pk'), confirmed=True)
-        return (
-            queryset.select_related('membership_type')
-            .prefetch_related('groups')
-            .annotate(_has_two_factor=Exists(confirmed_devices))
+        restricted_group = getattr(settings, 'MEMBER_ADMIN_RESTRICTED_GROUP', None)
+        restricted_membership = getattr(settings, 'MEMBER_ADMIN_RESTRICTED_MEMBERSHIP_TYPE', None)
+        if (
+            not request.user.is_superuser
+            and restricted_group
+            and restricted_membership
+            and request.user.groups.filter(name=restricted_group).exists()
+        ):
+            queryset = queryset.filter(membership_type__name=restricted_membership)
+        confirmed_totp = TOTPDevice.objects.filter(user=OuterRef('pk'), confirmed=True)
+        confirmed_passkeys = WebAuthnCredential.objects.filter(user=OuterRef('pk'), confirmed=True)
+        staff_groups = Group.objects.filter(user=OuterRef('pk'), name__in=settings.STAFF_GROUPS)
+        return queryset.select_related('membership_type').annotate(
+            _has_two_factor=Exists(confirmed_totp) | Exists(confirmed_passkeys),
+            _is_staff=Exists(staff_groups),
         )
 
-    def get_search_results(self, request, queryset, search_term):
-        base_queryset = queryset
-        queryset, may_have_duplicates = super().get_search_results(request, queryset, search_term)
-        search_term = search_term.strip()
+    def _has_restricted_object_access(self, request, obj):
+        restricted_group = getattr(settings, 'MEMBER_ADMIN_RESTRICTED_GROUP', None)
+        restricted_membership = getattr(settings, 'MEMBER_ADMIN_RESTRICTED_MEMBERSHIP_TYPE', None)
+        if request.user.is_superuser or not restricted_group or not restricted_membership:
+            return True
+        if not request.user.groups.filter(name=restricted_group).exists() or obj is None:
+            return True
+        return obj.membership_type.name == restricted_membership
 
+    def _has_restricted_member_access(self, request):
+        restricted_group = getattr(settings, 'MEMBER_ADMIN_RESTRICTED_GROUP', None)
+        return (
+            not request.user.is_superuser
+            and restricted_group
+            and request.user.groups.filter(name=restricted_group).exists()
+        )
+
+    def has_add_permission(self, request):
+        return not self._has_restricted_member_access(request) and super().has_add_permission(request)
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly_fields = super().get_readonly_fields(request, obj)
+        if self._has_restricted_member_access(request):
+            return (*readonly_fields, 'membership_type', 'groups')
+        return readonly_fields
+
+    def has_view_permission(self, request, obj=None):
+        return self._has_restricted_object_access(request, obj) and super().has_view_permission(request, obj)
+
+    def has_change_permission(self, request, obj=None):
+        return self._has_restricted_object_access(request, obj) and super().has_change_permission(request, obj)
+
+    def has_delete_permission(self, request, obj=None):
+        return self._has_restricted_object_access(request, obj) and super().has_delete_permission(request, obj)
+
+    def get_deleted_objects(self, objs, request):
+        # Deleting a member cascades into that member's admin log entries
+        # (LogEntry.user is a CASCADE foreign key) and the log admin is
+        # deliberately read-only, so Django's related-object permission check
+        # would refuse every member deletion, superusers included. The log rows
+        # are collateral of the deletion rather than objects the operator has to
+        # be allowed to delete on their own, so drop that single label from the
+        # check and let the cascade remove the rows. Django's set identifies
+        # models by their active-language label only, which is why this is a
+        # label discard rather than a model comparison.
+        to_delete, model_count, perms_needed, protected = super().get_deleted_objects(objs, request)
+        perms_needed.discard(LogEntry._meta.verbose_name)
+        return to_delete, model_count, perms_needed, protected
+
+    def get_search_results(self, request, queryset, search_term):
+        """Search text fields without joining the member's to-many tables.
+
+        Group and subscription names used to be ``search_fields`` entries,
+        which fanned every member row out by its groups and payments before the
+        changelist could paginate. Match them with correlated EXISTS subqueries
+        instead, so each member appears at most once and no DISTINCT is needed.
+        """
+        search_term = search_term.strip()
         if not search_term:
-            return queryset, may_have_duplicates
+            return queryset, False
 
         extra_query = Q()
 
@@ -185,19 +275,35 @@ class UserAdmin(_UserAdminBase):
                 output_field=CharField(),
             )
 
-            # Ensure both querysets have matching selected columns before OR-combining.
             queryset = queryset.annotate(_phone_digits=phone_digits_annotation)
-            base_queryset = base_queryset.annotate(_phone_digits=phone_digits_annotation)
             phone_query = Q()
             for variant in phone_variants:
                 phone_query |= Q(_phone_digits__icontains=variant)
             extra_query |= phone_query
 
-        if extra_query:
-            queryset = queryset | base_queryset.filter(extra_query)
-            may_have_duplicates = True
+        # Match whole terms the same way Django's keyword search does: every
+        # term has to match one field (AND across terms, OR within a term).
+        # Groups and subscriptions are matched with one EXISTS per term, not a
+        # shared join. Two terms can therefore match two different related rows
+        # for the same member, where the join version required one row to
+        # contain both. This widening is deliberate; docs/dev/members.md
+        # documents it and the tests in core/tests/test_admin_perf_members.py
+        # pin it.
+        text_query = Q()
+        for term in smart_split(search_term):
+            if term.startswith(('"', "'")) and term[0] == term[-1]:
+                term = unescape_string_literal(term)
+            term_query = Q()
+            for field_name in self.get_search_fields(request):
+                term_query |= Q(**{f'{field_name}__icontains': term})
+            group_match = Group.objects.filter(user=OuterRef('pk'), name__icontains=term)
+            subscription_match = SubscriptionPayment.objects.filter(
+                member=OuterRef('pk'), subscription__name__icontains=term
+            )
+            term_query |= Q(Exists(group_match)) | Q(Exists(subscription_match))
+            text_query &= term_query
 
-        return queryset, may_have_duplicates
+        return queryset.filter(text_query | extra_query), False
 
     @admin.display(boolean=True, description="2FA")
     def has_two_factor(self, obj):
@@ -213,13 +319,20 @@ class UserAdmin(_UserAdminBase):
         updated = queryset.update(is_active=False)
         self.message_user(request, _("Deaktiverade %(count)d användare.") % {'count': updated})
 
-    @admin.action(description="Inaktivera 2FA")
+    @admin.action(description="Inaktivera 2FA", permissions=['change'])
     def disable_two_factor(self, request, queryset):
-        totp_qs = TOTPDevice.objects.filter(user__in=queryset)
-        static_qs = StaticDevice.objects.filter(user__in=queryset)
-        total = totp_qs.count() + static_qs.count()
-        totp_qs.delete()
-        static_qs.delete()
+        if not request.user.is_superuser:
+            queryset = queryset.filter(is_superuser=False)
+        device_querysets = [
+            model.objects.filter(user__in=queryset) for model in (TOTPDevice, WebAuthnCredential, StaticDevice)
+        ]
+        total = sum(qs.count() for qs in device_querysets)
+        member_ids = list(queryset.values_list('pk', flat=True))
+        for qs in device_querysets:
+            qs.delete()
+        logger.warning(
+            '2FA disabled by admin %s for members %s (%d devices removed)', request.user.pk, member_ids, total
+        )
         self.message_user(
             request,
             _("2FA inaktiverat för valda medlemmar: %(count)d enhet(er) borttagna.") % {'count': total},
@@ -249,15 +362,11 @@ class SubscriptionPaymentAdmin(ModelAdmin):
         'member__email',
         'subscription__name',
     )
-    autocomplete_fields = ('subscription',)
+    autocomplete_fields = ('member', 'subscription')
     list_select_related = ('member', 'subscription')
     ordering = ('-date_paid',)
     date_hierarchy = 'date_paid'
+    show_full_result_count = False
 
     def full_name(self, obj):
         return obj.member.get_full_name()
-
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        if db_field.name == 'member':
-            return SubscriptionPaymentChoiceField(queryset=Member.objects.all())
-        return super().formfield_for_foreignkey(db_field, request, **kwargs)

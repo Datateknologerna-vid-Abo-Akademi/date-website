@@ -1,0 +1,113 @@
+/* Event background picture, linked by events/detail.html only when the event has one.
+   `Event.background_image_layout` picks the modifier: `event-bg--full` or `event-bg--sides`.
+
+   Layering uses positioning and DOM order rather than z-index: a positioned element
+   paints over earlier positioned siblings, so the content container (positioned below)
+   covers the background layer that precedes it. */
+
+.event-bg {
+    position: relative;
+}
+
+/* --event-bg-color is the picture's dominant colour, set inline by the template along
+   with this class. Darkened a little so the picture stands out against it and bright
+   colours do not glare. Events without a colour keep the page's own background. */
+.event-bg--tinted {
+    background-color: color-mix(in srgb, var(--event-bg-color, transparent) 75%, black);
+}
+
+.event-bg > .container-md {
+    position: relative;
+}
+
+/* Full: the picture always covers the viewport, never the whole (tall) page.
+   A `background-size: cover` on the page wrapper scaled the picture against the wrapper
+   on phones, where `background-attachment: fixed` is ignored or switched off, so it was
+   zoomed in far past the screen. A fixed <img> is sized against the viewport everywhere.
+   The layer's clip-path also clips its fixed child, which keeps the picture inside this
+   wrapper instead of painting over the footer. */
+.event-bg__layer {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    clip-path: inset(0);
+    pointer-events: none;
+}
+
+.event-bg__full {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    object-fit: cover;
+}
+
+/* Sides: a banner above the text on narrow screens, the picture beside the text when
+   there is room for it. */
+.event-bg__side {
+    display: none;
+}
+
+.event-bg__banner {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: 60vh;
+    margin-bottom: 1rem;
+    object-fit: contain;
+    border-radius: var(--defaultRadius, 5px);
+}
+
+@media (min-width: 1200px) {
+    /* The side columns end half a scrollbar past the viewport; clip, unlike hidden,
+       does not create a scroll container, so the sticky pictures keep working. */
+    .event-bg--sides {
+        overflow-x: clip;
+    }
+
+    .event-bg--sides .container-size {
+        position: relative;
+    }
+
+    .event-bg__banner {
+        display: none;
+    }
+
+    /* Each column fills the gap between the 800px text column and the viewport edge
+       (50vw minus half the text column), but never grows wider than 90% of the text
+       column, so on very wide screens the picture stays smaller than the card. */
+    .event-bg__side {
+        display: block;
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: min(50vw - 50%, 90%);
+    }
+
+    .event-bg__side--left {
+        right: 100%;
+    }
+
+    .event-bg__side--right {
+        left: 100%;
+    }
+
+    /* The column is as tall as the card (.content's margins collapse through the text
+       column), so the picture box is never taller than the card, nor than the screen
+       below the header once the page scrolls. The padding insets the picture on every
+       side, so it always ends up slightly smaller than the card. Because the box never
+       outgrows its column, the sticky positioning always has room to work. */
+    .event-bg__side img {
+        position: sticky;
+        top: 13vh;
+        box-sizing: border-box;
+        width: 100%;
+        height: min(100%, 87vh - 1.5rem);
+        padding: 1.5rem;
+        object-fit: contain;
+        object-position: center top;
+    }
+}

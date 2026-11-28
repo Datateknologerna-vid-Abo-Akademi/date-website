@@ -5,6 +5,7 @@ from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.models import PermissionsMixin
 from django.db import models
 from django.utils import timezone
+from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 
 from core.utils import send_email_task
@@ -18,12 +19,14 @@ FRESHMAN = 1
 ORDINARY_MEMBER = 2
 SUPPORTING_MEMBER = 3
 SENIOR_MEMBER = 4
+NON_VOTING_MEMBER = 5
 
 PERMISSION_PROFILES = (
     (FRESHMAN, _('Gulnäbb')),
     (ORDINARY_MEMBER, _('Ordinarie medlem')),
     (SUPPORTING_MEMBER, _('Stödjande medlem')),
     (SENIOR_MEMBER, _('Seniormedlem')),
+    (NON_VOTING_MEMBER, _('Medlem utan rösträtt')),
 )
 
 
@@ -41,6 +44,7 @@ class Member(AbstractBaseUser, PermissionsMixin):  # type: ignore[django-manager
         "members.MembershipType", default=FRESHMAN, blank=False, on_delete=models.CASCADE
     )
     year_of_admission = models.IntegerField(_('Inskrivningsår'), blank=True, null=True)
+    archive_access_eligible = models.BooleanField(_('Gulispass utfört'), default=False)
     github_id = models.BigIntegerField(_('GitHub ID'), unique=True, blank=True, null=True)
     is_active = models.BooleanField(default=True)
     objects = MemberManager()
@@ -55,9 +59,20 @@ class Member(AbstractBaseUser, PermissionsMixin):  # type: ignore[django-manager
     def __unicode__(self):
         return f"{self.get_full_name()} ({self.email})"
 
-    @property
+    def __str__(self):
+        # Admin autocompletes and choice fields label members with this, so
+        # prefer the human name and fall back to the unique username.
+        if self.first_name and self.last_name:
+            return f"{self.first_name} {self.last_name}"
+        return self.username
+
+    @cached_property
     def is_staff(self):
-        return self.groups.filter(name__in=settings.STAFF_GROUPS).exists() or self.is_superuser
+        # Cached on the instance: this is a query, and templates and views reach for
+        # it several times per request. Each request loads its own instance, so the
+        # cache cannot outlive the group membership it reports. Superusers are
+        # staff without a group lookup.
+        return self.is_superuser or self.groups.filter(name__in=settings.STAFF_GROUPS).exists()
 
     @property
     def full_name(self):
@@ -90,6 +105,15 @@ class Member(AbstractBaseUser, PermissionsMixin):  # type: ignore[django-manager
 
     def get_str_membership_type(self):
         return self.membership_type.name
+
+    def has_archive_access(self):
+        if self.is_superuser:
+            return True
+        if not self.is_authenticated or self.membership_type.permission_profile == SUPPORTING_MEMBER:
+            return False
+        if getattr(settings, 'ARCHIVE_ACCESS_REQUIRES_ELIGIBILITY', False):
+            return self.archive_access_eligible
+        return True
 
 
 class MembershipType(models.Model):
@@ -146,6 +170,9 @@ class SubscriptionPayment(models.Model):
         verbose_name = _('prenumerationsbetalning')
         verbose_name_plural = _('prenumerationsbetalningar')
         ordering = ('id',)
+        indexes = [
+            models.Index(fields=['date_paid'], name='subpayment_date_idx'),
+        ]
 
     def __str__(self):
         return self.member.get_full_name()

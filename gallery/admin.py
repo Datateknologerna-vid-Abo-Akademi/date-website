@@ -1,18 +1,25 @@
 import logging
 
-from django.contrib import admin
+from django.conf import settings
+from django.contrib import admin, messages
 from django.db import models
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 
-from core.admin_base import UNFOLD_FORMFIELD_OVERRIDES, ExtraChangeListLinksMixin, ModelAdmin, TabularInline
+from core.admin_base import (
+    UNFOLD_FORMFIELD_OVERRIDES,
+    CompactTabularInline,
+    ExtraChangeListLinksMixin,
+    ModelAdmin,
+)
 from core.admin_ui import AdminLink
 from core.admin_widgets import (
     FLATPICKR_ADMIN_CSS,
     FLATPICKR_ADMIN_JS,
     FlatpickrDateTimeAdminMixin,
-    SafeAdminFileWidget,
+    SafeAdminImageWidget,
 )
+from core.upload_widgets import DirectUploadAdminMediaMixin
 
 from .forms import AlbumAdminForm
 from .models import Album, Photo
@@ -24,7 +31,10 @@ def safe_image_preview(image_field):
     if not image_field:
         return '-'
     try:
-        return format_html('<img src="{}" style="width: auto; height: 80px"/>', image_field.url)
+        return format_html(
+            '<img src="{}" style="width: auto; height: 80px" loading="lazy" decoding="async"/>',
+            image_field.url,
+        )
     except Exception as exc:
         logger.warning("Unable to resolve gallery image URL for %s: %s", image_field.name, exc)
         return image_field.name
@@ -34,7 +44,7 @@ class GalleryAdminMixin(ExtraChangeListLinksMixin):
     changelist_links = (AdminLink(_('Städa upp media'), icon='cleaning_services', url_name='archive:cleanMedia'),)
 
 
-class PhotoInline(TabularInline):
+class PhotoInline(CompactTabularInline):
     model = Photo
     fk_name = 'album'
     can_delete = True
@@ -42,15 +52,36 @@ class PhotoInline(TabularInline):
     extra = 0
     formfield_overrides = {
         **UNFOLD_FORMFIELD_OVERRIDES,
-        models.ImageField: {'widget': SafeAdminFileWidget},
+        models.ImageField: {'widget': SafeAdminImageWidget},
     }
+
+    if getattr(settings, 'USE_UNFOLD', False):
+        template = 'admin/functionaries_gallery/responsive_inline.html'
+
+        class Media:
+            css = {'all': ('admin/css/assignment-photo-inline.css',)}
 
     def preview_image(self, obj):
         return safe_image_preview(obj.image)
 
+    def _has_legacy_permission(self, request, action):
+        return request.user.has_perm(f'archive.{action}_picture')
+
+    def has_view_permission(self, request, obj=None):
+        return super().has_view_permission(request, obj) or self._has_legacy_permission(request, 'view')
+
+    def has_add_permission(self, request, obj=None):
+        return super().has_add_permission(request, obj) or self._has_legacy_permission(request, 'add')
+
+    def has_change_permission(self, request, obj=None):
+        return super().has_change_permission(request, obj) or self._has_legacy_permission(request, 'change')
+
+    def has_delete_permission(self, request, obj=None):
+        return super().has_delete_permission(request, obj) or self._has_legacy_permission(request, 'delete')
+
 
 @admin.register(Album)
-class AlbumAdmin(FlatpickrDateTimeAdminMixin, GalleryAdminMixin, ModelAdmin):
+class AlbumAdmin(FlatpickrDateTimeAdminMixin, GalleryAdminMixin, DirectUploadAdminMediaMixin, ModelAdmin):
     save_on_top = True
     form = AlbumAdminForm
     inlines = [PhotoInline]
@@ -59,6 +90,16 @@ class AlbumAdmin(FlatpickrDateTimeAdminMixin, GalleryAdminMixin, ModelAdmin):
     ordering = ('-pub_date',)
     date_hierarchy = 'pub_date'
     flatpickr_datetime_fields = ('pub_date',)
+
+    def save_related(self, request, form, formsets, change):
+        super().save_related(request, form, formsets, change)
+        skipped = getattr(form, 'skipped_images', None)
+        if skipped:
+            messages.warning(
+                request,
+                _('Kunde inte bearbeta följande bilder, de laddades inte upp: %(files)s')
+                % {'files': ', '.join(skipped)},
+            )
 
     legacy_permission_map = {
         'view': 'archive.view_picturecollection',
@@ -69,6 +110,11 @@ class AlbumAdmin(FlatpickrDateTimeAdminMixin, GalleryAdminMixin, ModelAdmin):
 
     def _has_legacy_permission(self, request, action):
         return request.user.has_perm(self.legacy_permission_map[action])
+
+    def has_module_permission(self, request):
+        if super().has_module_permission(request):
+            return True
+        return any(self._has_legacy_permission(request, action) for action in self.legacy_permission_map)
 
     def has_view_permission(self, request, obj=None):
         return super().has_view_permission(request, obj) or self._has_legacy_permission(request, 'view')

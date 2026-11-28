@@ -1,11 +1,49 @@
+from types import SimpleNamespace
+from unittest.mock import Mock
+
+from django.conf import settings
+from django.contrib import admin
 from django.contrib.auth.models import AnonymousUser
-from django.test import RequestFactory, TestCase
+from django.test import RequestFactory, TestCase, override_settings
+from django.urls import reverse
 from django.utils import timezone
 
+from functionaries.admin import FunctionaryAdmin, FunctionaryInline, FunctionaryRoleAdmin
 from functionaries.forms import FunctionaryForm
 from functionaries.models import Functionary, FunctionaryRole
 from functionaries.selectors import get_filtered_functionaries, get_selected_role, get_selected_year
 from members.models import ORDINARY_MEMBER, Member, MembershipType
+
+
+class FunctionaryLegacyAdminPermissionTests(TestCase):
+    def test_legacy_permissions_preserve_role_and_assignment_workflows(self):
+        request = SimpleNamespace(
+            user=SimpleNamespace(
+                has_module_perms=Mock(return_value=False),
+                has_perm=Mock(side_effect=lambda permission: permission.startswith('members.')),
+            )
+        )
+
+        role_admin = FunctionaryRoleAdmin(FunctionaryRole, admin.site)
+        assignment_admin = FunctionaryAdmin(Functionary, admin.site)
+        inline = FunctionaryInline(FunctionaryRole, admin.site)
+
+        self.assertTrue(role_admin.has_module_permission(request))
+        self.assertTrue(role_admin.has_change_permission(request))
+        self.assertTrue(assignment_admin.has_change_permission(request))
+        self.assertTrue(inline.has_add_permission(request))
+        self.assertTrue(role_admin.get_changelist_links(request))
+
+    def test_role_list_hides_assignment_link_without_assignment_permission(self):
+        request = SimpleNamespace(
+            user=SimpleNamespace(
+                has_module_perms=Mock(return_value=False),
+                has_perm=Mock(side_effect=lambda permission: permission == 'members.view_functionaryrole'),
+            )
+        )
+        role_admin = FunctionaryRoleAdmin(FunctionaryRole, admin.site)
+
+        self.assertNotIn('functionary_count', role_admin.get_list_display(request))
 
 
 class FunctionaryFormTests(TestCase):
@@ -17,6 +55,14 @@ class FunctionaryFormTests(TestCase):
             membership_type=self.membership_type,
         )
         self.role = FunctionaryRole.objects.create(title='Chair', board=True)
+
+    def test_assignment_inline_renders_existing_row_keys(self):
+        editor = Member.objects.create_superuser(username='role-editor', email='role@example.invalid', password=None)
+        self.client.force_login(editor)
+        Functionary.objects.create(member=self.member, functionary_role=self.role, year=2024)
+        response = self.client.get(reverse('admin:functionaries_functionaryrole_change', args=[self.role.pk]))
+        self.assertContains(response, 'name="functionary_set-0-id"')
+        self.assertContains(response, 'name="functionary_set-0-functionary_role"')
 
     def test_prevents_duplicate_year_role(self):
         Functionary.objects.create(member=self.member, functionary_role=self.role, year=2024)
@@ -100,12 +146,20 @@ class FunctionaryHelperTests(TestCase):
         self.assertEqual(list(selected), list(years))
         self.assertTrue(all_years)
 
-    def test_get_selected_year_ignores_parameters_for_anonymous_user(self):
+    def test_get_selected_year_ignores_parameters_for_anonymous_user_by_default(self):
         request = self.factory.get('/funktionarer/?year=2020')
         request.user = AnonymousUser()
         years = Functionary.objects.values_list('year', flat=True).distinct().order_by('-year')
         selected, _ = get_selected_year(request, years)
         self.assertEqual(selected, timezone.now().year)
+
+    @override_settings(FUNCTIONARIES_ANONYMOUS_FILTERS=True)
+    def test_get_selected_year_applies_parameters_for_anonymous_user_when_enabled(self):
+        request = self.factory.get('/funktionarer/?year=2020')
+        request.user = AnonymousUser()
+        years = Functionary.objects.values_list('year', flat=True).distinct().order_by('-year')
+        selected, _ = get_selected_year(request, years)
+        self.assertEqual(selected, 2020)
 
     def test_get_selected_role_supports_all_and_specific_roles(self):
         request_all = self.factory.get('/funktionarer/?role=all')
@@ -129,8 +183,26 @@ class FunctionaryHelperTests(TestCase):
         self.assertIsNone(selected)
         self.assertFalse(all_roles)
 
-    def test_get_selected_role_ignores_anonymous_requests(self):
+    def test_get_selected_role_ignores_anonymous_requests_by_default(self):
         request = self.factory.get('/funktionarer/?role=all')
+        request.user = AnonymousUser()
+        roles = FunctionaryRole.objects.all()
+        selected, all_roles = get_selected_role(request, roles)
+        self.assertIsNone(selected)
+        self.assertFalse(all_roles)
+
+    @override_settings(FUNCTIONARIES_ANONYMOUS_FILTERS=True)
+    def test_get_selected_role_applies_for_anonymous_requests_when_enabled(self):
+        request = self.factory.get('/funktionarer/?role=all')
+        request.user = AnonymousUser()
+        roles = FunctionaryRole.objects.all()
+        selected, all_roles = get_selected_role(request, roles)
+        self.assertTrue(all_roles)
+        self.assertEqual(list(selected), list(roles))
+
+    @override_settings(FUNCTIONARIES_ANONYMOUS_FILTERS=True)
+    def test_get_selected_role_ignores_non_numeric_anonymous_value_when_enabled(self):
+        request = self.factory.get('/funktionarer/?role=abc')
         request.user = AnonymousUser()
         roles = FunctionaryRole.objects.all()
         selected, all_roles = get_selected_role(request, roles)
@@ -146,3 +218,88 @@ class FunctionaryHelperTests(TestCase):
             list(functionaries.values_list('year', flat=True)),
             [2024, 2023],
         )
+
+
+class FunctionaryTutorSectionTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        member = Member.objects.create_user(
+            username='tutorsection',
+            password='pwd',
+            membership_type=MembershipType.objects.get(pk=ORDINARY_MEMBER),
+        )
+        cls.board_role = FunctionaryRole.objects.create(title='Ordförande', board=True)
+        cls.tutor_role = FunctionaryRole.objects.create(title='Tutor', tutor=True)
+        cls.board_tutor_role = FunctionaryRole.objects.create(title='Tutorchef', board=True, tutor=True)
+        cls.other_role = FunctionaryRole.objects.create(title='Webmaster')
+        cls.year = timezone.now().year
+        cls.board = Functionary.objects.create(member=member, functionary_role=cls.board_role, year=cls.year)
+        cls.tutor = Functionary.objects.create(name='Tutor Person', functionary_role=cls.tutor_role, year=cls.year)
+        cls.board_tutor = Functionary.objects.create(
+            name='Tutor Chair', functionary_role=cls.board_tutor_role, year=cls.year
+        )
+        cls.other = Functionary.objects.create(name='Web Person', functionary_role=cls.other_role, year=cls.year)
+
+    def test_tutor_defaults_to_false(self):
+        self.assertFalse(self.other_role.tutor)
+
+    def test_selector_sections_are_mutually_exclusive(self):
+        self.assertCountEqual(
+            get_filtered_functionaries(self.year, None, True),
+            [self.board, self.board_tutor],
+        )
+        self.assertCountEqual(
+            get_filtered_functionaries(self.year, None, False, is_tutor=True),
+            [self.tutor],
+        )
+        self.assertCountEqual(
+            get_filtered_functionaries(self.year, None, False),
+            [self.other],
+        )
+
+    def test_public_listing_renders_tutor_section(self):
+        response = self.client.get(reverse('members:functionaries'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(list(response.context['tutor_functionaries_by_role']), [self.tutor_role])
+        self.assertNotIn(self.tutor_role, response.context['functionaries_by_role'])
+        self.assertIn(self.board_tutor_role, response.context['board_functionaries_by_role'])
+        self.assertContains(response, 'Tutor Person')
+
+    def test_role_admin_lists_and_filters_tutor_flag(self):
+        role_admin = FunctionaryRoleAdmin(FunctionaryRole, admin.site)
+
+        self.assertIn('tutor', role_admin.list_display)
+        self.assertIn('tutor', role_admin.list_filter)
+
+    def test_role_admin_shows_board_and_tutor_on_one_row(self):
+        admin_user = Member.objects.create_superuser(
+            username='tutor-admin',
+            password='pwd',
+            email='tutor-admin@example.com',
+        )
+        self.client.force_login(admin_user)
+
+        response = self.client.get(reverse('admin:functionaries_functionaryrole_change', args=[self.tutor_role.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        fieldset_fields = [field for fieldset in response.context['adminform'] for field in fieldset.fields]
+        self.assertIn(('board', 'tutor'), fieldset_fields)
+        self.assertNotIn('tutor', fieldset_fields)
+        self.assertIn('title_sv', fieldset_fields)
+        self.assertContains(response, 'name="board"')
+        self.assertContains(response, 'name="tutor"')
+
+    def test_role_admin_labels_unfold_assignment_fields(self):
+        self.client.force_login(
+            Member.objects.create_superuser(username='assignment-editor', email='editor@example.invalid', password=None)
+        )
+        response = self.client.get(reverse('admin:functionaries_functionaryrole_change', args=[self.tutor_role.pk]))
+
+        if settings.USE_UNFOLD:
+            self.assertContains(response, 'admin/css/assignment-photo-inline.css')
+            for row in ('0', '__prefix__'):
+                for field in ('name', 'year'):
+                    self.assertContains(response, f'for="id_functionary_set-{row}-{field}"')
+        else:
+            self.assertNotContains(response, 'admin/css/assignment-photo-inline.css')

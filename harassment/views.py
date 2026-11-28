@@ -11,8 +11,12 @@ from .models import HarassmentEmailRecipient
 
 def harassment_form(request):
     form = HarassmentForm()
-    if request.session.get("harass_submitted", False):
-        request.session['harass_submitted'] = False
+    # Consume the flag on GET only. Checking it before the POST branch would
+    # swallow a report whenever the redirect GET never landed (back button,
+    # dropped connection, a second tab): the reporter would see the thank-you
+    # page and the report would be silently lost. Mirrors
+    # feedback.views.feedback_form.
+    if request.method == 'GET' and request.session.pop("harass_submitted", False):
         return render(request, 'social/harassment_success.html')
 
     if request.method == 'POST':
@@ -30,7 +34,7 @@ def harassment_form(request):
             enqueue_task_on_commit(
                 send_email_task,
                 "Ny trakasserianmälan har inkommit",
-                render_to_string('social/harassment_admin_email.html', email_ctx),
+                render_to_string('social/harassment_admin_email.txt', email_ctx),
                 settings.DEFAULT_FROM_EMAIL,
                 harassment_receivers,
             )

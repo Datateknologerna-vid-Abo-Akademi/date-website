@@ -1,25 +1,13 @@
+import os
+
 from .common import *  # noqa
 
-TEMPLATES = [
-    {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [
-            'templates/biocum',
-            'templates/date',
-            *COMMON_TEMPLATE_DIRS,
-        ],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                *COMMON_CONTEXT_PROCESSORS,
-            ],
-        },
-    },
-]
+TEMPLATES = build_templates('biocum', parent_variants=('date',))
 
 INSTALLED_APPS = get_installed_apps(
     [
         'staticpages',
+        'feedback',
         'news',
         'events',
         'ads',
@@ -36,13 +24,19 @@ INSTALLED_APPS = get_installed_apps(
 
 ROOT_URLCONF = 'core.urls.biocum'
 USE_ACCEPT_LANGUAGE_HEADER = False
+DATE_LANGUAGES = (
+    ("sv", "Svenska"),
+    ("en", "English"),
+)
+LANGUAGES = (
+    DATE_LANGUAGES
+    if ENABLE_LANGUAGE_FEATURES
+    else tuple(language for language in DATE_LANGUAGES if language[0] == LANGUAGE_CODE)
+)
 
 STAFF_GROUPS = get_staff_groups(['styrelse', 'admin', 'fotograf', 'rösträknare'])
 
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static/biocum'),
-    os.path.join(BASE_DIR, 'static/common'),
-]
+STATICFILES_DIRS = build_static_dirs('biocum')
 
 CONTENT_VARIABLES = {
     "SITE_URL": "https://biologica.fi",
@@ -59,3 +53,15 @@ CONTENT_VARIABLES = {
         ["fa-instagram", "https://www.instagram.com/biologica_rf/"],
     ],
 }
+
+# Lunch widget fallback coordinates for the association kansli (Biocity, Artillerigatan 6).
+LUNCH_KANSLI_LATITUDE = 60.4493152
+LUNCH_KANSLI_LONGITUDE = 22.2932317
+LUNCH_LAT = env('LUNCH_LAT', float, LUNCH_KANSLI_LATITUDE) if os.environ.get('LUNCH_LAT') else LUNCH_KANSLI_LATITUDE
+LUNCH_LNG = env('LUNCH_LNG', float, LUNCH_KANSLI_LONGITUDE) if os.environ.get('LUNCH_LNG') else LUNCH_KANSLI_LONGITUDE
+
+# The lunchmenu.fi student lunch widget, the same list DaTe shows, measuring
+# from Biocity.
+LUNCH_ENABLED = env('LUNCH_ENABLED', bool, True)
+# The widget's link and price colour: the site's own link colour.
+LUNCH_ACCENT = env('LUNCH_ACCENT', str, '#49796b')

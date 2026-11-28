@@ -7,7 +7,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from members.models import ORDINARY_MEMBER, SENIOR_MEMBER, MembershipType
+from members.models import NON_VOTING_MEMBER, ORDINARY_MEMBER, SENIOR_MEMBER, MembershipType
 from publications.admin import PublicationCollectionAdminForm
 from publications.models import PDFFile, PublicationCollection
 
@@ -82,6 +82,7 @@ class PDFFileAdminTests(TestCase):
         self.assertContains(response, "Selected collection access")
         self.assertContains(response, "Password protected")
         self.assertContains(response, "Password configured")
+        self.assertContains(response, "admin-inline-action")
         self.assertContains(response, reverse("admin:publications_publicationcollection_change", args=[collection.pk]))
 
     def test_collection_access_endpoint_returns_selected_collection_details(self):
@@ -99,9 +100,9 @@ class PDFFileAdminTests(TestCase):
     def test_collection_access_endpoint_requires_publication_permission(self):
         staff_group = Group.objects.create(name="admin")
         staff_user = get_user_model().objects.create_user(
-            username="staff-without-publications",
+            username="staff-no-pubs",
             password="pwd",
-            email="staff-without-publications@example.com",
+            email="staff-no-pubs@example.com",
         )
         staff_user.groups.add(staff_group)
         self.client.force_login(staff_user)
@@ -136,9 +137,12 @@ class PublicationCollectionAdminTests(TestCase):
         self.assertContains(response, "Access Control")
         self.assertContains(response, "Annual Magazine")
         self.assertContains(response, "id_publications-0-title")
+        # A blank publication row renders today's date, so an untouched row
+        # would count as changed and block saving the collection.
+        self.assertNotContains(response, "id_publications-1-title")
         self.assertRegex(
             response.content.decode(),
-            r'<input type="file" name="publications-0-file" disabled id="id_publications-0-file">',
+            r'<input\b(?=[^>]*\bid="id_publications-0-file")(?=[^>]*\bdisabled\b)[^>]*>',
         )
         self.assertContains(response, "Publication list")
 
@@ -338,6 +342,35 @@ class PDFFileListTests(TestCase):
 
         self.assertRedirects(response, only.get_absolute_url())
 
+    def test_membership_collection_is_visible_for_extra_member_when_ordinary_is_allowed(self):
+        ordinary = MembershipType.objects.get(pk=ORDINARY_MEMBER)
+        extra_type = MembershipType.objects.create(name="Extra medlem", permission_profile=NON_VOTING_MEMBER)
+        collection = create_collection(
+            title="Members Magazine",
+            slug="members-magazine",
+            visibility=PublicationCollection.VISIBILITY_MEMBERSHIP,
+        )
+        collection.allowed_membership_types.add(ordinary)
+        PDFFile.objects.create(
+            collection=collection,
+            title="Members Magazine Issue",
+            slug="members-magazine-issue",
+            redirect_url="https://issuu.com/sfklubben/docs/members-magazine",
+        )
+        user = get_user_model().objects.create_user(
+            username="extra-member",
+            password="pwd",
+            membership_type=extra_type,
+        )
+        self.client.force_login(user)
+
+        response = self.client.get(reverse("publications:pdf_list"))
+
+        self.assertRedirects(response, collection.get_absolute_url(), fetch_redirect_response=False)
+        response = self.client.get(collection.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Members Magazine")
+
     def test_index_hides_empty_collections(self):
         create_collection(title="Empty", slug="empty")
 
@@ -430,6 +463,50 @@ class PDFFileDetailTests(TestCase):
             username="ordinary",
             password="pwd",
             membership_type=ordinary,
+        )
+        self.client.force_login(user)
+
+        response = self.client.get(pdf_file.get_absolute_url())
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_membership_collection_granted_to_extra_member_when_ordinary_is_allowed(self):
+        ordinary = MembershipType.objects.get(pk=ORDINARY_MEMBER)
+        extra_type = MembershipType.objects.create(name="Extra medlem", permission_profile=NON_VOTING_MEMBER)
+        collection = create_collection(visibility=PublicationCollection.VISIBILITY_MEMBERSHIP)
+        collection.allowed_membership_types.add(ordinary)
+        pdf_file = PDFFile.objects.create(
+            collection=collection,
+            title="Members Magazine",
+            slug="members-magazine",
+            redirect_url="https://issuu.com/sfklubben/docs/members",
+        )
+        user = get_user_model().objects.create_user(
+            username="extra-member",
+            password="pwd",
+            membership_type=extra_type,
+        )
+        self.client.force_login(user)
+
+        response = self.client.get(pdf_file.get_absolute_url())
+
+        self.assertRedirects(response, "https://issuu.com/sfklubben/docs/members", fetch_redirect_response=False)
+
+    def test_membership_collection_still_rejects_extra_member_without_ordinary_allowlist(self):
+        senior = MembershipType.objects.get(pk=SENIOR_MEMBER)
+        extra_type = MembershipType.objects.create(name="Extra medlem", permission_profile=NON_VOTING_MEMBER)
+        collection = create_collection(visibility=PublicationCollection.VISIBILITY_MEMBERSHIP)
+        collection.allowed_membership_types.add(senior)
+        pdf_file = PDFFile.objects.create(
+            collection=collection,
+            title="Senior Magazine",
+            slug="senior-magazine",
+            redirect_url="https://issuu.com/sfklubben/docs/senior",
+        )
+        user = get_user_model().objects.create_user(
+            username="extra-member",
+            password="pwd",
+            membership_type=extra_type,
         )
         self.client.force_login(user)
 

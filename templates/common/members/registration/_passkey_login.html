@@ -1,0 +1,24 @@
+{% load i18n otp_webauthn %}
+<div class="passkey-login">
+  <input type="hidden"
+         name="next"
+         value="{% if redirect_field_value %}{{ redirect_field_value }}{% else %}{{ request.GET.next|default:'' }}{% endif %}">
+  <span id="passkey-verification-placeholder"></span>
+  <template id="passkey-verification-available-template">
+    {# The library rewrites the label via textContent, so the icon lives in CSS (::before). #}
+    <button type="button" id="passkey-verification-button" class="passkey-button">
+      {% trans "Sign in with a passkey" %}
+    </button>
+    <div id="passkey-verification-status-message"
+         class="passkey-status"
+         role="alert"></div>
+  </template>
+  <template id="passkey-verification-unavailable-template">
+    <p class="passkey-unavailable">{% trans "This browser does not support passkeys." %}</p>
+  </template>
+  {% if passkey_username_selector %}
+    {% render_otp_webauthn_auth_scripts username_field_selector=passkey_username_selector %}
+  {% else %}
+    {% render_otp_webauthn_auth_scripts %}
+  {% endif %}
+</div>

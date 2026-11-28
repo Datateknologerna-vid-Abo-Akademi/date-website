@@ -13,6 +13,9 @@ customColorPalette = [
 
 CKEDITOR_5_CUSTOM_CSS = 'core/css/ckeditor.css'
 CKEDITOR_5_FILE_STORAGE = 'core.storage_backends.PublicCKEditorStorage'
+# The widget falls back to a default list that omits jpg, which hides .jpg files
+# in the upload picker even though the server side accepts them.
+CKEDITOR_5_UPLOAD_FILE_TYPES = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'tiff']
 CKEDITOR_5_CONFIGS = {
     'default': {
         'toolbar': [
@@ -31,6 +34,8 @@ CKEDITOR_5_CONFIGS = {
             'superscript',
             'highlight',
             '|',
+            'alignment',
+            '|',
             'codeBlock',
             'sourceEditing',
             'insertImage',
@@ -40,15 +45,23 @@ CKEDITOR_5_CONFIGS = {
             '|',
             'blockQuote',
             'imageUpload',
+            'horizontalLine',
             '|',
             'fontSize',
             'fontFamily',
             'fontColor',
             'fontBackgroundColor',
             'mediaEmbed',
-            'removeFormat',
             'insertTable',
+            'specialCharacters',
+            '|',
+            'findAndReplace',
+            'showBlocks',
+            'removeFormat',
         ],
+        'alignment': {
+            'options': ['left', 'center', 'right', 'justify'],
+        },
         'image': {
             'toolbar': [
                 'imageTextAlternative',
@@ -58,17 +71,43 @@ CKEDITOR_5_CONFIGS = {
                 'imageStyle:alignCenter',
                 'imageStyle:side',
                 '|',
+                'imageStyle:noHoverLink',
+                '|',
+                'resizeImage',
+                'linkImage',
             ],
-            'styles': [
-                'full',
-                'side',
-                'alignLeft',
-                'alignRight',
-                'alignCenter',
-            ],
+            'styles': {
+                'options': [
+                    'block',
+                    'side',
+                    'alignLeft',
+                    'alignRight',
+                    'alignCenter',
+                    {
+                        'name': 'noHoverLink',
+                        'title': 'No hover effect (linked images)',
+                        'icon': (
+                            '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">'
+                            '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM4 12c0-4.42 '
+                            '3.58-8 8-8 1.85 0 3.55.63 4.9 1.69L5.69 16.9C4.63 15.55 4 13.85 4 12zm8 8c-1.85 '
+                            '0-3.55-.63-4.9-1.69L18.31 7.1C19.37 8.45 20 10.15 20 12c0 4.42-3.58 8-8 8z"/>'
+                            '</svg>'
+                        ),
+                        'modelElements': ['imageBlock', 'imageInline'],
+                        'className': 'editor-img-no-hover',
+                    },
+                ],
+            },
         },
         'table': {
-            'contentToolbar': ['tableColumn', 'tableRow', 'mergeTableCells', 'tableProperties', 'tableCellProperties'],
+            'contentToolbar': [
+                'tableColumn',
+                'tableRow',
+                'mergeTableCells',
+                'toggleTableCaption',
+                'tableProperties',
+                'tableCellProperties',
+            ],
             'tableProperties': {'borderColors': customColorPalette, 'backgroundColors': customColorPalette},
             'tableCellProperties': {'borderColors': customColorPalette, 'backgroundColors': customColorPalette},
         },
@@ -78,14 +117,18 @@ CKEDITOR_5_CONFIGS = {
                 {'model': 'heading1', 'view': 'h1', 'title': 'Heading 1', 'class': 'ck-heading_heading1'},
                 {'model': 'heading2', 'view': 'h2', 'title': 'Heading 2', 'class': 'ck-heading_heading2'},
                 {'model': 'heading3', 'view': 'h3', 'title': 'Heading 3', 'class': 'ck-heading_heading3'},
+                {'model': 'heading4', 'view': 'h4', 'title': 'Heading 4', 'class': 'ck-heading_heading4'},
             ]
         },
-    },
-    'list': {
-        'properties': {
-            'styles': 'true',
-            'startIndex': 'true',
-            'reversed': 'true',
-        }
+        'list': {
+            # These must be booleans. ListProperties treats a string as the name
+            # of a single list type, so `'true'` registers a bogus type called
+            # "true" and the bullet and number style dropdowns never appear.
+            'properties': {
+                'styles': True,
+                'startIndex': True,
+                'reversed': True,
+            }
+        },
     },
 }

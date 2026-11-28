@@ -12,10 +12,40 @@ from core.admin import (
     LanguageTabbedTranslationAdmin,
     TranslationCompletionAdminMixin,
 )
-from core.admin_base import ExtraChangeListLinksMixin, ModelAdmin, TabularInline
+from core.admin_base import CompactTabularInline, ExtraChangeListLinksMixin, ModelAdmin
 from core.admin_ui import AdminLink
 
 from .models import Functionary, FunctionaryRole
+
+
+class LegacyFunctionaryPermissionMixin:
+    legacy_model_name = ''
+
+    def _has_legacy_permission(self, request, action):
+        return request.user.has_perm(f'members.{action}_{self.legacy_model_name}')
+
+    def has_module_permission(self, request):
+        if super().has_module_permission(request):
+            return True
+        return any(self._has_legacy_permission(request, action) for action in ('view', 'add', 'change', 'delete'))
+
+    def has_view_permission(self, request, obj=None):
+        return super().has_view_permission(request, obj) or self._has_legacy_permission(request, 'view')
+
+    def has_add_permission(self, request, obj=None):
+        current_permission = (
+            super().has_add_permission(request, obj)
+            if isinstance(self, admin.options.InlineModelAdmin)
+            else super().has_add_permission(request)
+        )
+        return current_permission or self._has_legacy_permission(request, 'add')
+
+    def has_change_permission(self, request, obj=None):
+        return super().has_change_permission(request, obj) or self._has_legacy_permission(request, 'change')
+
+    def has_delete_permission(self, request, obj=None):
+        return super().has_delete_permission(request, obj) or self._has_legacy_permission(request, 'delete')
+
 
 if settings.ENABLE_LANGUAGE_FEATURES:  # type: ignore[misc]
 
@@ -27,7 +57,8 @@ else:
     FunctionaryRoleTranslationAdminBase = ModelAdmin  # type: ignore[misc, assignment]
 
 
-class FunctionaryInline(TabularInline):
+class FunctionaryInline(LegacyFunctionaryPermissionMixin, CompactTabularInline):
+    legacy_model_name = 'functionary'
     model = Functionary
     fk_name = 'functionary_role'
     extra = 1
@@ -35,9 +66,16 @@ class FunctionaryInline(TabularInline):
     fields = ('member', 'name', 'year')
     ordering = ('-year', 'name')
 
+    if getattr(settings, 'USE_UNFOLD', False):
+        template = 'admin/functionaries_gallery/responsive_inline.html'
+
+        class Media:
+            css = {'all': ('admin/css/assignment-photo-inline.css',)}
+
 
 @admin.register(Functionary)
-class FunctionaryAdmin(ModelAdmin):
+class FunctionaryAdmin(LegacyFunctionaryPermissionMixin, ModelAdmin):
+    legacy_model_name = 'functionary'
     list_display = ('get_display_name', 'functionary_role_link', 'year')
     list_filter = ('functionary_role', 'year')
     search_fields = (
@@ -69,29 +107,59 @@ class FunctionaryAdmin(ModelAdmin):
 
 @admin.register(FunctionaryRole)
 class FunctionaryRoleAdmin(
-    ExtraChangeListLinksMixin, TranslationCompletionAdminMixin, FunctionaryRoleTranslationAdminBase
+    LegacyFunctionaryPermissionMixin,
+    ExtraChangeListLinksMixin,
+    TranslationCompletionAdminMixin,
+    FunctionaryRoleTranslationAdminBase,
 ):
+    legacy_model_name = 'functionaryrole'
     changelist_links = (
         AdminLink(
             _('All assignments'),
             icon='manage_accounts',
             url_name='admin:functionaries_functionary_changelist',
-            permission='functionaries.view_functionary',
+            any_permissions=('functionaries.view_functionary', 'members.view_functionary'),
         ),
     )
     save_on_top = True
-    list_display = ('title', 'translation_status', 'board', 'functionary_count')
-    list_filter = ('board',)
+    list_display = ('title', 'translation_status', 'board', 'tutor', 'functionary_count')
+    list_filter = ('board', 'tutor')
     search_fields = ('title', 'functionary__name', 'functionary__member__first_name', 'functionary__member__last_name')
     ordering = ['title']
     inlines = [FunctionaryInline]
+
+    def get_fieldsets(self, request, obj=None):
+        # Show the board and tutor checkboxes on one row. The grouping happens here rather than in
+        # get_fields because the translation admin rebuilds the fieldsets from the form and flattens
+        # any grouped fields.
+        fieldsets = []
+        for name, options in super().get_fieldsets(request, obj):
+            fields = list(options.get('fields', ()))
+            if 'board' in fields and 'tutor' in fields:
+                fields.remove('tutor')
+                fields[fields.index('board')] = ('board', 'tutor')
+            fieldsets.append((name, {**options, 'fields': fields}))
+        return fieldsets
+
+    def get_list_display(self, request):
+        list_display = list(super().get_list_display(request))
+        if not hasattr(request, 'user'):
+            return list_display
+        assignment_admin = self.admin_site._registry[Functionary]
+        if not assignment_admin.has_view_permission(request):
+            list_display.remove('functionary_count')
+        return list_display
 
     def get_queryset(self, request):
         return super().get_queryset(request).annotate(functionary_total=Count('functionary', distinct=True))
 
     @admin.display(description=_('Funktionärer'))
     def functionary_count(self, obj):
-        count = getattr(obj, 'functionary_total', obj.functionary_set.count())
+        # getattr evaluates its default eagerly; keep the annotated count and
+        # only fall back to a query when the annotation is absent.
+        count = getattr(obj, 'functionary_total', None)
+        if count is None:
+            count = obj.functionary_set.count()
         if not count:
             return '0'
         return format_html(

@@ -1,0 +1,287 @@
+/*
+ * Public styles for content written in CKEditor 5.
+ *
+ * CKEditor stores image alignment and resizing as classes on the rendered HTML
+ * (`.image.image-style-align-left`, `.image.image_resized`, `figure.table`, and
+ * so on) and ships the matching rules in `django_ckeditor_5/dist/styles.css`.
+ * That stylesheet is loaded by the admin widget only, so on the public site the
+ * classes used to do nothing: every image rendered as a plain block figure no
+ * matter which alignment the editor showed, and tables lost their borders.
+ *
+ * `django-ckeditor-5` ships no standalone content stylesheet to link, so the
+ * rules below are adapted from the `.ck-content` section of the bundled
+ * stylesheet, reduced to the markup this configuration can produce. Deliberately
+ * left out:
+ *
+ * - the base typography, because the site already sets the font and text colour
+ *   for the page and the CKEditor defaults would override them;
+ * - the editor chrome (`.ck.ck-*`), which never matches public markup;
+ * - everything for layout tables, which the toolbar does not offer.
+ *
+ * The spacing and caption custom properties are declared here for the same
+ * reason. Re-check this file when `django-ckeditor-5` is upgraded.
+ *
+ * A template only picks these rules up if the element wrapping CKEditor HTML
+ * carries the `ck-content` class. See
+ * `templates/common/staticpages/staticpage.html`.
+ */
+
+.ck-content {
+    --ck-content-image-style-spacing: 1.5em;
+    --ck-content-inline-image-style-spacing: calc(var(--ck-content-image-style-spacing) / 2);
+    --ck-content-color-image-caption-background: #f7f7f7;
+    --ck-content-color-image-caption-text: #333;
+    --ck-content-color-table-caption-background: #f7f7f7;
+    --ck-content-color-table-caption-text: #333;
+
+    /* Own block formatting context, so floated images stay inside the content box. */
+    display: flow-root;
+}
+
+/* Images */
+
+.ck-content .image {
+    clear: both;
+    display: table;
+    margin: 0.9em auto;
+    min-width: 50px;
+    text-align: center;
+}
+
+.ck-content .image img {
+    display: block;
+    height: auto;
+    margin: 0 auto;
+    max-width: 100%;
+    min-width: 100%;
+}
+
+.ck-content .image > figcaption {
+    background-color: var(--ck-content-color-image-caption-background);
+    caption-side: bottom;
+    color: var(--ck-content-color-image-caption-text);
+    display: table-caption;
+    font-size: 0.75em;
+    outline-offset: -1px;
+    overflow-wrap: anywhere;
+    padding: 0.6em;
+    word-break: normal;
+}
+
+/* Alignment. These are the classes the editor's image toolbar writes. */
+
+.ck-content .image-style-align-center {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.ck-content .image-style-align-left {
+    float: left;
+    margin-right: var(--ck-content-image-style-spacing);
+}
+
+.ck-content .image-style-align-right {
+    float: right;
+    margin-left: var(--ck-content-image-style-spacing);
+}
+
+.ck-content .image.image-style-align-left,
+.ck-content .image.image-style-align-right {
+    clear: none;
+}
+
+.ck-content .image.image-style-side {
+    float: right;
+    margin-left: var(--ck-content-image-style-spacing);
+    max-width: 50%;
+}
+
+.ck-content .image.image-style-block-align-left,
+.ck-content .image.image-style-block-align-right {
+    max-width: calc(100% - var(--ck-content-image-style-spacing));
+}
+
+.ck-content .image.image-style-block-align-left {
+    margin-left: 0;
+    margin-right: auto;
+}
+
+.ck-content .image.image-style-block-align-right {
+    margin-left: auto;
+    margin-right: 0;
+}
+
+.ck-content p + .image.image-style-align-left,
+.ck-content p + .image.image-style-align-right,
+.ck-content p + .image.image-style-side {
+    margin-top: 0;
+}
+
+/* Inline images */
+
+.ck-content .image-inline {
+    align-items: flex-start;
+    display: inline-flex;
+    max-width: 100%;
+}
+
+.ck-content .image-inline picture {
+    display: flex;
+}
+
+.ck-content .image-inline img,
+.ck-content .image-inline picture {
+    flex-grow: 1;
+    flex-shrink: 1;
+    max-width: 100%;
+}
+
+.ck-content .image-inline.image-style-align-left,
+.ck-content .image-inline.image-style-align-right {
+    margin-bottom: var(--ck-content-inline-image-style-spacing);
+    margin-top: var(--ck-content-inline-image-style-spacing);
+}
+
+.ck-content .image-inline.image-style-align-left {
+    margin-right: var(--ck-content-inline-image-style-spacing);
+}
+
+.ck-content .image-inline.image-style-align-right {
+    margin-left: var(--ck-content-inline-image-style-spacing);
+}
+
+/*
+ * Resized images. The association stylesheets cap content images with
+ * `width: auto !important` and `max-height: 35vh`, which would ignore the width
+ * the editor stored on the figure and, once the width is forced, squash the
+ * aspect ratio. Both are released here so a resized image keeps the size the
+ * editor showed. The cap still applies to every other content image.
+ */
+
+.ck-content img.image_resized {
+    height: auto;
+}
+
+.ck-content .image.image_resized {
+    box-sizing: border-box;
+    display: block;
+    max-width: 100%;
+}
+
+.ck-content .image.image_resized img {
+    height: auto !important;
+    max-height: none !important;
+    width: 100% !important;
+}
+
+.ck-content .image.image_resized > figcaption {
+    display: block;
+}
+
+/* Tables */
+
+/*
+ * The figure is the table box and the inner table fills it, which is how the
+ * editor lays them out. Keeping that relationship is what makes a width set in
+ * Table Properties size the visible table, and what gives the caption a table
+ * formatting context instead of letting it stretch the full column width.
+ */
+.ck-content figure.table {
+    display: table;
+    margin: 0.9em auto;
+    max-width: 100%;
+    width: fit-content;
+}
+
+.ck-content figure.table > table {
+    border: 1px double #b3b3b3;
+    border-collapse: collapse;
+    border-spacing: 0;
+    height: auto;
+    width: 100%;
+}
+
+.ck-content figure.table > table th {
+    text-align: start;
+}
+
+.ck-content figure.table > table td,
+.ck-content figure.table > table th {
+    border: 1px solid #bfbfbf;
+    min-width: 2em;
+    overflow-wrap: break-word;
+    padding: 0.4em;
+}
+
+.ck-content figure.table > table > thead > tr > th,
+.ck-content figure.table > table > tbody > tr > th {
+    background: rgba(0, 0, 0, 0.05);
+    font-weight: 700;
+}
+
+.ck-content figure.table > table > thead > tr > th > p:first-child,
+.ck-content figure.table > table > thead > tr > td > p:first-child,
+.ck-content figure.table > table > tbody > tr > th > p:first-child,
+.ck-content figure.table > table > tbody > tr > td > p:first-child {
+    margin-top: 0;
+}
+
+.ck-content figure.table > table > thead > tr > th > p:last-child,
+.ck-content figure.table > table > thead > tr > td > p:last-child,
+.ck-content figure.table > table > tbody > tr > th > p:last-child,
+.ck-content figure.table > table > tbody > tr > td > p:last-child {
+    margin-bottom: 0;
+}
+
+.ck-content figure.table > figcaption,
+.ck-content figure.table > table > caption {
+    background-color: var(--ck-content-color-table-caption-background);
+    caption-side: top;
+    color: var(--ck-content-color-table-caption-text);
+    display: table-caption;
+    font-size: 0.75em;
+    outline-offset: -1px;
+    overflow-wrap: anywhere;
+    padding: 0.6em;
+    text-align: center;
+    word-break: normal;
+}
+
+.ck-content figure.table .ck-table-resized {
+    table-layout: fixed;
+}
+
+/*
+ * A table formatting box cannot scroll, so below the Bootstrap md breakpoint the
+ * figure becomes a plain scroll container instead. That trades the caption
+ * sizing for keeping a table wider than the screen from pushing the whole page
+ * sideways on a phone. Wider viewports keep the editor layout; a table wider
+ * than the content column still widens the page there, as it did before these
+ * rules existed.
+ */
+@media (max-width: 767.98px) {
+    .ck-content figure.table {
+        display: block;
+        overflow-x: auto;
+        width: auto;
+    }
+}
+
+/* Blockquotes and embedded media */
+
+.ck-content blockquote {
+    border-left: 5px solid #ccc;
+    font-style: italic;
+    margin-left: 0;
+    margin-right: 0;
+    overflow: hidden;
+    padding-left: 1.5em;
+    padding-right: 1.5em;
+}
+
+.ck-content .media {
+    clear: both;
+    display: block;
+    margin: 0.9em 0;
+    min-width: 15em;
+}

@@ -1,8 +1,10 @@
 import csv
 
 from django.contrib import admin
+from django.core.exceptions import PermissionDenied
 from django.db.models import Count
 from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
 from django.urls import re_path, reverse
 from django.utils.html import format_html
 from django.utils.http import urlencode
@@ -41,6 +43,7 @@ class EventInvoiceAdmin(ModelAdmin):
     list_select_related = ('participant', 'participant__event')
     ordering = ('-invoice_date',)
     date_hierarchy = 'invoice_date'
+    show_full_result_count = False
 
     @admin.display(description=_('Event'))
     def event_link(self, obj):
@@ -77,6 +80,16 @@ class EventBillingConfigurationAdmin(ExtraChangeListLinksMixin, ModelAdmin):
     list_select_related = ('event',)
     ordering = ('event',)
 
+    def get_list_display(self, request):
+        list_display = list(super().get_list_display(request))
+        if not hasattr(request, 'user'):
+            return list_display
+        invoice_admin = self.admin_site._registry[EventInvoice]
+        if not invoice_admin.has_view_permission(request):
+            list_display.remove('invoice_count')
+            list_display.remove('ref_export')
+        return list_display
+
     def get_queryset(self, request):
         return (
             super()
@@ -94,7 +107,7 @@ class EventBillingConfigurationAdmin(ExtraChangeListLinksMixin, ModelAdmin):
     @admin.display(description="Exportera data")
     def ref_export(self, obj):
         return format_html(
-            '<a class="button" href="{}">Exportera data</a>&nbsp;',
+            '<a class="button admin-inline-action" href="{}">Exportera data</a>&nbsp;',
             reverse('admin:billing_ref_numbers', args=[obj.pk]),
         )
 
@@ -108,11 +121,11 @@ class EventBillingConfigurationAdmin(ExtraChangeListLinksMixin, ModelAdmin):
 
     @admin.display(description=_('Invoices'))
     def invoice_count(self, obj):
-        count = getattr(
-            obj,
-            'invoice_total',
-            EventInvoice.objects.filter(participant__event=obj.event).count(),
-        )
+        # getattr evaluates its default eagerly; the changelist already
+        # annotates invoice_total, so only fall back when it is absent.
+        count = getattr(obj, 'invoice_total', None)
+        if count is None:
+            count = EventInvoice.objects.filter(participant__event=obj.event).count()
         if not count:
             return '0'
         return format_html(
@@ -124,7 +137,11 @@ class EventBillingConfigurationAdmin(ExtraChangeListLinksMixin, ModelAdmin):
         )
 
     def ref_numbers(self, request, conf_id):
-        bconfig = self.get_object(request, conf_id)
+        invoice_admin = self.admin_site._registry[EventInvoice]
+        if not self.has_view_permission(request) or not invoice_admin.has_view_permission(request):
+            raise PermissionDenied
+
+        bconfig = get_object_or_404(self.get_queryset(request), pk=conf_id)
         event = bconfig.event
 
         response = HttpResponse(

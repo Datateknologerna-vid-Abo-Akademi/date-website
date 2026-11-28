@@ -4,8 +4,8 @@ version = "0.1.0"
 license = "AGPL-3.0-or-later"
 requires-python = ">=3.14"
 dependencies = [
-    "Django~=6.0",
-    "django-unfold>=0.99.1,<0.100",
+    "Django~=6.1",
+    "django-unfold>=0.108.0,<0.109",
     "asgiref",
     "django-ckeditor-5",
     "requests",
@@ -19,10 +19,7 @@ dependencies = [
     "whitenoise",
     "channels",
     "channels-redis",
-    "websocket-client",
     "six",
-    "instaloader",
-    "schedule",
     "boto3",
     "django-storages",
     "django-tables2",
@@ -35,19 +32,35 @@ dependencies = [
     "daphne",
     "celery[redis]",
     "gunicorn",
+    "uvicorn[standard]",
     "gspread",
     "twisted[tls]>=26.4.0",
     "defusedxml>=0.7.1",
+    "pillow-heif>=1.5.0",
+    "uvicorn-worker>=0.4.0",
+    "django-stubs-ext>=6.0.4",
+    "django-otp-webauthn==0.10.3",
+]
+
+[project.optional-dependencies]
+# Standalone Instagram updater (instagram/igupdate.py); not part of the
+# web/worker runtime. Install with: uv sync --extra instagram
+instagram = [
+    "instaloader",
+    "schedule",
 ]
 
 [dependency-groups]
 dev = [
-    "django-stubs>=6.0.5",
-    "djlint>=1.36.4",
-    "mypy>=2.1.0",
-    "pre-commit>=4.6.0",
-    "ruff>=0.15.20",
+    "django-stubs>=6.1.2",
+    "djlint==1.44.2",
+    "mypy>=2.3.0",
+    "pre-commit>=4.6.2",
+    "ruff>=0.17.3",
     "types-requests>=2.33.0.20260518",
+    # Used directly by scripts/css_regression.py, which drives Chrome over the
+    # DevTools Protocol. uvicorn[standard] already pulls it in for the runtime.
+    "websockets>=17.1",
 ]
 
 [tool.ruff]
@@ -107,6 +120,7 @@ module = [
     "staticpages.models",
     "members.models",
     "gallery.models",
+    "feedback.models",
 ]
 disable_error_code = ["django-manager-missing"]
 

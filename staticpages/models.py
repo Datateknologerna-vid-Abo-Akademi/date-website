@@ -1,5 +1,6 @@
 import logging
 import os
+from urllib.parse import urlsplit
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -15,6 +16,37 @@ from core.fields import PublicFileField
 logger = logging.getLogger('date')
 
 POST_SLUG_MAX_LENGTH = 50
+
+# A navigation target is either a full external address or a site-relative
+# path. Anything else (for example "pages/om-oss/" without the leading slash)
+# is almost always a typo and would render as a broken link.
+ALLOWED_NAV_URL_SCHEMES = {'http', 'https', 'mailto', 'tel'}
+
+
+def validate_nav_target(url):
+    if not url or not url.strip():
+        return
+    value = url.strip()
+    if value.startswith('#'):
+        return
+    parsed = urlsplit(value)
+    if parsed.scheme:
+        if parsed.scheme in ALLOWED_NAV_URL_SCHEMES:
+            return
+        raise ValidationError(
+            _(
+                'Använd en fullständig adress som börjar med https:// eller en intern sökväg '
+                'som börjar med /, till exempel /pages/om-oss/.'
+            )
+        )
+    if value.startswith('/') and not parsed.netloc:
+        return
+    raise ValidationError(
+        _(
+            'Använd en fullständig adress som börjar med https:// eller en intern sökväg '
+            'som börjar med /, till exempel /pages/om-oss/.'
+        )
+    )
 
 
 def upload_to(instance, filename):
@@ -32,6 +64,18 @@ class StaticPageNav(models.Model):  # type: ignore[django-manager-missing]
 
     def __str__(self):
         return self.category_name
+
+    def clean(self):
+        super().clean()
+        # The category URL is only read when use_category_url is on, so a stale
+        # value on a dropdown category must not block an unrelated edit.
+        if self.use_category_url:
+            if not (self.url or '').strip():
+                raise ValidationError({'url': _('Ange en URL när kategorin ska länka direkt.')})
+            try:
+                validate_nav_target(self.url)
+            except ValidationError as error:
+                raise ValidationError({'url': error.messages}) from error
 
 
 class StaticPage(models.Model):  # type: ignore[django-manager-missing]
@@ -124,3 +168,7 @@ class StaticUrl(models.Model):  # type: ignore[django-manager-missing]
             raise ValidationError({'parent': _('Välj en överordnad länk i samma kategori.')})
         if self.parent_id and self.parent.parent_id:
             raise ValidationError({'parent': _('Undermenyer stöder bara en nivå.')})
+        try:
+            validate_nav_target(self.url)
+        except ValidationError as error:
+            raise ValidationError({'url': error.messages}) from error

@@ -3,7 +3,9 @@
 {% block two_factor_content %}
   <div class="members-form two-factor-card two-factor-card-panel">
     <h2>{% trans "Disable two-factor authentication" %}</h2>
-    <p>{% trans "This removes the extra verification step from your account." %}</p>
+    <p>
+      {% trans "This removes the extra verification step from your account, including your authenticator app, passkeys and backup tokens." %}
+    </p>
     <form method="post">
       {% csrf_token %}
       {% if form.non_field_errors %}<div class="two-factor-errors">{{ form.non_field_errors }}</div>{% endif %}

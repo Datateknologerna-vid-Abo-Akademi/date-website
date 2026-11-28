@@ -8,7 +8,12 @@ from django.urls import path, reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 
-from core.admin_base import UNFOLD_FORMFIELD_OVERRIDES, ExtraChangeListLinksMixin, ModelAdmin, TabularInline
+from core.admin_base import (
+    UNFOLD_FORMFIELD_OVERRIDES,
+    CompactTabularInline,
+    ExtraChangeListLinksMixin,
+    ModelAdmin,
+)
 from core.admin_ui import AdminLink
 from core.admin_widgets import (
     FLATPICKR_ADMIN_CSS,
@@ -16,6 +21,7 @@ from core.admin_widgets import (
     FlatpickrDateTimeAdminMixin,
     SafeAdminFileWidget,
 )
+from core.upload_widgets import DirectUploadAdminMediaMixin
 
 from .forms import ExamArchiveAdminForm, ExamBankAccessSettingsAdminForm
 from .models import ExamArchive, ExamBankAccessSettings, ExamFile
@@ -50,7 +56,7 @@ class ExamBankAdminMixin(ExtraChangeListLinksMixin):
     )
 
 
-class ExamFileInline(TabularInline):
+class ExamFileInline(CompactTabularInline):
     model = ExamFile
     fk_name = 'archive'
     can_delete = True
@@ -60,9 +66,24 @@ class ExamFileInline(TabularInline):
         models.FileField: {'widget': SafeAdminFileWidget},
     }
 
+    def _has_legacy_permission(self, request, action):
+        return request.user.has_perm(f'archive.{action}_document')
+
+    def has_view_permission(self, request, obj=None):
+        return super().has_view_permission(request, obj) or self._has_legacy_permission(request, 'view')
+
+    def has_add_permission(self, request, obj=None):
+        return super().has_add_permission(request, obj) or self._has_legacy_permission(request, 'add')
+
+    def has_change_permission(self, request, obj=None):
+        return super().has_change_permission(request, obj) or self._has_legacy_permission(request, 'change')
+
+    def has_delete_permission(self, request, obj=None):
+        return super().has_delete_permission(request, obj) or self._has_legacy_permission(request, 'delete')
+
 
 @admin.register(ExamArchive)
-class ExamArchiveAdmin(FlatpickrDateTimeAdminMixin, ExamBankAdminMixin, ModelAdmin):
+class ExamArchiveAdmin(FlatpickrDateTimeAdminMixin, ExamBankAdminMixin, DirectUploadAdminMediaMixin, ModelAdmin):
     save_on_top = True
     form = ExamArchiveAdminForm
     inlines = [ExamFileInline]

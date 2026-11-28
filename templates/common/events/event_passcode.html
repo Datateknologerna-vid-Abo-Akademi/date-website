@@ -12,7 +12,7 @@
   <div class="container-md min-vh-100 container-margin-top">
     <div class="container-size break-words">
       <div class="content">
-        <h2>{{ event.title }}</h2>
+        <h2{% if event.title_shine %} class="title-shine"{% endif %}>{{ event.title }}</h2>
         {% if passcode_error %}
           <div class="alert alert-danger">
             <strong>{{ passcode_error }}</strong>

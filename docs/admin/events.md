@@ -11,13 +11,19 @@ Create public event pages, manage registration windows, collect attendee data, a
 1. Click **Add event**.
 2. Fill in the form (key sections):
    - **Titel & Innehåll** – what visitors see on the event page (CKEditor field supports images, embeds, etc.).
-   - **Date & time fields** – start/end timestamps plus signup open/close windows. Use the date+time split inputs; keep members/others windows realistic.
-   - **Anmälning** – uncheck if no signup is needed (all signup-related fields will be ignored).
+   - **Glanseffekt på titeln** – tick to show the title with the gold shine on the home page event cards, in the `/events/` list and on the event page. The event's day in the home page calendar also gets the gold shine. Keep it for the events you want to highlight; the checkbox only appears on sites whose styles support it (currently DaTe).
+   - **Date & time fields** – start/end timestamps plus signup open/close windows. Use the datetime picker in `YYYY-MM-DD HH:MM` form; keep members/others windows realistic.
+   - **Anmälning** – uncheck if no signup is needed (all signup-related fields will be ignored). On an Årsfest page this also removes the Anmälan tab and the sign-up panel, so the page works as a plain information page.
    - **Maximal antal deltagare** – `0` means unlimited.
    - **Avec** – allow partners; extra fields will display when the signup form contains `avec_…` inputs.
    - **Kräv inloggning för innehåll** – gate the event page behind member login.
    - **Passcode** – optional simple password visitors must enter before the signup form appears.
-   - **Background image** – upload locally (`Bakgrundsbild`) or to S3 (`s3_image`) depending on deployment settings.
+   - **Background image** – upload a background image. The form shows the field that matches this deployment's storage (local or public S3). Large pictures are shrunk on save so their longest side is at most 1920 pixels, and keep their shape, so nothing is cut off. Portrait posters keep their full height of 1920 pixels. Location data (GPS) and other photo metadata are removed. Uploading a bigger original gains nothing. iPhone photos (HEIC) are accepted and stored as JPEG, and transparent logos keep their transparency.
+   - **Bakgrundsbildens layout** – how the background image is shown on a normal event page:
+     - **Fyll hela bakgrunden** (default) fills the whole screen behind the text. The picture keeps its proportions, so when its shape differs from the screen's, the edges are cropped. Keep important details near the middle.
+     - **Visa bilden på sidorna** shows the whole picture, scaled down, to the left and right of the text on wide screens, and as a banner above the title on phones and narrow windows. The side pictures are always a little smaller than the event text box, so they stay small on events with very little text. Use it for posters where nothing may be cut off.
+     - In both layouts, the page background takes on a darkened version of the picture's main colour instead of plain black. This happens automatically, with nothing to set.
+     - The setting has no effect on the special Baal, Wappmiddag, KK100 and Årsfest templates, which have their own backgrounds.
    - **Redirect Link** – skip the internal page entirely and send visitors to another URL like another student association's event page.
 3. Publishing:
    - Set **Publiceras** to the date and time when the event should become visible.
@@ -27,7 +33,7 @@ Create public event pages, manage registration windows, collect attendee data, a
 
 ## Customize the Signup Form
 Each event can have dynamic questions managed inline:
-1. Scroll to the **Anmälningsfält** table (Event registration form inline).
+1. Scroll to **Anmälningsfält**. In Unfold, click a question's name or focus it and press Enter or Space to expand it. In stock admin, questions are displayed in a table.
 2. Click **Add another Event registration form** for each question.
 3. Fields:
    - **#** – ordering token. Values jump by 10 automatically so you can drag to reorder.
@@ -35,15 +41,21 @@ Each event can have dynamic questions managed inline:
    - **Typ** – `Text`, `Multiple choice`, or `Kryssryta`.
    - **Krävd** – mark required answers.
    - **Öppen info** – include responses in the public attendee list.
-   - **Alternativ** – comma-separated choices for select/check fields.
+   - **Alternativ** - the choices for a multiple-choice field, one input per option with **+ Lägg till alternativ** to add a row and `×` to remove one. An option cannot contain a comma. All options together, including the separators, must fit in 255 characters. Leave unused rows blank, and enter each option only once. Surrounding spaces are removed when saving. The row is hidden unless **Typ** is `Multiple choice`, and appears as soon as you change the select, including on rows you just added with "Add another".
    - **Göm för avec** – hide this field from partner signups.
 4. Save the event to persist form fields.
 
 ## Manage Attendees
-1. Use the **Deltagare** inline table to review or edit registrations. Columns include order number, name, email, anonymous flag, answers (JSON), and timestamps.
-2. If **Avec** is active or the event has child instances, extra columns ("Avec till", "Ursprungligt evenemang") appear automatically.
-3. To export a pretty list, click **Deltagarlista** in the main event row; this opens a printable view with the public answers.
-4. Bulk deletion: select events in the changelist → choose **Delete all attendees for selected events**. You will get a confirmation screen before anything is removed.
+1. Use the **Deltagare** inline table to review or edit registrations. Columns include order number, name, email, anonymous flag, and timestamps. The **Svar** column shows one input per registration question, so answers are edited as normal values (text, choice or Ja/Nej) instead of JSON.
+2. If a registration question was deleted or renamed after people signed up, its old answer still appears in the row and is marked as no longer matching a field, so it is not lost.
+3. Each inline row has a change link to the participant's own admin page, which shows the same answer fields without the rest of the event.
+4. If **Avec** is active or the event has child instances, extra columns ("Avec till", "Ursprungligt evenemang") appear automatically. **Avec till** is a search box: type a name to find an attendee of the same event instead of scrolling a long dropdown.
+5. To export a pretty list, click **Deltagarlista** in the main event row; this opens a printable view of the answers collected for that event.
+6. Bulk deletion: select events in the changelist → choose **Delete all attendees for selected events**. You will get a confirmation screen before anything is removed.
+7. Question names must be unique within an event. Names used by standard signup fields, such as `email`, `user`, and avec fields, are rejected to prevent invalid registrations.
+8. On an Årsfest page the **Anmälda** tab follows the list itself: it appears while the event is recent enough to show the list and the event either takes sign-ups or already holds registrations. Registrations you enter by hand therefore keep the tab, even on an event whose sign-up is turned off.
+
+**Large events:** the Deltagare table shows 50 attendees per page in the Unfold admin. Use the page links below the table to move between pages; saving only changes the rows on the current page. **Avec till** and answers remain editable per row. Drag reordering only exchanges the existing order numbers on the current page, leaving attendees on other pages unchanged. Save newly added attendees before dragging rows. Save before changing pages; unsaved edits on the previous page are not retained. If someone signs up while you are reordering, saving asks you to reload instead of applying the drag; edit without dragging, or reload and drag again.
 
 ## Handling Waiting Lists / Child Events
 - The **Parent** dropdown lets you chain events together. Registrations for child events roll up to the parent so attendee numbers stay consistent.

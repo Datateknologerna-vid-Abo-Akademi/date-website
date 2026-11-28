@@ -25,11 +25,11 @@ Publish downloadable PDFs or external publication links (meeting minutes, magazi
      - **Hidden** – not listed and direct links return not found.
    - **Allowed membership types** – used only for selected-membership visibility.
    - **Password** / **Clear password** – set, replace, or remove the password. The plaintext password is not shown again.
-3. Use the publications table at the bottom of the same page to add or edit publications in that collection. Click the inline change link when you need the full publication form.
+3. Use the publications list at the bottom of the same page to add or edit publications in that collection. Click **Add another PDF file** to start a new one. In Unfold, each publication is a block you open by its title; stock admin shows each publication as an expanded block. A publication needs a file or a redirect URL before it saves. Click the inline change link when you need the full publication form.
 4. Save.
 
 ## Add a New PDF
-1. Open the collection that should contain the publication. Use the inline publications table there for the quickest path, or click **Add pdf file** from the global PDF list if you need the full form first.
+1. Open the collection that should contain the publication. Use the inline publications list there for the quickest path, or click **Add pdf file** from the global PDF list if you need the full form first.
 2. Complete the form:
    - **Collection** – choose the group where the publication should appear.
    - **Title** – shown on listings and in the viewer.

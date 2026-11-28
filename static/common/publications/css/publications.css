@@ -5,7 +5,7 @@
        (currently only pulterit does, because pulterit's site is
        light-themed with pink accents).
        Surface defaults use the three consistent dark tones from
-       --primaryColorLight → --primaryColorLighte → --primaryColorLighter.
+       --primaryColorLight → --primaryColorMid → --primaryColorLighter.
        --primaryColor is intentionally avoided as a default because its
        lightness relative to the surface vars differs by association
        (notably pulterit, where it is a bright light gray).
@@ -14,7 +14,7 @@
        --linkColorLight. biocum falls through to --linkColor (it doesn't
        define --linkColorLight at all). */
     --pub-surface:         var(--pubChromeBg,    var(--primaryColorLight));
-    --pub-surface-pill:    var(--pubChromePill,  var(--primaryColorLighte));
+    --pub-surface-pill:    var(--pubChromePill,  var(--primaryColorMid));
     --pub-surface-hover:   var(--pubChromeHover, var(--primaryColorLighter));
     --pub-stage-bg:        var(--pubStageBg,     var(--pub-surface));
     --pub-chrome-fg:       var(--pubChromeFg,    var(--textColorLightish));

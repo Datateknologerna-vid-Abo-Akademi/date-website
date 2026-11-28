@@ -101,7 +101,7 @@
 
 .button:hover{
     transition: 0.2s ease;
-    background-color: var(--primaryColorLighte);
+    background-color: var(--primaryColorMid);
     color: var(--linkColorLightHover);
 }
 

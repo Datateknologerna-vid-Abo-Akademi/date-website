@@ -1,0 +1,5 @@
+{% if choice_language_label and widget.attrs.id %}
+  <label class="mb-1 block text-xs font-medium lg:hidden"
+         for="{{ widget.attrs.id }}">{{ choice_language_label }}</label>
+{% endif %}
+{% include "unfold/widgets/text.html" %}

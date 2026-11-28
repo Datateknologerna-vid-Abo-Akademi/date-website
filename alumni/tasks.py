@@ -106,7 +106,7 @@ def handle_create(form: dict):
     alumni_email = form['email']
     alumni_message_subject = "Välkommen till ARG - Betalningsinstruktioner"
     alumni_message_content = render_to_string(
-        'members/alumni_signup_email.html',
+        'members/alumni_signup_email.txt',
         {
             "alumni": form,
             "reference": reference,
@@ -120,7 +120,7 @@ def handle_create(form: dict):
     # Mail to relevant people
     admin_message_recipients = list(AlumniEmailRecipient.objects.all().values_list('recipient_email', flat=True))
     admin_message_subject = f"ARG - Ny medlem {form['firstname'] + ' ' + form['lastname']}"
-    admin_message_content = render_to_string('members/alumni_signup_email_admin.html', {'alumni': form})
+    admin_message_content = render_to_string('members/alumni_signup_email_admin.txt', {'alumni': form})
     # Schedule admin message
     send_email_task.delay(
         admin_message_subject, admin_message_content, settings.DEFAULT_FROM_EMAIL, admin_message_recipients
@@ -213,7 +213,7 @@ def send_token_email(token: str, email: str):
         'ALUMNI_ASSOCIATION_NAME': settings.CONTENT_VARIABLES.get("ALUMNI_ASSOCIATION_NAME", "Albins R Gamyler"),
         'ALUMNI_ASSOCIATION_EMAIL': settings.CONTENT_VARIABLES.get("ALUMNI_ASSOCIATION_EMAIL"),
     }
-    message = render_to_string('alumni/update_token_email.html', context)
+    message = render_to_string('alumni/update_token_email.txt', context)
     send_email_task.delay(subject, message, settings.DEFAULT_FROM_EMAIL, [email])
 
 

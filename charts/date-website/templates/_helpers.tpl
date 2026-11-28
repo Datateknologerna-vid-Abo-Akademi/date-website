@@ -74,6 +74,22 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- if .Values.postgresql.enabled }}5432{{ else }}{{ .Values.database.external.port }}{{ end }}
 {{- end }}
 
+{{- define "date-website.migrationDbHost" -}}
+{{- if .Values.migrations.job.databaseHost }}
+{{- .Values.migrations.job.databaseHost }}
+{{- else }}
+{{- include "date-website.dbHost" . }}
+{{- end }}
+{{- end }}
+
+{{- define "date-website.migrationDbPort" -}}
+{{- if .Values.migrations.job.databaseHost }}
+{{- .Values.migrations.job.databasePort }}
+{{- else }}
+{{- include "date-website.dbPort" . }}
+{{- end }}
+{{- end }}
+
 {{- define "date-website.redisUrl" -}}
 {{- if .Values.redis.enabled }}
 {{- printf "redis://%s:6379" (include "date-website.redis.fullname" .) }}
@@ -107,3 +123,9 @@ volumeMounts:
     mountPath: /code/media
 {{- end }}
 {{- end }}
+
+{{- define "date-website.image" -}}
+{{- $tag := .Values.image.tag | default .Chart.AppVersion -}}
+{{- printf "%s:%s" .Values.image.repository $tag -}}
+{{- if .Values.image.digest }}{{ printf "@%s" .Values.image.digest }}{{ end -}}
+{{- end -}}

@@ -5,12 +5,22 @@ metadata:
   labels:
     {{- include "date-website.labels" . | nindent 4 }}
     app.kubernetes.io/component: web
+  {{- with .Values.web.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   replicas: {{ .Values.web.replicaCount }}
   selector:
     matchLabels:
       {{- include "date-website.selectorLabels" . | nindent 6 }}
       app.kubernetes.io/component: web
+  # Zero-downtime rollouts: never take the old pod down until the new one
+  # is Ready. Default maxUnavailable 25% rounds up to 1 with a single
+  # replica -> the old pod dies while the new one is still migrating,
+  # causing a real outage window on every rollout (2026-08-05).
+  strategy:
+    {{- toYaml .Values.web.strategy | nindent 4 }}
   template:
     metadata:
       labels:
@@ -45,10 +55,17 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      terminationGracePeriodSeconds: {{ .Values.web.terminationGracePeriodSeconds }}
       containers:
         - name: web
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          image: {{ include "date-website.image" . }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- if .Values.web.preStopSleepSeconds }}
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "sleep {{ .Values.web.preStopSleepSeconds }}"]
+          {{- end }}
           command:
             - /bin/bash
             - -c
@@ -59,15 +76,34 @@ spec:
               {{- if .Values.web.migrateOnStartup }}
               python /code/manage.py migrate --noinput
               {{- end }}
-              {{- if .Values.web.collectstaticOnStartup }}
-              python /code/manage.py collectstatic --noinput
+              {{- if and .Values.web.collectstaticOnStartup (not .Values.media.s3.staticEnabled) }}
+              # --clear: the image may contain date-built static, so wipe
+              # STATIC_ROOT before collecting this variant's assets.
+              python /code/manage.py collectstatic --noinput --clear
               {{- end }}
               exec gunicorn \
+                -k {{ .Values.web.gunicorn.workerClass }} \
                 -w {{ .Values.web.gunicorn.workers }} \
+                --timeout {{ .Values.web.gunicorn.timeout }} \
+                --graceful-timeout {{ .Values.web.gunicorn.gracefulTimeout }} \
                 --max-requests {{ .Values.web.gunicorn.maxRequests }} \
                 --max-requests-jitter {{ .Values.web.gunicorn.maxRequestsJitter }} \
                 --bind=0.0.0.0:8000 \
-                core.wsgi
+                core.asgi:application
+          env:
+            - name: ASGI_HTTP_CONCURRENCY
+              value: {{ .Values.web.asgi.maxConcurrentHttpRequestsPerWorker | quote }}
+            # Django 6 destroys its thread-sensitive executor after each ASGI
+            # request, so persistent thread-local connections cannot be reused.
+            - name: DB_CONN_MAX_AGE
+              value: "0"
+            {{- if .Values.django.alumniSettingsSecretName }}
+            - name: ALUMNI_SETTINGS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.django.alumniSettingsSecretName }}
+                  key: ALUMNI_SETTINGS
+            {{- end }}
           envFrom:
             - configMapRef:
                 name: {{ include "date-website.fullname" . }}
@@ -77,6 +113,22 @@ spec:
             - name: http
               containerPort: 8000
               protocol: TCP
+          # startupProbe gates liveness during slow starts (cold boot:
+          # wait-for-postgres + optional migrate/collectstatic under the web
+          # CPU limit can exceed 2 min; a 30x2s budget is too tight because
+          # refused probes fail instantly -> ~60s floor). Budget is
+          # configurable via web.startupProbe; tighten once startup work is
+          # off (image-built static, migration Job).
+          startupProbe:
+            httpGet:
+              path: /healthz/
+              port: http
+              httpHeaders:
+                - name: Host
+                  value: {{ include "date-website.probeHost" . | quote }}
+            failureThreshold: {{ .Values.web.startupProbe.failureThreshold }}
+            periodSeconds: {{ .Values.web.startupProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.web.startupProbe.timeoutSeconds }}
           livenessProbe:
             httpGet:
               path: /healthz/
@@ -84,9 +136,10 @@ spec:
               httpHeaders:
                 - name: Host
                   value: {{ include "date-website.probeHost" . | quote }}
-            initialDelaySeconds: 30
+            initialDelaySeconds: 10
             periodSeconds: 30
-            failureThreshold: 3
+            timeoutSeconds: {{ .Values.web.livenessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.web.livenessProbe.failureThreshold }}
           readinessProbe:
             httpGet:
               path: /readyz/
@@ -96,7 +149,8 @@ spec:
                   value: {{ include "date-website.probeHost" . | quote }}
             initialDelaySeconds: 10
             periodSeconds: 10
-            failureThreshold: 3
+            timeoutSeconds: {{ .Values.web.readinessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.web.readinessProbe.failureThreshold }}
           {{- with .Values.securityContext }}
           securityContext:
             {{- toYaml . | nindent 12 }}

@@ -25,6 +25,7 @@ When disabled:
 
 Typical translated content in admin includes:
 
+- CTF titles and descriptions
 - event titles and event content
 - news titles, category names, and article content
 - poll questions and choices

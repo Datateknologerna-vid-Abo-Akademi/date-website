@@ -3,13 +3,15 @@ import re
 
 from django import forms
 from django.conf import settings
+from django.core.exceptions import ValidationError
+from django.db.models import Q
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 
 from core.admin_base import UnfoldFormMixin
 from core.admin_widgets import (
     FLATPICKR_DATETIME_INPUT_FORMATS,
-    SafeAdminFileWidget,
+    SafeAdminImageWidget,
     flatpickr_datetime_field,
     flatpickr_datetime_widget,
 )
@@ -58,9 +60,34 @@ def unique_event_slug(slug, title, instance=None):
 
 
 def _template_choices():
-    if settings.PROJECT_NAME == 'kk':
+    if settings.KK_EVENT_TEMPLATES_ENABLED:
         return EVENT_TEMPLATE_CHOICES_COMMON + EVENT_TEMPLATE_CHOICES_KK
     return EVENT_TEMPLATE_CHOICES_COMMON
+
+
+class ChoiceListField(forms.CharField):
+    """Validate individual rows before joining them for the existing model field."""
+
+    def to_python(self, value):
+        if isinstance(value, list):
+            if any(',' in option for option in value):
+                raise ValidationError(_('Ett alternativ får inte innehålla kommatecken.'), code='comma_in_option')
+            value = ','.join(value)
+        return super().to_python(value)
+
+    def has_changed(self, initial, data):
+        if isinstance(initial, str) and isinstance(data, list):
+            initial = ','.join(choice.strip() for choice in initial.split(',') if choice.strip())
+        return super().has_changed(initial, data)
+
+
+class EventRegistrationChoiceForm(forms.ModelForm):
+    def clean_choice_list(self):
+        choices = self.cleaned_data['choice_list']
+        if self.instance.pk and choices == ','.join(self.instance.get_choices()):
+            # The editor hides blank slots, but billing prices still use them.
+            return self.instance.choice_list
+        return choices
 
 
 class EventCreationForm(UnfoldFormMixin, forms.ModelForm):
@@ -83,7 +110,7 @@ class EventCreationForm(UnfoldFormMixin, forms.ModelForm):
             self.fields['published_time'].help_text = _("Leave blank to keep the event hidden.")
         for field_name in ('image', 's3_image'):
             if field_name in self.fields:
-                self.fields[field_name].widget = SafeAdminFileWidget()
+                self.fields[field_name].widget = SafeAdminImageWidget()
         if 'require_registration_terms' in self.fields:
             if models.registration_terms_feature_enabled():
                 self.fields['require_registration_terms'].initial = True
@@ -96,6 +123,7 @@ class EventCreationForm(UnfoldFormMixin, forms.ModelForm):
         model = Event
         temp_fields = (
             'title',
+            'title_shine',
             'event_date_start',
             'event_date_end',
             'content',
@@ -118,9 +146,9 @@ class EventCreationForm(UnfoldFormMixin, forms.ModelForm):
             'parent',
         )
         if settings.USE_S3:  # type: ignore[misc]
-            fields = temp_fields + ('s3_image',)
+            fields = temp_fields + ('s3_image', 'background_image_layout')
         else:
-            fields = temp_fields + ('image',)
+            fields = temp_fields + ('image', 'background_image_layout')
 
     def clean_slug(self):
         return unique_event_slug(
@@ -175,18 +203,21 @@ class EventEditForm(UnfoldFormMixin, forms.ModelForm):
             self.fields['published_time'].help_text = _("Leave blank to keep the event hidden.")
         for field_name in ('image', 's3_image'):
             if field_name in self.fields:
-                self.fields[field_name].widget = SafeAdminFileWidget()
+                self.fields[field_name].widget = SafeAdminImageWidget()
         if 'require_registration_terms' in self.fields and not models.registration_terms_feature_enabled():
             self.fields.pop('require_registration_terms')
         if 'template' in self.fields:
             self.fields['template'].choices = _template_choices()
-        # exclude the current instance from parent choices so an event cannot be its own parent
+        # Keep the parent an edited event already has, even after that parent
+        # has ended. Limiting the dropdown to future events alone silently
+        # cleared the link on the next save, which removed the child from its
+        # parent's registration list.
         try:
             if getattr(self, 'instance', None) and getattr(self.instance, 'pk', None):
-                # limit parent choices to future events and exclude self
-                self.fields['parent'].queryset = Event.objects.filter(event_date_end__gte=now()).exclude(
-                    pk=self.instance.pk
-                )
+                parent_filter = Q(event_date_end__gte=now())
+                if self.instance.parent_id:
+                    parent_filter |= Q(pk=self.instance.parent_id)
+                self.fields['parent'].queryset = Event.objects.filter(parent_filter).exclude(pk=self.instance.pk)
             else:
                 # creation: only future events
                 self.fields['parent'].queryset = Event.objects.filter(event_date_end__gte=now())
@@ -198,6 +229,7 @@ class EventEditForm(UnfoldFormMixin, forms.ModelForm):
         model = Event
         temp_fields = (
             'title',
+            'title_shine',
             'event_date_start',
             'event_date_end',
             'content',
@@ -220,9 +252,9 @@ class EventEditForm(UnfoldFormMixin, forms.ModelForm):
             'parent',
         )
         if settings.USE_S3:  # type: ignore[misc]
-            fields = temp_fields + ('s3_image',)
+            fields = temp_fields + ('s3_image', 'background_image_layout')
         else:
-            fields = temp_fields + ('image',)
+            fields = temp_fields + ('image', 'background_image_layout')
 
     def clean_slug(self):
         slug = (self.cleaned_data.get('slug') or "").strip()

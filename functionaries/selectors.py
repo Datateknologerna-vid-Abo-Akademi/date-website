@@ -1,5 +1,6 @@
 from collections import defaultdict
 
+from django.conf import settings
 from django.db.models import Q, QuerySet
 from django.utils import timezone
 
@@ -23,7 +24,7 @@ def get_selected_year(request, distinct_years):
     selected_year = get_current_year()
     all_years = False
 
-    if request.user.is_authenticated and 'year' in request.GET:
+    if (request.user.is_authenticated or settings.FUNCTIONARIES_ANONYMOUS_FILTERS) and 'year' in request.GET:
         year_param = request.GET['year']
 
         if year_param == 'all':
@@ -44,7 +45,7 @@ def get_selected_role(request, functionary_roles):
     selected_role = None
     all_roles = False
 
-    if request.user.is_authenticated and 'role' in request.GET:
+    if (request.user.is_authenticated or settings.FUNCTIONARIES_ANONYMOUS_FILTERS) and 'role' in request.GET:
         role_param = request.GET['role']
 
         if role_param == 'all':
@@ -61,9 +62,16 @@ def get_selected_role(request, functionary_roles):
     return selected_role, all_roles
 
 
-def get_filtered_functionaries(year, selected_role, is_board):
+def get_filtered_functionaries(year, selected_role, is_board, is_tutor=False):
+    """Return functionaries for one section of the public listing.
+
+    Sections are mutually exclusive: board roles win over the tutor flag, and
+    the "other" section (``is_board=False, is_tutor=False``) excludes both.
+    """
     years = year if isinstance(year, (QuerySet, list, tuple, set)) else [year]
     main_filter = Q(year__in=years, functionary_role__board=is_board)
+    if not is_board:
+        main_filter &= Q(functionary_role__tutor=is_tutor)
 
     if selected_role is not None:
         role_filter = (

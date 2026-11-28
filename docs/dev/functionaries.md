@@ -8,17 +8,20 @@ The public routes remain under the members URL namespace for compatibility:
 - `/members/functionaries/` (`members:functionaries`) shows the public year/role listing.
 
 ## Models
-- `FunctionaryRole` defines a translated position title and whether it is a board seat.
+- `FunctionaryRole` defines a translated position title and whether it is a board seat (`board`) or a tutor role (`tutor`).
 - `Functionary` links a role to a year and either a `Member` or standalone display `name`.
 - When a linked member has no stored display name, `Functionary.save()` snapshots the member's current full name or username.
 
 ## Forms & Selectors
 - `FunctionaryForm` enforces uniqueness per `(member, role, year)` for member-managed entries.
-- `functionaries.selectors` groups and filters functionaries by year, role, and board/non-board status for the public listing.
+- `functionaries.selectors` groups and filters functionaries by year, role, and section for the public listing. The sections are board, tutors, and other functionaries, and they are mutually exclusive: `board` wins over `tutor`, and the other section excludes both.
+- The public listing is public: signed-out visitors can always view it. The year and role query parameters are applied for anonymous visitors only when `FUNCTIONARIES_ANONYMOUS_FILTERS` is on. The default is off so earlier years are not browsable without signing in. `pulterit` enables the setting because it has no member accounts to sign in with.
 
 ## Admin
 - `FunctionaryRoleAdmin` includes an inline `Functionary` table so role metadata and yearly assignments can be edited together. The full assignment list is available through an **All assignments** tool link rather than a separate sidebar entry.
+- On narrow screens, the role's assignment rows show their field labels above the controls. Unfold uses a dedicated inline template for this layout and keeps its table on desktop.
 - `FunctionaryAdmin` links each assignment back to its role and supports searching by linked member or standalone display name.
+- Legacy `members` functionary and role permissions continue to grant equivalent admin and inline access while stale content types are being migrated.
 
 ## Migration Notes
 - Data was split out from `members.FunctionaryRole` and `members.Functionary`.

@@ -2,12 +2,13 @@
 import datetime
 import logging
 
+from django.db.models import Count
 from django.http import HttpResponseForbidden
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.views import generic
 
 from .forms import FlagForm
-from .models import Ctf, Flag, Guess
+from .models import Ctf, Flag, Guess, PostMortem
 
 logger = logging.getLogger('date')
 
@@ -113,3 +114,43 @@ def form_invalid(request, context):
     logger.info('INVALID FLAG')
     context['invalid'] = 'Fel Flag angiven, prova igen.'
     return render(request, 'ctf/flag_detail.html', context)
+
+
+class PostMortemIndexView(generic.ListView):
+    template_name = 'ctf/post_mortem_index.html'
+    context_object_name = 'post_mortems'
+
+    def get_queryset(self):
+        return PostMortem.objects.visible().select_related('ctf').order_by('-ctf__start_date')
+
+
+class PostMortemDetailView(generic.DetailView):
+    model = PostMortem
+    template_name = 'ctf/post_mortem_detail.html'
+    context_object_name = 'post_mortem'
+
+    def get_queryset(self):
+        return PostMortem.objects.visible()
+
+    def get_object(self, queryset=None):
+        queryset = queryset if queryset is not None else self.get_queryset()
+        return get_object_or_404(queryset.select_related('ctf'), ctf__slug=self.kwargs['ctf_slug'])
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        ctf = self.object.ctf
+        # Restrict the aggregate to guesses whose flag belongs to this CTF: a
+        # Guess row can point at a flag from another CTF, and such a row must
+        # not inflate the total.
+        input_counts = {
+            row['flag_id']: row['inputs']
+            for row in Guess.objects.filter(ctf=ctf, flag__ctf=ctf).values('flag_id').annotate(inputs=Count('id'))
+        }
+        context['ctf'] = ctf
+        context['challenges'] = [
+            {'flag': flag, 'inputs': input_counts.get(flag.pk, 0)}
+            for flag in Flag.objects.filter(ctf=ctf).select_related('solver').order_by('pk')
+        ]
+        # Total is the sum of the rendered rows, so the data block always adds up.
+        context['total_guesses'] = sum(challenge['inputs'] for challenge in context['challenges'])
+        return context

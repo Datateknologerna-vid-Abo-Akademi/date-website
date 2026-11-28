@@ -34,6 +34,14 @@ class PostQuerySet(models.QuerySet):
 
 class Post(models.Model):
     title = models.CharField(_('Titel'), max_length=255, blank=False)
+    title_shine = models.BooleanField(
+        _('Glanseffekt på titeln'),
+        default=False,
+        # A database default keeps inserts from the previous release working
+        # while blue-green deploys share the database.
+        db_default=False,
+        help_text=_('Visar titeln med glanseffekt på startsidan, i nyhetslistan och på nyhetssidan.'),
+    )
     category = models.ForeignKey(Category, on_delete=models.CASCADE, verbose_name=_('Kategori'), blank=True, null=True)
     content = CKEditor5Field(_('Innehåll'), blank=True)
     author = models.ForeignKey('members.Member', on_delete=models.CASCADE)
@@ -54,6 +62,14 @@ class Post(models.Model):
         verbose_name = _('nyhet')
         verbose_name_plural = _('nyheter')
         ordering = ('id',)
+        indexes = [
+            # Homepage/news listing: category-scoped publication lookups and
+            # the uncategorized homepage feed.
+            models.Index(fields=['category', 'published_time'], name='post_cat_pub_idx'),
+            models.Index(fields=['published_time'], name='post_pub_idx'),
+            # Admin changelist default ordering.
+            models.Index(fields=['created_time'], name='post_created_idx'),
+        ]
 
     def __str__(self):
         return self.title

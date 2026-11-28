@@ -6,15 +6,38 @@
   - Latest three un-categorized news posts.
   - Albins Angels spotlight (news posts in that category within 10 days).
   - Ad banners (`AdUrl`) and Instagram embeds (`instagram.IgUrl`).
+- Anonymous homepages cache the whole context (pickled model instances) for 300 seconds. The key carries the project, a fingerprint of the cached models' fields (`_homepage_schema()`), the language, and a version that every Event/Post/AdUrl/IgUrl save bumps. The fingerprint keeps blue-green releases with different model fields off each other's entries, because an instance pickled without a new field would cost a deferred-field query on every access.
 - Also provides the homepage-template selection logic, language switching endpoint, and custom 404/500 handlers.
 
 ## Homepage Variants
 - `get_homepage_template_name()` returns the standard `date/start.html` template for most sites.
-- For `PROJECT_NAME=kk`, it occasionally serves `date/april_start.html` on April 1st.
+- With `APRIL_HOMEPAGE_ENABLED=True` (kk), it occasionally serves `date/april_start.html` on April 1st.
+- kk and impuls include the shared Instagram slider (`date/components/instagram.html`, see `docs/dev/instagram.md`); impuls shows it in place of the partners section.
 - Keep variant-specific homepage behavior here rather than scattering date checks through templates.
 
+## Lunch Widget
+- DaTe's homepage right column embeds the official lunchmenu.fi student lunch widget below the booking card and above "Annat". The partial is `templates/common/date/components/lunch.html`; its `lunch` CSS grid area sits between `bookings` and `extras` on desktop and after the news card on mobile (`static/date/date/css/homepage.css`). Biologica and Pulterit include the same partial from their own homepage templates, each with a `lunch` grid area in its homepage sheet: Biologica under the events sidebar, Pulterit under the events card.
+- `date/templatetags/lunch.py` provides the `{% raw %}{% lunch_widget count=... heading=... wrapper_class=... %}{% endraw %}` tag. It renders `templates/common/date/components/lunch_widget.html`, returns no markup when `LUNCH_ENABLED` is off, and uses the active language when it is `sv`, `en`, or `fi`, falling back to `sv`.
+- The widget appears only on the homepage. DaTe's old `/lunch/` URL redirects to the same student lunch list on lunchmenu.fi as the widget's fallback link, even when the widget is disabled, so bookmarks and existing navigation links still work. Biologica and Pulterit do not mount `/lunch/`.
+- Settings: `LUNCH_ENABLED` (off in `core/settings/common.py`, on for DaTe, Biologica and Pulterit), `LUNCH_CITY` (`turku`, used when no coordinates are set), `LUNCH_LAT`/`LUNCH_LNG` (the search origin. DaTe, Biocum, kk, impuls and sf carry their kansli coordinates and Pulterit carries Kåren's; set the env vars to override, or set the settings to `None` to use the city), `LUNCH_COUNT` (3, the sidebar count), `LUNCH_ACCENT` (`#3a80c3` shared default; DaTe uses `#7a6012`, the deep link gold, Biocum `#49796b` and Pulterit `#6d6d69`, their own link colours).
+- Pulterit shows Kåren alone: its settings point the search origin at Kåren (Hämeenkatu 22) and set `LUNCH_COUNT=1`, so the widget's single nearest student restaurant is Kåren. The student widget has no restaurant filter, and the venue widget that does have one would show the price everyone pays instead of the student price.
+- Set the values in the site's release environment, for example Helm `extraEnv`; the association settings carry the coordinates, so the shared `.env.example` leaves them unset:
+
+  ```dotenv
+  LUNCH_ENABLED="True"
+  LUNCH_CITY="turku"
+  LUNCH_COUNT=3
+  LUNCH_ACCENT="#3a80c3"
+  # Override the association's coordinates if needed:
+  # LUNCH_LAT="60.4565176"
+  # LUNCH_LNG="22.2796885"
+  ```
+
+- Other associations opt in by setting `LUNCH_ENABLED=true` and including `date/components/lunch.html` on their homepage. The embed keeps the box's markup until it draws, so the box's own link is what shows while the widget loads and what stays when the script can't run.
+- The box's link follows the embed's own snippet: one anchor to the student lunch list of `LUNCH_CITY` for today, in the page's language, labelled with lunchmenu.fi's own wording (`Lunch i Åbo` in Swedish, `Lunch in Turku` in English, `Lounas Turku` in Finnish). `date/lunch.py` keeps those paths and labels in `CITY_PAGES`; add a city there before pointing `LUNCH_CITY` at it, otherwise the link falls back to `https://lunchmenu.fi/`.
+
 ## Calendar Data Structure
-- `calendar_format()` converts the event queryset into a `dict["YYYY-MM-DD"] = {...}` used by the front-end calendar widget. Keys include `link`, `modifier`, `eventFullDate`, `eventTitle`, and partial HTML stub.
+- `format_calendar_events()` converts the event queryset into a `dict["YYYY-MM-DD"] = [event, ...]` used by the front-end calendar widget. Each date maps to a list because several events can share a day; each event includes `link`, `eventFullDate`, `eventTitle`, and `titleShine`. The calendar JS builds the popup HTML and the `modifier` itself: `calendar-eventday`, plus `calendar-eventday--shine` when any event that day has `title_shine` ticked (DaTe's `homepage.css` gives that day the deep gold gradient and a sweep on hover or keyboard focus).
 
 ## Language Handling
 - `set_language(request)` reads `POST["lang"]`, normalizes it through `date.language_utils.resolve_language()`, stores the choice in Django's language cookie, and redirects back to the referrer.
@@ -30,7 +53,6 @@
 
 ## Middleware Notes
 - `HTCPCPMiddleware` serves the custom `418` page for coffee-themed easter-egg routes.
-- `CDNRewriteMiddleware` rewrites known storage hostnames in non-streaming responses. If you introduce new public asset hostnames, add them to `CDN_URL_TRANSFORMATIONS` in settings.
 
 ## Extending
 - If more widgets are added to the home page, keep the aggregation work inside `index()` minimal; heavy data should be fetched via dedicated services or cached.
