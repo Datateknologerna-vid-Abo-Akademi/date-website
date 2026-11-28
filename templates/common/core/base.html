@@ -1,5 +1,6 @@
 {% load static %}
 {% load i18n %}
+{% load og_tags %}
 <!DOCTYPE html>
 {% get_current_language as LANGUAGE_CODE %}
 <html lang="{{ LANGUAGE_CODE }}">
@@ -52,6 +53,13 @@
       <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.slim.min.js"
               integrity="sha384-5AkRS45j4ukf+JbWAfHL8P4onPA9p0KwwP7pUdjSQA3ss9edbJUJc/XcYAiheSSz"
               crossorigin="anonymous"></script>
+    {% endblock %}
+    {% block og_meta %}
+      <meta property="og:title" content="{{ ASSOCIATION_NAME }}">
+      <meta property="og:type" content="website">
+      <meta property="og:site_name" content="{{ ASSOCIATION_NAME }}">
+      {% if request %}<meta property="og:url" content="{{ request.path|absolute_uri:request }}">{% endif %}
+      <meta name="twitter:card" content="summary">
     {% endblock %}
     {% block extra_head %}{% endblock %}
     <link rel="stylesheet"

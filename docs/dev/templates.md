@@ -132,6 +132,19 @@ To give one association a different icon, put a file at the same path in its own
 
 Shared icons so far: `tiktok`, `linktree` (Font Awesome Free 7.3.1, CC BY 4.0). `sf` renders its own complete footer and does not use this lookup: `templates/sf/core/footer.html` has one branch per platform (instagram, facebook, x, linkedin, tiktok), so a new platform for sf needs a branch added there. Its `tiktok` branch includes the shared `tiktok.svg`.
 
+## Social Preview Tags
+
+A link shared to Facebook, WhatsApp, LinkedIn or X is previewed from the Open Graph and Twitter Card tags in the page head. They come from the `{% raw %}{% block og_meta %}{% endraw %}` in `templates/common/core/base.html`, so every association and every page gets them without a template change; the default is the association name, `og:type` `website` and a `summary` card.
+
+A public detail page that knows its own title, teaser and image overrides the block. `events/arsfest_base.html`, `events/detail.html`, `events/baal_detail.html`, `events/kk100_detail.html`, `events/tomtejakt.html`, `events/wappmiddag.html`, `news/article.html`, `staticpages/staticpage.html` and `publications/viewer.html` do this. An association override of those paths inherits the tags, so do not copy the block into `templates/<association>/`. Pages behind a sign-in or a password (archive, exam bank, polls, CTF, lucia) keep the defaults on purpose.
+
+An override emits the same shared part as the default: `og:site_name` with the association name, `og:type`, a canonical `og:url` built from the request path without the query string, and the Twitter card type. On top of that it carries the page's own `og:title`, `og:description` and, when the page has one, `og:image` with alt text. A page without an image keeps the `summary` card rather than advertising a broken image.
+
+The block relies on two filters in `date/templatetags/og_tags.py`:
+
+- `plaintext_truncate:<length>` strips the editor HTML out of a body field and cuts it to a description length; 160 characters is what the platforms show.
+- `absolute_uri:request` makes a file URL absolute. Storage that serves files from S3 or a CDN already returns an absolute URL, and prefixing the request host to that URL would point at a page on this site instead of at the file.
+
 ## Shared CSS And Element Selectors
 
 An association's stylesheets are loaded on every page of that association, and a selector that matches a bare HTML element therefore reaches parts of the page it was not written for. Two rules are enforced:
